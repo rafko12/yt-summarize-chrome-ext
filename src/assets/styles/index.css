@@ -1,0 +1,66 @@
+@import 'tailwindcss';
+@plugin "daisyui" {
+  themes:
+    night --default,
+    nord;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+}
+
+:host {
+  display: block;
+  position: fixed;
+  /* Do NOT use 'all: initial' — it resets Tailwind v4 CSS variables (--spacing etc.)
+     defined on :host via @layer theme, breaking utilities like min-h-0. */
+  margin: 0;
+  inset: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden !important;
+  pointer-events: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  line-height: normal;
+  font-family: 'Geist Sans', sans-serif !important;
+  letter-spacing: normal;
+}
+
+body {
+  font-family: 'Geist Sans', sans-serif;
+}
+
+/* Custom sleek scrollbar styles for Shadow DOM */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.35);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+* {
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+  scrollbar-width: thin;
+}
