@@ -11,6 +11,14 @@ Issues and specs for this repo live as GitHub issues in [`rafko12/yt-summarize-c
 - **Apply / remove labels**: `gh issue edit <number> --repo rafko12/yt-summarize-chrome-ext --add-label "..."` / `--remove-label "..."`
 - **Close**: `gh issue close <number> --repo rafko12/yt-summarize-chrome-ext --comment "..."`
 
+## GitHub CLI authentication in agent sessions
+
+The agent sandbox may be unable to read the valid GitHub CLI token from Windows Credential Manager. When `gh` reports an invalid token or keyring authentication failure inside the sandbox:
+
+1. Retry `gh auth status --hostname github.com` outside the sandbox with the required escalation.
+2. Treat authentication as broken only if the escalated check also fails.
+3. Keep token values secret; never run or display `gh auth token`.
+
 ## Pull requests as a triage surface
 
 **PRs as a request surface: no.** _(Set to `yes` if this repo treats external PRs as feature requests; `/triage` reads this flag.)_
