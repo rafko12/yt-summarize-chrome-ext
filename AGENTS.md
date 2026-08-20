@@ -31,3 +31,17 @@ Polecenie obejmuje Prettier, ESLint bez ostrzeżeń, TypeScript, cspell, coverag
 - Testowanie: przeczytaj [`.agents/rules/testing.md`](.agents/rules/testing.md) przed dodaniem lub zmianą testów.
 - Panel boczny: przeczytaj [`.agents/rules/sidepanel.md`](.agents/rules/sidepanel.md) przed zmianą cyklu życia, przypinania lub layoutu panelu.
 - Issue tracker i triage: procedury znajdują się w [`docs/agents/`](docs/agents/).
+
+## Agent skills
+
+### Issue tracker
+
+Zgłoszenia i specyfikacje są prowadzone w GitHub Issues repozytorium `rafko12/yt-summarize-chrome-ext`. Zobacz `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Stosowane są domyślne etykiety triage. Zobacz `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Projekt ma układ single-context. Zobacz `docs/agents/domain.md`.
