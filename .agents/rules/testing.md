@@ -1,55 +1,65 @@
 ---
-description: 'Testing Approach and Standards'
+description: 'Read before adding tests, changing behavior, refactoring a seam, running coverage, or auditing extension UI.'
 globs: '*'
 ---
 
-# Testing Approach
+# Testowanie
 
-## Current State
+## Automatyczna bramka
 
-- The repository currently **does not have an automated unit or E2E testing framework** (such as Jest, Vitest, Playwright, or Cypress) installed in `package.json`.
-- Testing is primarily handled manually in the browser.
+Pełną bramkę uruchamia:
 
-## Manual Testing Commands
+```bash
+pnpm check
+```
 
-- **Chrome:** Run `pnpm run dev` to start Vite in Chrome extension mode.
+Składają się na nią Prettier, ESLint bez ostrzeżeń, TypeScript, cspell, Vitest z coverage oraz build Chrome. Do krótszej pętli używaj `pnpm test` albo testu wskazanego pliku, ale przed zakończeniem etapu uruchom pełną bramkę.
 
-## Future Guidelines
+Testy używają Vitest. Domyślne środowisko to Node; testy UI mogą wybrać jsdom. Wspólne przygotowanie znajduje się w `vitest.setup.ts`.
 
-- If an automated testing framework is introduced, this file should be updated to reflect the chosen tools (e.g., Playwright for E2E extension testing, Vitest for unit tests).
+## Zatwierdzone szwy
 
-## Metodologia Testowania UI Rozszerzenia Chrome (Deterministic Layout Audit)
+Testuj zachowanie przez interfejs używany przez kod produkcyjny:
 
-Podczas testowania interfejsu (w tym audytów takich jak `deterministic-design`), używaj następującej procedury, ponieważ środowisko rozszerzenia wymaga specjalnego podejścia:
+1. panel boczny — instalacja sterownika z kontrolowanym adapterem Chrome;
+2. storage — operacje wysokiego poziomu, np. zapis analizy albo odczyt ustawień;
+3. komunikacja — wysłana wiadomość i otrzymana odpowiedź;
+4. Dostawcy AI — wspólny klient LLM z kontrolowanym adapterem `fetch`;
+5. YouTube — wiadomości content scriptu i zapisane przykłady HTML;
+6. popup — działanie użytkownika i widoczny rezultat.
 
-1. **Mockowanie API Chrome**: Zanim sprawdzisz layout w standardowej przeglądarce (np. przez `browser_subagent`), wstrzyknij mocki obiektów `chrome` do plików HTML (`dist_chrome/src/popup/index.html`, `dist_chrome/src/options/index.html`), np.:
-   ```javascript
-   window.chrome = window.chrome || {};
-   window.chrome.runtime = window.chrome.runtime || {};
-   window.chrome.runtime.onMessage = {
-     addListener: () => {},
-     removeListener: () => {},
-   };
-   window.chrome.storage = {
-     local: {
-       get: (k, cb) => (cb ? cb({}) : Promise.resolve({})),
-       set: (k, cb) => (cb ? cb() : Promise.resolve()),
-     },
-   };
-   window.chrome.tabs = {
-     query: (o, cb) =>
-       cb
-         ? cb([{ id: 1, url: 'https://youtube.com/watch?v=123' }])
-         : Promise.resolve([{ id: 1, url: 'https://youtube.com/watch?v=123' }]),
-   };
-   ```
-2. **Serwowanie lokalne**: Uruchom pliki z folderu `dist_chrome` za pomocą serwera statycznego, np. `npx -y serve dist_chrome -p 3000`.
-3. **Pomiary i weryfikacja (Viewport)**: Wejdź na strony poprzez subagenta z odpowiednio ustawionym oknem:
-   - Popup: `http://localhost:3000/src/popup/index.html` (rozmiary: `400x600`, `800x600`).
-   - Opcje: `http://localhost:3000/src/options/index.html` (rozmiary: `800x600`, `1200x800`).
-4. **Weryfikacja Horizontal Overflow**: Zawsze wywołuj matematyczny pomiar przepełnienia poziomego z JavaScriptu:
-   ```javascript
-   document.documentElement.scrollWidth - document.documentElement.clientWidth;
-   ```
-   Wartość musi zawsze wynosić `0`. Jeśli jest `> 0`, znajdź kolidujący element.
-5. **Sprzątanie (Ważne)**: Po zakończeniu audytu, uruchom `pnpm run build` aby nadpisać zmockowane pliki w `dist_chrome` oryginalnymi artefaktami i posprzątać po środowisku testowym.
+Mockuj wyłącznie granice zewnętrzne: Chrome, sieć i DOM YouTube. Nie mockuj prywatnych modułów ani nie testuj wnętrza hooków. Oczekiwane wartości mają pochodzić ze specyfikacji albo znanego przykładu, nie z powtórzenia algorytmu implementacji.
+
+## Refaktor zachowujący zachowanie
+
+Pracuj pionowym fragmentem:
+
+1. dodaj test charakterystyczny obserwowalnego zachowania;
+2. potwierdź, że test reaguje na zmianę tego zachowania;
+3. wykonaj minimalne wydzielenie;
+4. uruchom test przez ten sam szew;
+5. uruchom pełną bramkę etapu.
+
+Jeżeli test potwierdzi błąd, zachowaj bieżące zachowanie w refaktorze i utwórz osobne GitHub Issue zgodnie z `docs/agents/issue-tracker.md`.
+
+## Docelowe coverage
+
+- minimum 80% linii i 75% gałęzi globalnie;
+- 100% gałęzi dla sterownika panelu, kontraktów wiadomości, migracji storage i rejestru modeli.
+
+Coverage jest bramką regresji, nie celem samym w sobie. Test musi opisywać istotne zachowanie przez zatwierdzony szew.
+
+## Testy manualne
+
+Pełna procedura znajduje się w [`../../docs/manual-regression-checklist.md`](../../docs/manual-regression-checklist.md).
+
+Dla deterministycznego audytu UI:
+
+1. uruchom `pnpm run build`;
+2. wstrzyknij niezbędny mock `chrome` do zbudowanych stron w `dist_chrome`;
+3. serwuj `dist_chrome` lokalnie;
+4. sprawdź popup w `400×600` i `800×600`, a opcje w `800×600` i `1200×800`;
+5. zmierz `document.documentElement.scrollWidth - document.documentElement.clientWidth`; wynik musi wynosić `0`;
+6. po audycie uruchom `pnpm run build`, aby odtworzyć czyste artefakty.
+
+Mocki testowe i klucze Dostawców AI nie mogą trafić do artefaktu produkcyjnego.

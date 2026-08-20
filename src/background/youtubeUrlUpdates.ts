@@ -1,0 +1,23 @@
+export default function registerYoutubeUrlUpdates(
+  chromeApi: typeof chrome
+): () => void {
+  const onTabUpdated = (
+    tabId: number,
+    changeInfo: chrome.tabs.TabChangeInfo
+  ) => {
+    if (!changeInfo.url?.includes('youtube.com/watch')) return;
+
+    chromeApi.runtime
+      .sendMessage({
+        type: 'YOUTUBE_URL_UPDATED',
+        url: changeInfo.url,
+        tabId,
+      })
+      .catch(() => {
+        // The side panel may not be open or listening.
+      });
+  };
+
+  chromeApi.tabs.onUpdated.addListener(onTabUpdated);
+  return () => chromeApi.tabs.onUpdated.removeListener(onTabUpdated);
+}

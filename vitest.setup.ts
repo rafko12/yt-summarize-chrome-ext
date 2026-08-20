@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom/vitest';
+
 import { vi } from 'vitest';
 
 const runtimeMessageListeners = new Set<
