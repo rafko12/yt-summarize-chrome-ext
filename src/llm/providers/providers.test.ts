@@ -25,13 +25,11 @@ afterEach(() => vi.unstubAllGlobals());
 
 describe('LLM provider adapters', () => {
   it('serializes a Gemini request and maps its response', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        mockJsonResponse({
-          candidates: [{ content: { parts: [{ text: 'Gemini answer' }] } }],
-        })
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      mockJsonResponse({
+        candidates: [{ content: { parts: [{ text: 'Gemini answer' }] } }],
+      })
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(geminiProvider.request(request)).resolves.toBe(
@@ -51,13 +49,11 @@ describe('LLM provider adapters', () => {
   });
 
   it('serializes an OpenAI request and maps its response', async () => {
-    const fetchMock = vi
-      .fn()
-      .mockResolvedValue(
-        mockJsonResponse({
-          choices: [{ message: { content: 'OpenAI answer' } }],
-        })
-      );
+    const fetchMock = vi.fn().mockResolvedValue(
+      mockJsonResponse({
+        choices: [{ message: { content: 'OpenAI answer' } }],
+      })
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     await expect(openaiProvider.request(request)).resolves.toBe(

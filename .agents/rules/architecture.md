@@ -1,30 +1,26 @@
 ---
-description: 'Architecture and Technology Stack'
+description: 'Read when changing module responsibilities, Chrome execution contexts, messaging, storage, build, or manifest.'
 globs: '*'
 ---
 
-# Architecture and Technology Stack
+# Architektura i technologia
 
-## Core Technologies
+## Platforma
 
-- **Framework:** React 19, TypeScript
-- **Build Tool:** Vite with `@crxjs/vite-plugin` for dynamic manifest generation
-- **Extension API:** `webextension-polyfill` for cross-browser compatibility (Chrome)
-- **Styling:** Tailwind CSS v4, DaisyUI 5, PostCSS
-- **Key Libraries:** `youtube-transcript` (for fetching subtitles), Multi-provider AI Integration (Google Gemini, OpenAI, Anthropic Claude)
+- React 19 i TypeScript.
+- Vite z `@crxjs/vite-plugin`.
+- Manifest V3 dla Google Chrome; projekt nie utrzymuje wariantu Firefoksa.
+- Tailwind CSS v4, DaisyUI 5 i PostCSS.
+- Vitest oraz Testing Library dla testów automatycznych.
 
-## Project Structure
+Pełny opis przepływów i odpowiedzialności znajduje się w [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md). Nie kopiuj jego treści do tej reguły.
 
-- `src/manifest.ts`: Central extension manifest configuration.
-- `src/background/`: Service worker scripts handling background tasks.
-- `src/content/`: Content scripts injected into web pages (e.g., YouTube).
-- `src/popup/`: React application for the extension's popup UI.
-- `src/options/`: React application for the extension's options page.
-- `src/utils/`: Shared utilities (`storage.ts` for multi-provider API keys and settings, `gemini.ts` for AI calls, `createShadowRoot.tsx`).
-- `src/assets/`: Static assets and global styles (`index.css`).
+## Reguły zmian
 
-## Architectural Guidelines
-
-- **Manifest:** Always manage manifest settings through `src/manifest.ts`.
-- **CSS Themes:** DaisyUI themes must be configured directly in the main CSS file using `@plugin "daisyui"`, not in `tailwind.config.js`.
-- **State & Storage:** API keys and settings are persisted via `chrome.storage.local` using functions defined in `src/utils/storage.ts`.
+- Zarządzaj manifestem wyłącznie przez `src/manifest.ts`.
+- Umieszczaj decyzje o stanie panelu w sterowniku, a szczegóły `chrome.*` w adapterze Chrome.
+- Utrzymuj `src/shared/messages.ts` jako kontrakt niezależny od transportu.
+- Zachowuj klucze i akceptowane formaty danych z `STORAGE_KEYS`; zmiana wymaga migracji.
+- Wykonuj żądania LLM oraz operacje Historii analiz w panelu, dopóki osobna decyzja architektoniczna nie zmieni kontekstu wykonania.
+- Konfiguruj tematy DaisyUI w głównym CSS przez `@plugin "daisyui"`.
+- Generuj `dist_chrome` przez build. Artefaktu nie edytuj jako źródła.
