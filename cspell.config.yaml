@@ -1,0 +1,70 @@
+version: '0.2'
+import:
+  - '@cspell/dict-pl_pl/cspell-ext.json'
+language: pl, pl_PL, en
+ignorePaths:
+  - node_modules
+  - dist
+  - dist_*
+  - vendor
+  - pnpm-lock.yaml
+  - '**/*.map'
+  - '**/*.ttf'
+  - '.husky'
+  - '.cursor'
+dictionaries:
+  - en_US
+  - softwareTerms
+  - typescript
+  - node
+words:
+  - actioned
+  - buildzie
+  - buildu
+  - Commity
+  - CRX
+  - crxjs
+  - DaisyUI
+  - fallbacków
+  - HMR
+  - ianvs
+  - Inicjalizacja
+  - listenerów
+  - listenery
+  - mattpocock
+  - metakomentarza
+  - minifikacji
+  - mockuj
+  - MV3
+  - pluginami
+  - pluginem
+  - pnpm
+  - Polyfillów
+  - promptów
+  - Reacta
+  - Reactowy
+  - Refaktor
+  - refaktoru
+  - requesty
+  - responsywny
+  - scriptu
+  - serializowane
+  - sidepanel
+  - stringu
+  - Tailwind
+  - thedutchcoder
+  - timestampy
+  - Tracklist
+  - tsconfig
+  - tsx
+  - unionami
+  - unstub
+  - ustrukturyzowanych
+  - utilsy
+  - Vite
+  - wayfinder
+  - Wayfinding
+  - webextension
+  - wersjonowanej
+  - wielomodelowa
+  - zmockowane
