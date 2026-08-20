@@ -11,6 +11,7 @@
 - Listener `chrome.runtime.onMessage.addListener`, który zwraca wartość tylko dla części wiadomości, musi kończyć się jawnym `return false;`.
 - Zachowuj istniejące klucze i akceptowane formaty danych. Zmiana formatu wymaga bezstratnej, wersjonowanej migracji i testu kompatybilności.
 - Commity, jeśli użytkownik ich zażąda, muszą spełniać Conventional Commits.
+- Na Windows uruchamiaj poza środowiskiem izolowanym polecenia Git wywołujące hooki Husky, w szczególności `commit`, `switch`, `checkout`, `merge`, `rebase` i `cherry-pick`; izolacja blokuje potoki Git Bash.
 
 ## Bramka jakości
 
