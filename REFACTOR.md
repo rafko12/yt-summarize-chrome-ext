@@ -4,6 +4,8 @@
 
 Plan został zatwierdzony 20 sierpnia 2026 r. Status etapu można zmienić dopiero po przejściu jego automatycznej i manualnej bramki. Sama obecność nowych plików w drzewie roboczym nie oznacza ukończenia etapu.
 
+Bieżące technologie i ich źródła prawdy mapuje [`TECH_STACK.md`](TECH_STACK.md). Ten plan opisuje zamierzone przejścia, dlatego nie należy traktować jego etapów jako opisu już wdrożonego stosu.
+
 ## Cel
 
 Zmniejszyć ryzyko regresji i koszt dalszego rozwoju rozszerzenia bez zamierzonych zmian zachowania, wyglądu ani UX. Audyt obejmuje całe repozytorium, lecz zmieniamy wyłącznie kod z mierzalnym problemem: pomieszanymi odpowiedzialnościami, duplikacją, niejawnym stanem, słabą testowalnością albo niebezpieczną zależnością.

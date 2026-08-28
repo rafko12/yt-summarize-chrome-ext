@@ -15,7 +15,10 @@ pnpm check
 
 Składają się na nią Prettier, ESLint bez ostrzeżeń, TypeScript, cspell, Vitest z coverage oraz build Chrome. Do krótszej pętli używaj `pnpm test` albo testu wskazanego pliku, ale przed zakończeniem etapu uruchom pełną bramkę.
 
-Testy używają Vitest. Domyślne środowisko to Node; testy UI mogą wybrać jsdom. Wspólne przygotowanie znajduje się w `vitest.setup.ts`.
+Mapę narzędzi testowych i ich pliki źródłowe zawiera
+[`../../TECH_STACK.md`](../../TECH_STACK.md). Domyślne środowisko Vitest to
+Node; testy UI mogą wybrać jsdom. Wspólne przygotowanie znajduje się w
+`vitest.setup.ts`.
 
 ## Zatwierdzone szwy
 

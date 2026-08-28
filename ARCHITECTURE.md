@@ -5,6 +5,7 @@
 YT Summarizer jest rozszerzeniem Manifest V3 dla Google Chrome. Pozwala pobrać transkrypcję filmu z YouTube, wygenerować podsumowanie przy użyciu wybranego Dostawcy AI oraz prowadzić rozmowę dotyczącą filmu. Kanoniczne pojęcia domenowe definiuje [`CONTEXT.md`](CONTEXT.md).
 
 Projekt jest Chrome-only. Uzasadnienie znajduje się w [ADR-0001](docs/adr/0001-google-chrome-jako-jedyna-wspierana-przegladarka.md).
+Technologie, ich role i pliki konfiguracyjne mapuje [`TECH_STACK.md`](TECH_STACK.md).
 
 ## Konteksty wykonania
 

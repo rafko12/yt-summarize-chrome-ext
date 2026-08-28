@@ -14,12 +14,19 @@ Rozszerzenie dla Google Chrome, które pobiera transkrypcję filmu z YouTube, tw
 
 ## Wymagania
 
-- Google Chrome w wersji 142 lub nowszej;
-- Node.js 20 lub nowszy;
-- pnpm 8.15.0 lub nowszy;
+- Google Chrome w wersji zgodnej z `minimum_chrome_version` w
+  [`src/manifest.ts`](src/manifest.ts);
+- Node.js i pnpm w wersjach zadeklarowanych w [`package.json`](package.json);
 - własny klucz wybranego Dostawcy AI.
 
 Projekt wspiera wyłącznie Google Chrome. Zobacz [ADR-0001](docs/adr/0001-google-chrome-jako-jedyna-wspierana-przegladarka.md).
+
+## Technologie
+
+Rozszerzenie łączy Chrome Manifest V3, TypeScript, React, Vite z CRXJS,
+Tailwind CSS z DaisyUI oraz Vitest z Testing Library. Pełna mapa technologii,
+ich odpowiedzialności i plików źródłowych znajduje się w
+[`TECH_STACK.md`](TECH_STACK.md).
 
 ## Uruchomienie deweloperskie
 
@@ -47,6 +54,7 @@ W ustawieniach rozszerzenia można usunąć zapisane klucze API i Historię anal
 
 ## Dokumentacja techniczna
 
+- [Stos technologiczny](TECH_STACK.md)
 - [Architektura](ARCHITECTURE.md)
 - [Plan refaktoru](REFACTOR.md)
 - [Słownik domeny](CONTEXT.md)

@@ -3,17 +3,12 @@ description: 'Read when changing module responsibilities, Chrome execution conte
 globs: '*'
 ---
 
-# Architektura i technologia
+# Architektura
 
-## Platforma
-
-- React 19 i TypeScript.
-- Vite z `@crxjs/vite-plugin`.
-- Manifest V3 dla Google Chrome; projekt nie utrzymuje wariantu Firefoksa.
-- Tailwind CSS v4, DaisyUI 5 i PostCSS.
-- Vitest oraz Testing Library dla testów automatycznych.
-
-Pełny opis przepływów i odpowiedzialności znajduje się w [`../../ARCHITECTURE.md`](../../ARCHITECTURE.md). Nie kopiuj jego treści do tej reguły.
+Przed zmianą platformy, zależności, buildu albo narzędzi przeczytaj mapę i źródła
+prawdy w [`../../TECH_STACK.md`](../../TECH_STACK.md). Przepływy oraz
+odpowiedzialności modułów opisuje
+[`../../ARCHITECTURE.md`](../../ARCHITECTURE.md).
 
 ## Reguły zmian
 

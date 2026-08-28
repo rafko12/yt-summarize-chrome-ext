@@ -25,6 +25,7 @@ Polecenie obejmuje Prettier, ESLint bez ostrzeżeń, TypeScript, cspell, coverag
 
 ## Dokumentacja kontekstowa
 
+- Stos technologiczny: przeczytaj [`TECH_STACK.md`](TECH_STACK.md) przed zmianą zależności, konfiguracji buildu, narzędzi jakości, test runnera albo warstwy UI.
 - Terminologia domenowa: przeczytaj [`CONTEXT.md`](CONTEXT.md) przed zmianą nazw lub modelu domeny.
 - Decyzje architektoniczne: przeczytaj odpowiednie pliki w [`docs/adr/`](docs/adr/).
 - Architektura i odpowiedzialności modułów: przeczytaj [`ARCHITECTURE.md`](ARCHITECTURE.md) oraz [`.agents/rules/architecture.md`](.agents/rules/architecture.md), gdy zmieniasz strukturę, manifest, komunikację, storage albo kontekst wykonania.
@@ -33,16 +34,8 @@ Polecenie obejmuje Prettier, ESLint bez ostrzeżeń, TypeScript, cspell, coverag
 - Panel boczny: przeczytaj [`.agents/rules/sidepanel.md`](.agents/rules/sidepanel.md) przed zmianą cyklu życia, przypinania lub layoutu panelu.
 - Issue tracker i triage: procedury znajdują się w [`docs/agents/`](docs/agents/).
 
-## Agent skills
+## Procedury agentów
 
-### Issue tracker
-
-Zgłoszenia i specyfikacje są prowadzone w GitHub Issues repozytorium `rafko12/yt-summarize-chrome-ext`. Zobacz `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Stosowane są domyślne etykiety triage. Zobacz `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Projekt ma układ single-context. Zobacz `docs/agents/domain.md`.
+- Issue tracker: przed obsługą zgłoszeń lub specyfikacji przeczytaj [`docs/agents/issue-tracker.md`](docs/agents/issue-tracker.md).
+- Triage: przed nadawaniem etykiet przeczytaj [`docs/agents/triage-labels.md`](docs/agents/triage-labels.md).
+- Dokumentacja domenowa: przed modelowaniem domeny przeczytaj [`docs/agents/domain.md`](docs/agents/domain.md); projekt ma układ single-context.

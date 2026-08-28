@@ -1,0 +1,79 @@
+# Stos technologiczny
+
+Ten dokument jest mapą technologii używanych przez YT Summarizer. Dokładne
+wersje i konfigurację odczytuj ze wskazanych plików źródłowych zamiast utrwalać
+je w dokumentacji.
+
+## Platforma wykonawcza
+
+| Obszar                | Technologia                                                                               | Zastosowanie                                                       | Źródło prawdy                                                              |
+| --------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| Przeglądarka          | Google Chrome, Manifest V3                                                                | Rozszerzenie z panelem bocznym, usługą w tle i skryptem treści     | [`src/manifest.ts`](src/manifest.ts)                                       |
+| Interfejsy rozszerzeń | `chrome.sidePanel`, `chrome.runtime`, `chrome.tabs`, `chrome.storage`, `chrome.scripting` | Panel, komunikacja między kontekstami, stan i integracja ze stroną | [`src/manifest.ts`](src/manifest.ts), [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| Strona docelowa       | YouTube                                                                                   | Metadane Filmu, transkrypcja i sterowanie odtwarzaczem             | [`src/content/`](src/content/), [`ARCHITECTURE.md`](ARCHITECTURE.md)       |
+
+Wspieranym artefaktem jest wyłącznie build Chrome w `dist_chrome`. Minimalną
+wersję przeglądarki wyznacza `minimum_chrome_version` w `src/manifest.ts`.
+Pozostałości wariantu Firefoksa w `vite.config.ts` są kodem przejściowym
+przeznaczonym do usunięcia zgodnie z [`REFACTOR.md`](REFACTOR.md), a nie drugą
+wspieraną platformą.
+
+## Język i interfejs użytkownika
+
+| Obszar              | Technologia                 | Zastosowanie                                   | Źródło prawdy                                                                                                |
+| ------------------- | --------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Język               | TypeScript w trybie ścisłym | Kod produkcyjny, konfiguracja buildu i testy   | [`tsconfig.json`](tsconfig.json), [`package.json`](package.json)                                             |
+| UI                  | React i React DOM           | Panel boczny oraz strona opcji                 | [`package.json`](package.json), [`src/popup/`](src/popup/), [`src/options/`](src/options/)                   |
+| Style               | Tailwind CSS 4              | Klasy narzędziowe i konfiguracja CSS-first     | [`src/assets/styles/index.css`](src/assets/styles/index.css), [`postcss.config.js`](postcss.config.js)       |
+| Komponenty i motywy | DaisyUI 5                   | Komponenty oraz motywy `night` i `nord`        | [`src/assets/styles/index.css`](src/assets/styles/index.css)                                                 |
+| Izolacja stylów     | Shadow DOM i PostCSS        | Izolacja UI rozszerzenia od CSS strony YouTube | [`src/utils/createShadowRoot.tsx`](src/utils/createShadowRoot.tsx), [`postcss.config.js`](postcss.config.js) |
+| Typografia i ikony  | Geist Sans, Phosphor Icons  | Font i ikony interfejsu                        | [`package.json`](package.json), [`src/assets/`](src/assets/)                                                 |
+
+Bootstrap content scriptu nadal korzysta z Reacta, choć niczego nie renderuje.
+Usunięcie tego narzutu jest osobnym, zatwierdzonym etapem refaktoru.
+
+## Build i zależności
+
+| Obszar                      | Technologia           | Zastosowanie                                                             | Źródło prawdy                                                            |
+| --------------------------- | --------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| Środowisko                  | Node.js 20 lub nowszy | Uruchamianie narzędzi projektu                                           | [`package.json`](package.json)                                           |
+| Pakiety                     | pnpm                  | Jedyny wspierany menedżer pakietów                                       | [`package.json`](package.json), [`pnpm-lock.yaml`](pnpm-lock.yaml)       |
+| Build i serwer deweloperski | Vite                  | Budowanie i lokalna pętla deweloperska                                   | [`vite.config.ts`](vite.config.ts), [`package.json`](package.json)       |
+| Integracja rozszerzenia     | CRXJS Vite Plugin     | Generowanie rozszerzenia z typowanego manifestu                          | [`vite.config.ts`](vite.config.ts), [`src/manifest.ts`](src/manifest.ts) |
+| Przetwarzanie CSS           | PostCSS               | Tailwind, prefiks selektorów, zamiana `rem` na `px` i prefiksy dostawców | [`postcss.config.js`](postcss.config.js)                                 |
+
+## Testy i jakość
+
+| Obszar                  | Technologia                                        | Zastosowanie                                         | Źródło prawdy                                                                                        |
+| ----------------------- | -------------------------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Test runner             | Vitest                                             | Testy jednostkowe i integracyjne                     | [`vitest.config.ts`](vitest.config.ts)                                                               |
+| Testy UI                | React Testing Library, User Event, Jest DOM, jsdom | Testy zachowania widocznego dla użytkownika          | [`package.json`](package.json), [`vitest.setup.ts`](vitest.setup.ts)                                 |
+| Coverage                | V8                                                 | Raporty pokrycia kodu                                | [`vitest.config.ts`](vitest.config.ts)                                                               |
+| Analiza statyczna       | TypeScript, ESLint                                 | Typy i reguły jakości bez ostrzeżeń                  | [`tsconfig.json`](tsconfig.json), [`.eslintrc.cjs`](.eslintrc.cjs)                                   |
+| Formatowanie i pisownia | Prettier, cspell                                   | Spójny zapis kodu i dokumentacji                     | [`.prettierrc`](.prettierrc), [`cspell.config.yaml`](cspell.config.yaml)                             |
+| Hooki Git               | Husky, lint-staged, commitlint                     | Kontrole plików staged i Conventional Commits        | [`.husky/`](.husky/), [`package.json`](package.json), [`commitlint.config.js`](commitlint.config.js) |
+| CI                      | GitHub Actions                                     | Uruchamianie `pnpm check` dla zmian i gałęzi głównej | [`.github/workflows/quality.yml`](.github/workflows/quality.yml)                                     |
+
+Procedurę doboru testów i wymagane progi opisuje
+[`.agents/rules/testing.md`](.agents/rules/testing.md). Pełną bramką repozytorium
+pozostaje skrypt `check` z `package.json`.
+
+## Integracje zewnętrzne
+
+| Integracja                 | Sposób użycia                                             | Źródło prawdy                                                  |
+| -------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| Gemini, OpenAI i Anthropic | Bezpośrednie żądania z panelu przez adaptery Dostawców AI | [`src/llm/`](src/llm/), [`src/manifest.ts`](src/manifest.ts)   |
+| `youtube-transcript`       | Pobieranie transkrypcji Filmu                             | [`package.json`](package.json), [`src/content/`](src/content/) |
+| `chrome.storage.local`     | Trwałe dane użytkownika                                   | [`src/utils/storage.ts`](src/utils/storage.ts)                 |
+| `chrome.storage.session`   | Stan bieżącej sesji panelu                                | [`ARCHITECTURE.md`](ARCHITECTURE.md)                           |
+
+Klucze API i dane potrzebne do wygenerowania odpowiedzi trafiają bezpośrednio
+do interfejsu sieciowego wybranego Dostawcy AI. Rozszerzenie nie utrzymuje
+własnego serwera pośredniczącego.
+
+## Aktualizacja dokumentu
+
+Aktualizuj tę mapę, gdy zmienia się wspierana platforma, główna technologia,
+rola zależności albo plik będący źródłem prawdy. Zmiana samej wersji zależności
+wymaga aktualizacji wyłącznie w `package.json` i `pnpm-lock.yaml`, o ile nie
+zmienia opisanej tutaj odpowiedzialności lub ograniczenia.
