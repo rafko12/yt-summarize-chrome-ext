@@ -41,8 +41,11 @@ function createPlatform(restoreData = DEFAULT_RESTORE) {
     }),
     configureExistingTabs: vi.fn(async () => undefined),
     configureTab: vi.fn(async () => undefined),
-    persistLocalTabs: vi.fn(async () => undefined),
+    persistLocalTabs: vi.fn<SidePanelPlatform['persistLocalTabs']>(
+      async () => undefined
+    ),
     persistPinned: vi.fn(async () => undefined),
+    persistPinnedWindow: vi.fn(async () => undefined),
     openLocal: vi.fn(async () => undefined),
     closeLocal: vi.fn(async () => undefined),
     openGlobal: vi.fn(async () => undefined),
@@ -129,6 +132,80 @@ describe('side panel controller', () => {
     });
   });
 
+  test('processes an action click received during restoration after the restored state', async () => {
+    const restoring = deferred<SidePanelRestoreData>();
+    const fake = createPlatform();
+    fake.platform.restore.mockReturnValueOnce(restoring.promise);
+    const reportError = vi.fn<(failure: SidePanelFailure) => void>();
+    const installed = installSidePanelController({
+      platform: fake.platform,
+      reportError,
+    });
+
+    fake.emit({ type: 'action-clicked', tabId: 1, windowId: 10 });
+    expect(fake.platform.openLocal).not.toHaveBeenCalled();
+    expect(fake.platform.closeLocal).not.toHaveBeenCalled();
+
+    restoring.resolve({
+      storedLocalTabIds: [1],
+      storedPinned: false,
+      existingTabIds: [1],
+    });
+    await installed.ready;
+    await settlePromises();
+
+    expect(fake.platform.closeLocal).toHaveBeenCalledWith(1);
+    expect(fake.platform.persistLocalTabs).toHaveBeenLastCalledWith([]);
+  });
+  test('does not persist a panel for a tab removed after a click during restoration', async () => {
+    const restoring = deferred<SidePanelRestoreData>();
+    const fake = createPlatform();
+    fake.platform.restore.mockReturnValueOnce(restoring.promise);
+    const reportError = vi.fn<(failure: SidePanelFailure) => void>();
+    const installed = installSidePanelController({
+      platform: fake.platform,
+      reportError,
+    });
+
+    fake.emit({ type: 'action-clicked', tabId: 1, windowId: 10 });
+    await Promise.resolve();
+    fake.emit({ type: 'tab-removed', tabId: 1 });
+    restoring.resolve({
+      storedLocalTabIds: [],
+      storedPinned: false,
+      existingTabIds: [1],
+    });
+    await installed.ready;
+    await settlePromises();
+
+    expect(fake.platform.openLocal).toHaveBeenCalledWith(1);
+    expect(fake.platform.persistLocalTabs).toHaveBeenLastCalledWith([]);
+  });
+  test('waits for a local panel persistence before removing the same tab', async () => {
+    const fake = install();
+    const pendingOpenPersistence = deferred<void>();
+    let persistedTabIds: readonly number[] = [];
+    fake.platform.persistLocalTabs.mockImplementation((tabIds) => {
+      if (tabIds.length === 1) {
+        return pendingOpenPersistence.promise.then(() => {
+          persistedTabIds = [...tabIds];
+          return undefined;
+        });
+      }
+
+      persistedTabIds = [...tabIds];
+      return Promise.resolve(undefined);
+    });
+    await fake.installed.ready;
+
+    fake.emit({ type: 'action-clicked', tabId: 1, windowId: 10 });
+    await Promise.resolve();
+    fake.emit({ type: 'tab-removed', tabId: 1 });
+    pendingOpenPersistence.resolve(undefined);
+    await settlePromises();
+
+    expect(persistedTabIds).toEqual([]);
+  });
   test.each([
     {
       event: { type: 'installed' } as const,
@@ -286,6 +363,23 @@ describe('side panel controller', () => {
     expect(fake.platform.closeEveryPanelInWindow).toHaveBeenCalledWith(10);
   });
 
+  test('closes the pinned panel in its source window after a click in another window', async () => {
+    const fake = install({
+      storedLocalTabIds: [1],
+      storedPinned: true,
+      storedPinnedWindowId: 10,
+      existingTabIds: [1, 2],
+    });
+    await fake.installed.ready;
+
+    fake.emit({ type: 'action-clicked', tabId: 2, windowId: 20 });
+    await settlePromises();
+
+    expect(fake.platform.closeGlobal).toHaveBeenCalledWith(10);
+    expect(fake.platform.closeGlobal).not.toHaveBeenCalledWith(20);
+    expect(fake.platform.closeEveryPanelInWindow).toHaveBeenCalledWith(10);
+  });
+
   test('reports failure without cleanup when closing the global panel fails', async () => {
     const fake = install({
       storedLocalTabIds: [1],
@@ -411,6 +505,24 @@ describe('side panel controller', () => {
     });
   });
 
+  test('does not exit global mode when a panel closes in another window', async () => {
+    const fake = install({
+      storedLocalTabIds: [],
+      storedPinned: true,
+      storedPinnedWindowId: 10,
+      existingTabIds: [1, 2],
+    });
+    await fake.installed.ready;
+
+    fake.emit({ type: 'panel-closed', tabId: 2, windowId: 20 });
+    await settlePromises();
+
+    const reply = vi.fn();
+    fake.emit({ type: 'get-pin-state', reply });
+    await settlePromises();
+    expect(reply).toHaveBeenCalledWith({ isPinnedGlobal: true });
+    expect(fake.platform.closeEveryPanelInWindow).not.toHaveBeenCalled();
+  });
   test('removes local state only for a tracked numeric close notification', async () => {
     const fake = install({
       storedLocalTabIds: [1],
@@ -448,7 +560,7 @@ describe('side panel controller', () => {
     expect(successReply).toHaveBeenCalledWith({ success: true });
 
     const failure = new Error('pin failed');
-    fake.platform.openGlobal.mockRejectedValueOnce(failure);
+    fake.platform.persistPinnedWindow.mockRejectedValueOnce(failure);
     const failureReply = vi.fn();
     fake.emit({
       type: 'pin-global',
@@ -462,9 +574,46 @@ describe('side panel controller', () => {
       error: 'Nie udało się przypiąć panelu.',
     });
     expect(fake.platform.persistPinned).toHaveBeenLastCalledWith(false);
+    expect(fake.platform.closeGlobal).toHaveBeenCalledWith(10);
     expect(fake.platform.persistLocalTabs).toHaveBeenLastCalledWith([2]);
     expect(fake.reportError).toHaveBeenCalledWith({
       message: 'Failed to pin the side panel globally:',
+      cause: failure,
+    });
+  });
+  test('clears stale global pin state restored for a closed window', async () => {
+    const fake = install({
+      storedLocalTabIds: [],
+      storedPinned: true,
+      storedPinnedWindowId: 10,
+      existingTabIds: [1],
+      existingWindowIds: [20],
+    });
+    await fake.installed.ready;
+
+    const reply = vi.fn();
+    fake.emit({ type: 'get-pin-state', reply });
+    await settlePromises();
+    expect(reply).toHaveBeenCalledWith({ isPinnedGlobal: false });
+    expect(fake.platform.persistPinned).toHaveBeenCalledWith(false);
+    expect(fake.platform.persistPinnedWindow).toHaveBeenCalledWith(undefined);
+  });
+  test('continues processing events after a reply callback fails', async () => {
+    const fake = install();
+    await fake.installed.ready;
+    const failure = new Error('reply failed');
+    fake.emit({
+      type: 'panel-init',
+      reply: () => {
+        throw failure;
+      },
+    });
+    fake.emit({ type: 'action-clicked', tabId: 1, windowId: 10 });
+    await settlePromises();
+
+    expect(fake.platform.openLocal).toHaveBeenCalledWith(1);
+    expect(fake.reportError).toHaveBeenCalledWith({
+      message: 'Failed to process side panel event:',
       cause: failure,
     });
   });

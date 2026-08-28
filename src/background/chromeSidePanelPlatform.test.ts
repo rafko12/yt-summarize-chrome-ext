@@ -48,8 +48,9 @@ function platformFixture() {
     },
     storage: {
       session: {
-        get: vi.fn(async () => ({ localTabs: [1, 'wrong'] })),
+        get: vi.fn(async () => ({ localTabs: [1, 'wrong'], pinnedWindow: 4 })),
         set: vi.fn(async () => undefined),
+        remove: vi.fn(async () => undefined),
       },
       local: {
         get: vi.fn(async () => ({ pinned: true })),
@@ -92,12 +93,15 @@ describe('Chrome side panel platform', () => {
       panelPath: 'popup.html',
       localOpenTabsKey: 'localTabs',
       pinStateKey: 'pinned',
+      pinnedWindowKey: 'pinnedWindow',
     });
 
     await expect(platform.restore()).resolves.toEqual({
       storedLocalTabIds: [1, 'wrong'],
       storedPinned: true,
+      storedPinnedWindowId: 4,
       existingTabIds: [1, 2],
+      existingWindowIds: [4, 5],
     });
     await platform.configureExistingTabs();
     await platform.configureTab(9);
@@ -119,6 +123,7 @@ describe('Chrome side panel platform', () => {
       panelPath: 'popup.html',
       localOpenTabsKey: 'localTabs',
       pinStateKey: 'pinned',
+      pinnedWindowKey: 'pinnedWindow',
     });
     const accepted: unknown[] = [];
     const stop = platform.listen((entry) => accepted.push(entry));
@@ -182,6 +187,8 @@ describe('Chrome side panel platform', () => {
 
     await platform.persistLocalTabs([3]);
     await platform.persistPinned(false);
+    await platform.persistPinnedWindow(4);
+    await platform.persistPinnedWindow(undefined);
     await platform.openLocal(3);
     await platform.closeLocal(3);
     await platform.openGlobal(4);
@@ -195,10 +202,16 @@ describe('Chrome side panel platform', () => {
     expect(fake.chromeApi.storage.session.set).toHaveBeenCalledWith({
       localTabs: [3],
     });
+    expect(fake.chromeApi.storage.session.set).toHaveBeenCalledWith({
+      pinnedWindow: 4,
+    });
     expect(fake.chromeApi.storage.local.set).toHaveBeenCalledWith({
       pinned: false,
     });
     expect(fake.chromeApi.sidePanel.open).toHaveBeenCalledWith({ tabId: 3 });
+    expect(fake.chromeApi.storage.session.remove).toHaveBeenCalledWith(
+      'pinnedWindow'
+    );
     expect(fake.chromeApi.sidePanel.open).toHaveBeenCalledWith({ windowId: 4 });
     expect(
       (fake.chromeApi.sidePanel as unknown as { close: () => Promise<void> })

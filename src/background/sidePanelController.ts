@@ -1,7 +1,9 @@
 export interface SidePanelRestoreData {
   storedLocalTabIds: unknown;
   storedPinned: unknown;
+  storedPinnedWindowId?: unknown;
   existingTabIds: readonly number[];
+  existingWindowIds?: readonly number[];
 }
 
 export type SidePanelEvent =
@@ -39,6 +41,7 @@ export interface SidePanelPlatform {
   configureTab(tabId: number): Promise<void>;
   persistLocalTabs(tabIds: readonly number[]): Promise<void>;
   persistPinned(pinned: boolean): Promise<void>;
+  persistPinnedWindow(windowId: number | undefined): Promise<void>;
   openLocal(tabId: number): Promise<void>;
   closeLocal(tabId: number): Promise<void>;
   openGlobal(windowId: number): Promise<void>;
@@ -67,7 +70,7 @@ export function installSidePanelController({
 }: InstallSidePanelControllerOptions): InstalledSidePanelController {
   let isPinnedGlobal = false;
   let localOpenTabIds = new Set<number>();
-  let globalCleanupPromise: Promise<void> | null = null;
+  let pinnedWindowId: number | undefined;
 
   const persistLocalTabs = () =>
     platform.persistLocalTabs([...localOpenTabIds]);
@@ -78,41 +81,71 @@ export function installSidePanelController({
   };
 
   const finishGlobalMode = (windowId: number): Promise<void> => {
-    if (globalCleanupPromise) return globalCleanupPromise;
-
     isPinnedGlobal = false;
     localOpenTabIds.clear();
+    pinnedWindowId = undefined;
 
-    globalCleanupPromise = Promise.all([
+    return Promise.all([
       platform.persistPinned(false),
+      platform.persistPinnedWindow(undefined),
       persistLocalTabs(),
       platform.closeEveryPanelInWindow(windowId),
     ])
-      .then(() => undefined)
-      .finally(() => {
-        globalCleanupPromise = null;
-      });
-
-    return globalCleanupPromise;
+      .catch(async (cause: unknown) => {
+        await Promise.all([
+          platform.persistPinned(false).catch(() => undefined),
+          platform.persistPinnedWindow(undefined).catch(() => undefined),
+          persistLocalTabs().catch(() => undefined),
+        ]);
+        throw cause;
+      })
+      .then(() => undefined);
   };
 
   const ready = platform
     .restore()
-    .then(({ storedLocalTabIds, storedPinned, existingTabIds }) => {
-      const existingTabs = new Set(existingTabIds);
-      const restoredTabs = Array.isArray(storedLocalTabIds)
-        ? storedLocalTabIds
-        : [];
+    .then(
+      ({
+        storedLocalTabIds,
+        storedPinned,
+        storedPinnedWindowId,
+        existingTabIds,
+        existingWindowIds,
+      }) => {
+        const existingTabs = new Set(existingTabIds);
+        const restoredTabs = Array.isArray(storedLocalTabIds)
+          ? storedLocalTabIds
+          : [];
 
-      localOpenTabIds = new Set(
-        restoredTabs.filter(
-          (tabId: unknown): tabId is number =>
-            typeof tabId === 'number' && existingTabs.has(tabId)
-        )
-      );
-      isPinnedGlobal = storedPinned === true;
-      return persistLocalTabs();
-    })
+        localOpenTabIds = new Set(
+          restoredTabs.filter(
+            (tabId: unknown): tabId is number =>
+              typeof tabId === 'number' && existingTabs.has(tabId)
+          )
+        );
+        const restoredPinnedWindowId =
+          typeof storedPinnedWindowId === 'number'
+            ? storedPinnedWindowId
+            : undefined;
+        const isRestoredPinnedWindowAvailable =
+          restoredPinnedWindowId === undefined ||
+          existingWindowIds === undefined ||
+          existingWindowIds.includes(restoredPinnedWindowId);
+        isPinnedGlobal =
+          storedPinned === true && isRestoredPinnedWindowAvailable;
+        pinnedWindowId = isPinnedGlobal ? restoredPinnedWindowId : undefined;
+
+        if (storedPinned === true && !isPinnedGlobal) {
+          return Promise.all([
+            platform.persistPinned(false),
+            platform.persistPinnedWindow(undefined),
+            persistLocalTabs(),
+          ]).then(() => undefined);
+        }
+
+        return persistLocalTabs();
+      }
+    )
     .catch((cause: unknown) => {
       reportError({
         message: 'Failed to restore side panel state:',
@@ -120,159 +153,176 @@ export function installSidePanelController({
       });
     });
 
-  const accept = (event: SidePanelEvent): void => {
+  const processEvent = async (event: SidePanelEvent): Promise<void> => {
     switch (event.type) {
       case 'installed':
-        platform.configureExistingTabs().catch((cause: unknown) => {
+        try {
+          await platform.configureExistingTabs();
+        } catch (cause: unknown) {
           reportError({
             message: 'Failed to configure existing side panels:',
             cause,
           });
-        });
+        }
         break;
 
       case 'startup':
-        platform.configureExistingTabs().catch((cause: unknown) => {
+        try {
+          await platform.configureExistingTabs();
+        } catch (cause: unknown) {
           reportError({
             message: 'Failed to restore side panel configuration:',
             cause,
           });
-        });
+        }
         break;
 
       case 'tab-created':
-        platform.configureTab(event.tabId).catch((cause: unknown) => {
+        try {
+          await platform.configureTab(event.tabId);
+        } catch (cause: unknown) {
           reportError({
             message: 'Failed to configure a new tab side panel:',
             cause,
           });
-        });
+        }
         break;
 
       case 'tab-replaced': {
         const wasOpen = localOpenTabIds.delete(event.removedTabId);
         if (wasOpen) localOpenTabIds.add(event.addedTabId);
-        persistLocalTabs().catch(() => undefined);
-        platform.configureTab(event.addedTabId).catch((cause: unknown) => {
-          reportError({
-            message: 'Failed to configure a replaced tab side panel:',
-            cause,
-          });
-        });
+        await Promise.all([
+          persistLocalTabs().catch(() => undefined),
+          platform.configureTab(event.addedTabId).catch((cause: unknown) => {
+            reportError({
+              message: 'Failed to configure a replaced tab side panel:',
+              cause,
+            });
+          }),
+        ]);
         break;
       }
 
       case 'action-clicked': {
         const { tabId, windowId } = event;
         if (isPinnedGlobal && windowId !== undefined) {
-          platform
-            .closeGlobal(windowId)
-            .then(() => finishGlobalMode(windowId))
-            .catch((cause: unknown) => {
-              reportError({
-                message: 'Failed to close the global side panel:',
-                cause,
-              });
+          try {
+            const globalWindowId = pinnedWindowId ?? windowId;
+            await platform.closeGlobal(globalWindowId);
+            await finishGlobalMode(globalWindowId);
+          } catch (cause: unknown) {
+            reportError({
+              message: 'Failed to close the global side panel:',
+              cause,
             });
+          }
           break;
         }
 
         if (localOpenTabIds.has(tabId)) {
           localOpenTabIds.delete(tabId);
-          Promise.all([platform.closeLocal(tabId), persistLocalTabs()]).catch(
-            (cause: unknown) => {
-              localOpenTabIds.add(tabId);
-              reportError({
-                message: 'Failed to close the local side panel:',
-                cause,
-              });
-            }
-          );
+          try {
+            await Promise.all([platform.closeLocal(tabId), persistLocalTabs()]);
+          } catch (cause: unknown) {
+            localOpenTabIds.add(tabId);
+            reportError({
+              message: 'Failed to close the local side panel:',
+              cause,
+            });
+          }
           break;
         }
 
         localOpenTabIds.add(tabId);
-        Promise.all([platform.openLocal(tabId), persistLocalTabs()]).catch(
-          (cause: unknown) => {
-            localOpenTabIds.delete(tabId);
-            persistLocalTabs().catch(() => undefined);
-            reportError({
-              message: 'Failed to open the local side panel:',
-              cause,
-            });
-          }
-        );
+        try {
+          await Promise.all([platform.openLocal(tabId), persistLocalTabs()]);
+        } catch (cause: unknown) {
+          localOpenTabIds.delete(tabId);
+          await persistLocalTabs().catch(() => undefined);
+          reportError({
+            message: 'Failed to open the local side panel:',
+            cause,
+          });
+        }
         break;
       }
 
       case 'tab-activated':
-        ready.then(() => {
-          if (isPinnedGlobal) {
-            if (localOpenTabIds.has(event.tabId)) {
-              removeLocalTab(event.tabId).catch(() => undefined);
-            }
-            return;
+        if (isPinnedGlobal) {
+          if (localOpenTabIds.has(event.tabId)) {
+            await removeLocalTab(event.tabId).catch(() => undefined);
           }
+          break;
+        }
 
-          if (localOpenTabIds.has(event.tabId)) return;
-          platform.closeLocal(event.tabId).catch(() => undefined);
-        });
+        if (localOpenTabIds.has(event.tabId)) break;
+        await platform.closeLocal(event.tabId).catch(() => undefined);
         break;
 
       case 'tab-removed':
         if (localOpenTabIds.delete(event.tabId)) {
-          persistLocalTabs().catch(() => undefined);
+          await persistLocalTabs().catch(() => undefined);
         }
         break;
 
       case 'panel-closed':
-        ready.then(() => {
-          if (isPinnedGlobal) {
-            finishGlobalMode(event.windowId).catch((cause: unknown) => {
-              reportError({
-                message: 'Failed to clean up global side panels:',
-                cause,
-              });
+        if (isPinnedGlobal) {
+          if (pinnedWindowId !== undefined && event.windowId !== pinnedWindowId)
+            break;
+          try {
+            await finishGlobalMode(event.windowId);
+          } catch (cause: unknown) {
+            reportError({
+              message: 'Failed to clean up global side panels:',
+              cause,
             });
-            return;
           }
+          break;
+        }
 
-          if (
-            typeof event.tabId === 'number' &&
-            localOpenTabIds.delete(event.tabId)
-          ) {
-            persistLocalTabs().catch(() => undefined);
-          }
-        });
+        if (
+          typeof event.tabId === 'number' &&
+          localOpenTabIds.delete(event.tabId)
+        ) {
+          await persistLocalTabs().catch(() => undefined);
+        }
         break;
 
       case 'panel-init':
       case 'get-pin-state':
-        ready.then(() => event.reply({ isPinnedGlobal }));
+        event.reply({ isPinnedGlobal });
         break;
 
       case 'pin-global': {
         const { tabId, windowId, reply } = event;
         isPinnedGlobal = true;
         localOpenTabIds.delete(tabId);
+        pinnedWindowId = windowId;
 
-        const openGlobalPanel = platform.openGlobal(windowId);
-        const persistPinState = platform.persistPinned(true);
-        const persistTabs = persistLocalTabs();
-
-        Promise.all([openGlobalPanel, persistPinState, persistTabs])
-          .then(() => reply({ success: true }))
-          .catch((cause: unknown) => {
-            isPinnedGlobal = false;
-            localOpenTabIds.add(tabId);
-            platform.persistPinned(false).catch(() => undefined);
-            persistLocalTabs().catch(() => undefined);
-            reportError({
-              message: 'Failed to pin the side panel globally:',
-              cause,
-            });
-            reply({ error: 'Nie udało się przypiąć panelu.' });
+        try {
+          await Promise.all([
+            platform.openGlobal(windowId),
+            platform.persistPinned(true),
+            persistLocalTabs(),
+            platform.persistPinnedWindow(windowId),
+          ]);
+          reply({ success: true });
+        } catch (cause: unknown) {
+          isPinnedGlobal = false;
+          pinnedWindowId = undefined;
+          localOpenTabIds.add(tabId);
+          await Promise.all([
+            platform.persistPinnedWindow(undefined).catch(() => undefined),
+            platform.closeGlobal(windowId).catch(() => undefined),
+            platform.persistPinned(false).catch(() => undefined),
+            persistLocalTabs().catch(() => undefined),
+          ]);
+          reportError({
+            message: 'Failed to pin the side panel globally:',
+            cause,
           });
+          reply({ error: 'Nie udało się przypiąć panelu.' });
+        }
         break;
       }
 
@@ -282,6 +332,16 @@ export function installSidePanelController({
         throw new Error(`Unhandled side panel event: ${exhaustiveEvent}`);
       }
     }
+  };
+
+  let eventQueue = ready;
+
+  const accept = (event: SidePanelEvent): void => {
+    eventQueue = eventQueue
+      .then(() => processEvent(event))
+      .catch((cause: unknown) => {
+        reportError({ message: 'Failed to process side panel event:', cause });
+      });
   };
 
   const stopListening = platform.listen(accept);

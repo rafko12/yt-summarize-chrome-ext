@@ -17,11 +17,17 @@ interface ChromeSidePanelPlatformOptions {
   panelPath: string;
   localOpenTabsKey: string;
   pinStateKey: string;
+  pinnedWindowKey: string;
 }
 
 export default function createChromeSidePanelPlatform(
   chromeApi: typeof chrome,
-  { panelPath, localOpenTabsKey, pinStateKey }: ChromeSidePanelPlatformOptions
+  {
+    panelPath,
+    localOpenTabsKey,
+    pinStateKey,
+    pinnedWindowKey,
+  }: ChromeSidePanelPlatformOptions
 ): SidePanelPlatform {
   const sidePanel = chromeApi.sidePanel as SidePanelWithClose;
 
@@ -35,13 +41,15 @@ export default function createChromeSidePanelPlatform(
   return {
     async restore(): Promise<SidePanelRestoreData> {
       const [localResult, pinResult, tabs] = await Promise.all([
-        chromeApi.storage.session.get([localOpenTabsKey]),
+        chromeApi.storage.session.get([localOpenTabsKey, pinnedWindowKey]),
         chromeApi.storage.local.get([pinStateKey]),
         chromeApi.tabs.query({}),
       ]);
       return {
         storedLocalTabIds: localResult[localOpenTabsKey],
         storedPinned: pinResult[pinStateKey],
+        storedPinnedWindowId: localResult[pinnedWindowKey],
+        existingWindowIds: [...new Set(tabs.map((tab) => tab.windowId))],
         existingTabIds: tabs.flatMap((tab) =>
           tab.id === undefined ? [] : [tab.id]
         ),
@@ -146,6 +154,17 @@ export default function createChromeSidePanelPlatform(
 
     persistPinned(pinned) {
       return chromeApi.storage.local.set({ [pinStateKey]: pinned });
+    },
+
+    async persistPinnedWindow(windowId) {
+      if (windowId === undefined) {
+        await chromeApi.storage.session.remove(pinnedWindowKey);
+        return;
+      }
+
+      await chromeApi.storage.session.set({
+        [pinnedWindowKey]: windowId,
+      });
     },
 
     openLocal(tabId) {
