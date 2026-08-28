@@ -1,6 +1,14 @@
+import { resolve } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, './src'),
+      '@utils': resolve(__dirname, './src/utils'),
+      '@assets': resolve(__dirname, './src/assets'),
+    },
+  },
   test: {
     globals: true,
     environment: 'node',
@@ -16,6 +24,13 @@ export default defineConfig({
         'src/**/index.tsx',
         'src/manifest.ts',
       ],
+      thresholds: {
+        lines: 80,
+        branches: 75,
+        'src/background/sidePanelController.ts': {
+          branches: 100,
+        },
+      },
     },
   },
 });

@@ -60,3 +60,7 @@ W ustawieniach rozszerzenia można usunąć zapisane klucze API i Historię anal
 - [Słownik domeny](CONTEXT.md)
 - [Decyzje architektoniczne](docs/adr/)
 - [Manualna lista kontrolna regresji](docs/manual-regression-checklist.md)
+
+## Quality baseline (2026-08-28)
+
+`pnpm check`: 80 tests, 84.05% line coverage, 75.22% branch coverage.
