@@ -1,12 +1,12 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { TranscriptItem } from '../../llm/types';
-import {
-  isErrorResponse,
-  sendMessageToTabWithRetry,
-} from '../../shared/messages';
+import { sendMessageToTabWithRetry } from '../../shared/chromeMessageTransport';
+import { isErrorResponse } from '../../shared/messages';
 import { VideoSession } from '../../shared/video';
 import { getHistory } from '../../utils/storage';
+import createChromeYoutubePagePlatform from '../youtubePage/chromeYoutubePagePlatform';
+import createYoutubePage from '../youtubePage/youtubePage';
 
 interface UseVideoSessionProps {
   onVideoChanged?: () => void;
@@ -19,96 +19,42 @@ export default function useVideoSession({
   const [isSearchingVideo, setIsSearchingVideo] = useState<boolean>(false);
   const [transcript, setTranscript] = useState<TranscriptItem[] | null>(null);
   const [videoError, setVideoError] = useState<string | null>(null);
+  const youtubePage = useMemo(
+    () => createYoutubePage(createChromeYoutubePagePlatform()),
+    []
+  );
 
   const loadActiveVideo = useCallback(async () => {
     setIsSearchingVideo(true);
     setVideoError(null);
     try {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      if (
-        !tab ||
-        !tab.id ||
-        !tab.url ||
-        !tab.url.includes('youtube.com/watch')
-      ) {
+      const activeVideo = await youtubePage.readActiveVideo();
+      if (!activeVideo) {
         setCurrentVideo(null);
         setTranscript(null);
         onVideoChanged?.();
         return null;
       }
 
-      const url = new URL(tab.url);
-      const videoId = url.searchParams.get('v');
-      if (videoId) {
-        const savedHistory = await getHistory();
-        const existingSession = savedHistory.find(
-          (item) => item.videoId === videoId
-        );
+      const savedHistory = await getHistory();
+      const existingSession = savedHistory.find(
+        (item) => item.videoId === activeVideo.videoId
+      );
 
-        if (existingSession) {
-          setCurrentVideo({
-            videoId: existingSession.videoId,
-            title: existingSession.title,
-            author: existingSession.author,
-            thumbnailUrl: existingSession.thumbnailUrl,
-          });
-          setTranscript(existingSession.transcript);
-          // Don't call onVideoChanged here if we are restoring from history,
-          // but wait, if it's a completely new URL, we SHOULD reset analysis state, but then RESTORE the analysis state.
-          // Wait, if it's in history, `usePopupState` did: `setSummary(existingSession.summary); setChatMessages(...)`
-          // We can't do that here since we don't have those setters.
-          // To fix this, `loadActiveVideo` can RETURN the `existingSession` so the caller can restore it.
-          // Or we let `PopupContainer` handle the history restoration via `onRestoreSession(existingSession)`.
-          // For now, let's return the session if found.
-          return existingSession;
-        }
-      }
-
-      // Not in history
-      try {
-        const response = await sendMessageToTabWithRetry(tab.id, {
-          type: 'GET_VIDEO_DATA',
+      if (existingSession) {
+        setCurrentVideo({
+          videoId: existingSession.videoId,
+          title: existingSession.title,
+          author: existingSession.author,
+          thumbnailUrl: existingSession.thumbnailUrl,
         });
-        if (!isErrorResponse(response)) {
-          setCurrentVideo({
-            videoId: response.videoId,
-            title: response.title,
-            author: response.author,
-            thumbnailUrl: response.thumbnailUrl,
-          });
-          setTranscript(null);
-          onVideoChanged?.();
-        } else {
-          // Fallback parsing from Tab details directly
-          const fallbackVideoId = url.searchParams.get('v');
-          if (fallbackVideoId) {
-            setCurrentVideo({
-              videoId: fallbackVideoId,
-              title: tab.title || 'Film YouTube',
-              author: 'YouTube Creator',
-              thumbnailUrl: `https://img.youtube.com/vi/${fallbackVideoId}/hqdefault.jpg`,
-            });
-            setTranscript(null);
-            onVideoChanged?.();
-          }
-        }
-      } catch (err) {
-        // Content script might not be injected yet
-        const fallbackVideoId = url.searchParams.get('v');
-        if (fallbackVideoId) {
-          setCurrentVideo({
-            videoId: fallbackVideoId,
-            title: tab.title || 'Film YouTube',
-            author: 'YouTube Creator',
-            thumbnailUrl: `https://img.youtube.com/vi/${fallbackVideoId}/hqdefault.jpg`,
-          });
-          setTranscript(null);
-          onVideoChanged?.();
-        }
+        setTranscript(existingSession.transcript);
+        return existingSession;
       }
+
+      setCurrentVideo(activeVideo);
+      setTranscript(null);
+      onVideoChanged?.();
     } catch (err) {
       // eslint-disable-next-line no-console
       console.error('Error loading video details:', err);
@@ -116,7 +62,7 @@ export default function useVideoSession({
       setIsSearchingVideo(false);
     }
     return null;
-  }, [onVideoChanged]);
+  }, [onVideoChanged, youtubePage]);
 
   // Sync video and fetch transcript if missing
   const ensureVideoAndTranscript = useCallback(
@@ -135,26 +81,10 @@ export default function useVideoSession({
       let targetVideo = currentVideo!;
 
       if (currentTabVideoId && currentTabVideoId !== currentVideo?.videoId) {
-        try {
-          const response = await sendMessageToTabWithRetry(tab.id, {
-            type: 'GET_VIDEO_DATA',
-          });
-          if (!isErrorResponse(response)) {
-            targetVideo = {
-              videoId: response.videoId,
-              title: response.title,
-              author: response.author,
-              thumbnailUrl: response.thumbnailUrl,
-            };
-          } else {
-            targetVideo = {
-              ...currentVideo!,
-              videoId: currentTabVideoId,
-              title: tab.title || 'Film YouTube',
-              thumbnailUrl: `https://img.youtube.com/vi/${currentTabVideoId}/hqdefault.jpg`,
-            };
-          }
-        } catch (e) {
+        const activeVideo = await youtubePage.readActiveVideo();
+        if (activeVideo) {
+          targetVideo = activeVideo;
+        } else {
           targetVideo = {
             ...currentVideo!,
             videoId: currentTabVideoId,
@@ -193,7 +123,7 @@ export default function useVideoSession({
       setTranscript(response.transcript);
       return { activeTranscript: response.transcript, targetVideo };
     },
-    [currentVideo, onVideoChanged, transcript]
+    [currentVideo, onVideoChanged, transcript, youtubePage]
   );
 
   return {

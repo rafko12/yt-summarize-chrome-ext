@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
+  sendMessageToBackground,
+  sendMessageToTabWithRetry,
+} from './chromeMessageTransport';
+import {
   isBackgroundMessage,
   isContentMessage,
   isErrorResponse,
-  sendMessageToBackground,
-  sendMessageToTabWithRetry,
 } from './messages';
 
 beforeEach(() => {
@@ -25,6 +27,9 @@ beforeEach(() => {
 describe('communication contract', () => {
   test('recognizes only complete content and background messages', () => {
     expect(isContentMessage({ type: 'GET_VIDEO_DATA' })).toBe(true);
+    expect(isContentMessage({ type: 'GET_VIDEO_DATA', extra: true })).toBe(
+      false
+    );
     expect(
       isContentMessage({
         type: 'GET_TRANSCRIPT',

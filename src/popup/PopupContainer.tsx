@@ -8,11 +8,8 @@ import {
 } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
-import {
-  isBackgroundMessage,
-  isErrorResponse,
-  sendMessageToBackground,
-} from '../shared/messages';
+import { sendMessageToBackground } from '../shared/chromeMessageTransport';
+import { isBackgroundMessage, isErrorResponse } from '../shared/messages';
 import { clearApiKeysAndHistory, HistoryItem } from '../utils/storage';
 import AnalyzeView from './components/AnalyzeView';
 import { Header, PopupTab } from './components/Header';
@@ -95,7 +92,7 @@ export default function PopupContainer(): JSX.Element {
 
   // Update background url change handler in PopupContainer to trigger logic across hooks
   useEffect(() => {
-    const handleRuntimeMessage = (message: unknown) => {
+    const handleRuntimeMessage = (message: unknown): false => {
       // Nasłuch na aktualizacje w locie - jak zmienił się URL YouTube
       if (
         isBackgroundMessage(message) &&
@@ -103,6 +100,7 @@ export default function PopupContainer(): JSX.Element {
       ) {
         loadAndRestoreSession();
       }
+      return false;
     };
     chrome.runtime.onMessage.addListener(handleRuntimeMessage);
     return () => {

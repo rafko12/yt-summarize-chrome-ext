@@ -3,11 +3,18 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
+import registerYoutubeUrlUpdates from '../background/youtubeUrlUpdates';
 import PopupContainer from './PopupContainer';
 
-type RuntimeListener = (message: unknown) => void;
+type RuntimeListener = (message: unknown) => boolean;
+type TabUpdatedListener = (
+  tabId: number,
+  changeInfo: chrome.tabs.TabChangeInfo
+) => void;
 let stored: Record<string, unknown>;
 let runtimeListener: RuntimeListener | undefined;
+let tabUpdatedListener: TabUpdatedListener | undefined;
+let activeTab: Partial<chrome.tabs.Tab>;
 
 beforeEach(() => {
   stored = {
@@ -17,6 +24,13 @@ beforeEach(() => {
     ui_theme: 'night',
   };
   runtimeListener = undefined;
+  tabUpdatedListener = undefined;
+  activeTab = {
+    id: 3,
+    windowId: 4,
+    url: 'https://www.youtube.com/watch?v=movie',
+    title: 'Movie from tab',
+  };
   global.fetch = vi.fn(async () => ({
     ok: true,
     json: async () => ({
@@ -30,14 +44,15 @@ beforeEach(() => {
     ...chrome,
     tabs: {
       ...chrome.tabs,
-      query: vi.fn(async () => [
-        {
-          id: 3,
-          windowId: 4,
-          url: 'https://www.youtube.com/watch?v=movie',
-          title: 'Movie from tab',
-        },
-      ]),
+      query: vi.fn(async () => [activeTab]),
+      get: vi.fn(async (tabId: number) =>
+        tabId === 3
+          ? {
+              id: 3,
+              url: 'https://www.youtube.com/watch?v=movie',
+            }
+          : undefined
+      ),
       sendMessage: vi.fn(async (_tabId, message) => {
         if (message.type === 'GET_TRANSCRIPT') {
           return {
@@ -56,6 +71,12 @@ beforeEach(() => {
         }
         return { success: true };
       }),
+      onUpdated: {
+        addListener: vi.fn((listener: TabUpdatedListener) => {
+          tabUpdatedListener = listener;
+        }),
+        removeListener: vi.fn(),
+      },
     },
     storage: {
       local: {
@@ -78,11 +99,15 @@ beforeEach(() => {
     },
     runtime: {
       ...chrome.runtime,
-      sendMessage: vi.fn(async (message) =>
-        message.type === 'PANEL_INIT'
+      sendMessage: vi.fn(async (message) => {
+        if (message.type === 'YOUTUBE_URL_UPDATED') {
+          runtimeListener?.(message);
+          return undefined;
+        }
+        return message.type === 'PANEL_INIT'
           ? { success: true, isPinnedGlobal: false }
-          : { success: true }
-      ),
+          : { success: true };
+      }),
       onMessage: {
         addListener: vi.fn((listener: RuntimeListener) => {
           runtimeListener = listener;
@@ -159,5 +184,75 @@ describe('popup user flow', () => {
         type: 'GET_VIDEO_DATA',
       })
     );
+  });
+
+  test('refreshes the visible Film after a YouTube URL update', async () => {
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    vi.mocked(chrome.tabs.sendMessage).mockClear();
+    activeTab = {
+      id: 3,
+      windowId: 4,
+      url: 'https://www.youtube.com/watch?v=next-movie',
+      title: 'Next Movie from tab',
+    };
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValueOnce({
+      success: true,
+      videoId: 'next-movie',
+      title: 'Next Movie',
+      author: 'Next Creator',
+      thumbnailUrl: 'next-thumbnail',
+    });
+
+    expect(runtimeListener).toBeDefined();
+    expect(
+      runtimeListener!({
+        type: 'YOUTUBE_URL_UPDATED',
+        tabId: 3,
+        url: 'https://www.youtube.com/watch?v=next-movie',
+      })
+    ).toBe(false);
+
+    await waitFor(() =>
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(3, {
+        type: 'GET_VIDEO_DATA',
+      })
+    );
+    await waitFor(() => expect(screen.getByText('Next Movie')).toBeVisible());
+  });
+
+  test('refreshes the visible Film from a YouTube tab update event', async () => {
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+    activeTab = {
+      id: 3,
+      windowId: 4,
+      url: 'https://www.youtube.com/watch?v=next-movie',
+      title: 'Next Movie from tab',
+    };
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValueOnce({
+      success: true,
+      videoId: 'next-movie',
+      title: 'Next Movie',
+      author: 'Next Creator',
+      thumbnailUrl: 'next-thumbnail',
+    });
+
+    const unregister = registerYoutubeUrlUpdates(chrome);
+    expect(tabUpdatedListener).toBeDefined();
+    tabUpdatedListener!(3, {
+      url: 'https://www.youtube.com/watch?v=next-movie',
+    });
+
+    await waitFor(() =>
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(3, {
+        type: 'GET_VIDEO_DATA',
+      })
+    );
+    await waitFor(() => expect(screen.getByText('Next Movie')).toBeVisible());
+    unregister();
   });
 });

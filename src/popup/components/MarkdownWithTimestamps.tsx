@@ -1,6 +1,6 @@
 import { JSX } from 'react';
 
-import { sendMessageToTabWithRetry } from '../../shared/messages';
+import { sendMessageToTabWithRetry } from '../../shared/chromeMessageTransport';
 import { parseTimestamp } from '../../utils/time';
 
 const timestampRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;

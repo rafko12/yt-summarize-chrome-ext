@@ -73,7 +73,9 @@ describe('content script messages', () => {
         reply
       )
     ).toBe(false);
-    expect(reply).toHaveBeenCalledWith({ error: expect.any(String) });
+    expect(reply).toHaveBeenCalledWith({
+      error: 'Nie jesteś na stronie filmu YouTube.',
+    });
     expect(
       listener({ type: 'UNKNOWN' }, {} as chrome.runtime.MessageSender, reply)
     ).toBe(false);
