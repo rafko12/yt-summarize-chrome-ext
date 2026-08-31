@@ -1,25 +1,17 @@
-import {
-  JSX,
-  MouseEvent,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { JSX, MouseEvent, useEffect, useRef, useState } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
 import { AnalysisRecord } from '../analysisHistory/analysisHistory';
 import { sendMessageToBackground } from '../shared/chromeMessageTransport';
 import { isBackgroundMessage, isErrorResponse } from '../shared/messages';
 import { clearApiKeysAndHistory } from '../utils/storage';
+import useAnalysisSession from './analysisSession/useAnalysisSession';
 import AnalyzeView from './components/AnalyzeView';
 import { Header, PopupTab } from './components/Header';
 import HistoryView from './components/HistoryView';
 import SettingsView from './components/SettingsView';
-import useChat from './hooks/useChat';
 import useHistory from './hooks/useHistory';
 import useSettings from './hooks/useSettings';
-import useVideoSession from './hooks/useVideoSession';
 
 export default function PopupContainer(): JSX.Element {
   const [activeTab, setActiveTab] = useState<PopupTab>('analyze');
@@ -27,7 +19,6 @@ export default function PopupContainer(): JSX.Element {
   const panelContextRef = useRef<{ tabId: number; windowId: number } | null>(
     null
   );
-  const resetAnalysisRef = useRef<() => void>(() => undefined);
 
   // Ustawienia (theme, api keys)
   const settingsHook = useSettings();
@@ -35,35 +26,16 @@ export default function PopupContainer(): JSX.Element {
   // Historia (historia zapisanych wpisów)
   const historyHook = useHistory();
 
-  // Aktywne wideo (zmiana tabu, nowe id, transkrypcje, ładowanie z content script)
-  const handleVideoChanged = useCallback(() => resetAnalysisRef.current(), []);
-  const videoHook = useVideoSession({ onVideoChanged: handleVideoChanged });
-
-  // Czat i generowanie podsumowania
-  const chatHook = useChat({
-    settings: settingsHook.settings,
-    apiKeys: settingsHook.apiKeys,
-    currentVideo: videoHook.currentVideo,
-    transcript: videoHook.transcript,
-    ensureVideoAndTranscript: videoHook.ensureVideoAndTranscript,
+  // Sesja analizy (Film, transkrypcja, podsumowanie, rozmowa, błędy i rewizje operacji)
+  const analysisSession = useAnalysisSession({
     onHistoryUpdated: historyHook.loadHistory,
     onRequireSettings: (msg) => {
       setActiveTab('settings');
-      chatHook.setErrorMessage(msg);
+      analysisSession.setErrorMessage(msg);
     },
   });
-  const { resetAnalysisState, setChatMessages, setSummary } = chatHook;
-  const { loadActiveVideo } = videoHook;
-  resetAnalysisRef.current = chatHook.resetAnalysisState;
 
-  const loadAndRestoreSession = useCallback(async () => {
-    const sessionToRestore = await loadActiveVideo();
-    if (!sessionToRestore) return;
-
-    resetAnalysisState();
-    setSummary(sessionToRestore.summary);
-    setChatMessages(sessionToRestore.chat || []);
-  }, [loadActiveVideo, resetAnalysisState, setChatMessages, setSummary]);
+  const { loadActiveVideo } = analysisSession;
 
   // Inicjalizacja side panelu, nasłuchiwanie i sprawdzanie przypięcia
   useEffect(() => {
@@ -86,20 +58,19 @@ export default function PopupContainer(): JSX.Element {
         }
       }
 
-      await loadAndRestoreSession();
+      await loadActiveVideo();
     };
     initPanel();
-  }, [loadAndRestoreSession]);
+  }, [loadActiveVideo]);
 
-  // Update background url change handler in PopupContainer to trigger logic across hooks
+  // Nasłuch na aktualizacje w locie - jak zmienił się URL YouTube
   useEffect(() => {
     const handleRuntimeMessage = (message: unknown): false => {
-      // Nasłuch na aktualizacje w locie - jak zmienił się URL YouTube
       if (
         isBackgroundMessage(message) &&
         message.type === 'YOUTUBE_URL_UPDATED'
       ) {
-        loadAndRestoreSession();
+        loadActiveVideo();
       }
       return false;
     };
@@ -107,7 +78,7 @@ export default function PopupContainer(): JSX.Element {
     return () => {
       chrome.runtime.onMessage.removeListener(handleRuntimeMessage);
     };
-  }, [loadAndRestoreSession]);
+  }, [loadActiveVideo]);
 
   const handlePinGlobal = () => {
     const panelContext = panelContextRef.current;
@@ -126,24 +97,14 @@ export default function PopupContainer(): JSX.Element {
   };
 
   const handleResumeSession = (item: AnalysisRecord) => {
-    chatHook.resetAnalysisState();
-    videoHook.setCurrentVideo({
-      videoId: item.videoId,
-      title: item.title,
-      author: item.author,
-      thumbnailUrl: item.thumbnailUrl,
-    });
-    videoHook.setTranscript(item.transcript);
-    chatHook.setSummary(item.summary);
-    chatHook.setChatMessages(item.chat || []);
+    analysisSession.handleResumeSession(item);
     setActiveTab('analyze');
   };
 
   const handleDeleteHistory = async (e: MouseEvent, videoId: string) => {
     const deleted = await historyHook.handleDeleteHistory(e, videoId);
-    if (deleted && videoHook.currentVideo?.videoId === videoId) {
-      chatHook.resetAnalysisState();
-      videoHook.setTranscript(null);
+    if (deleted) {
+      analysisSession.handleDeleteHistoryCleanup(videoId);
     }
   };
 
@@ -157,8 +118,7 @@ export default function PopupContainer(): JSX.Element {
       await clearApiKeysAndHistory();
       settingsHook.clearApiKeyState();
       await historyHook.loadHistory();
-      chatHook.resetAnalysisState();
-      videoHook.setTranscript(null);
+      analysisSession.handleClearSession();
     }
   };
 
@@ -175,14 +135,14 @@ export default function PopupContainer(): JSX.Element {
         />
 
         <main className='bg-base-100/95 flex min-h-0 flex-1 flex-col overflow-hidden p-3.5'>
-          {chatHook.errorMessage && (
+          {analysisSession.errorMessage && (
             <div className='border-warning/30 bg-warning/15 text-base-content mb-3 flex items-start gap-2.5 rounded-xl border p-3 text-xs shadow-md'>
               <WarningCircle
                 weight='fill'
                 className='text-warning mt-0.5 h-5 w-5 shrink-0'
               />
               <span className='font-medium leading-relaxed'>
-                {chatHook.errorMessage}
+                {analysisSession.errorMessage}
               </span>
             </div>
           )}
@@ -190,21 +150,32 @@ export default function PopupContainer(): JSX.Element {
           {activeTab === 'analyze' && (
             <AnalyzeView
               hasAnyKey={settingsHook.hasAnyKey}
-              isSearchingVideo={videoHook.isSearchingVideo}
-              currentVideo={videoHook.currentVideo}
-              isLoading={chatHook.isLoading}
-              loadingMessage={chatHook.loadingMessage}
-              summary={chatHook.summary}
-              chatMessages={chatHook.chatMessages}
-              isSendingChat={chatHook.isSendingChat}
-              chatInput={chatHook.chatInput}
+              isSearchingVideo={analysisSession.isSearchingVideo}
+              currentVideo={analysisSession.currentVideo}
+              isLoading={analysisSession.isLoading}
+              loadingMessage={analysisSession.loadingMessage}
+              summary={analysisSession.summary}
+              chatMessages={analysisSession.chatMessages}
+              isSendingChat={analysisSession.isSendingChat}
+              chatInput={analysisSession.chatInput}
               settings={settingsHook.settings}
-              chatListRef={chatHook.chatListRef}
-              onLoadActiveVideo={loadAndRestoreSession}
-              onClearChat={chatHook.handleClearChat}
-              onSendChatMessage={chatHook.handleSendChatMessage}
-              onChatInputChange={chatHook.setChatInput}
-              onSummarizeVideo={chatHook.handleSummarizeVideo}
+              chatListRef={analysisSession.chatListRef}
+              onLoadActiveVideo={analysisSession.loadActiveVideo}
+              onClearChat={analysisSession.handleClearChat}
+              onSendChatMessage={(e) =>
+                analysisSession.handleSendChatMessage(
+                  e,
+                  settingsHook.settings,
+                  settingsHook.apiKeys
+                )
+              }
+              onChatInputChange={analysisSession.setChatInput}
+              onSummarizeVideo={() =>
+                analysisSession.handleSummarizeVideo(
+                  settingsHook.settings,
+                  settingsHook.apiKeys
+                )
+              }
               onSetActiveTab={setActiveTab}
             />
           )}

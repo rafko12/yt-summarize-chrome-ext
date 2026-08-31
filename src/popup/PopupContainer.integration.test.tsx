@@ -269,4 +269,167 @@ describe('popup user flow', () => {
     await waitFor(() => expect(screen.getByText('Next Movie')).toBeVisible());
     unregister();
   });
+
+  test('opens popup on a video with saved history and restores summary and chat atomically', async () => {
+    stored.summarizer_history = [
+      {
+        videoId: 'movie',
+        title: 'Saved Movie Title',
+        author: 'Saved Author',
+        thumbnailUrl: 'saved-thumbnail',
+        summary: 'Saved analysis summary text',
+        transcript: [{ start: 0, duration: 5, text: 'Transcript part' }],
+        chat: [{ role: 'user', message: 'Existing chat message' }],
+        createdAt: 123456789,
+      },
+    ];
+
+    render(<PopupContainer />);
+
+    await waitFor(() =>
+      expect(screen.getByText('Saved Movie Title')).toBeVisible()
+    );
+    expect(screen.getByText('Saved analysis summary text')).toBeVisible();
+    expect(screen.getByText('Existing chat message')).toBeVisible();
+  });
+
+  test('handles missing API key for selected provider when requesting summary by switching to settings view', async () => {
+    stored.gemini_api_key = '';
+    stored.openai_api_key = 'openai-fallback-key';
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Konfiguracja/)).toBeVisible();
+      expect(
+        screen.getByText(/Aby podsumować film, musisz najpierw podać klucz API/)
+      ).toBeVisible();
+    });
+  });
+
+  test('handles AI error during summary generation gracefully', async () => {
+    global.fetch = vi.fn(async () => ({
+      ok: false,
+      status: 401,
+      json: async () => ({
+        error: { message: 'Invalid API key' },
+      }),
+    })) as unknown as typeof fetch;
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Klucz API został odrzucony/)).toBeVisible();
+    });
+  });
+
+  test('handles transcript error during summary generation gracefully', async () => {
+    vi.mocked(chrome.tabs.sendMessage).mockImplementation(
+      async (_tabId, message: unknown) => {
+        const msg = message as { type?: string };
+        if (msg?.type === 'GET_TRANSCRIPT') {
+          return {
+            error: 'Brak napisów dla tego filmu.',
+          };
+        }
+        if (msg?.type === 'GET_VIDEO_DATA') {
+          return {
+            success: true,
+            videoId: 'movie',
+            title: 'Movie',
+            author: 'Creator',
+            thumbnailUrl: 'thumbnail',
+          };
+        }
+        return { success: true };
+      }
+    );
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText('Brak napisów dla tego filmu.')).toBeVisible();
+    });
+  });
+
+  test('ignores in-flight summary generation result if video was changed during generation', async () => {
+    let resolveAiFetch: (value: unknown) => void;
+    const pendingFetchPromise = new Promise((resolve) => {
+      resolveAiFetch = resolve;
+    });
+
+    global.fetch = vi.fn(() => pendingFetchPromise) as unknown as typeof fetch;
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // Start generation for Film A ("movie")
+    fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(
+          'Generowanie podsumowania (może potrwać kilka sekund)...'
+        )
+      ).toBeVisible()
+    );
+
+    // Switch video to Film B ("other-movie") while generation is pending
+    activeTab = {
+      id: 3,
+      windowId: 4,
+      url: 'https://www.youtube.com/watch?v=other-movie',
+      title: 'Other Movie from tab',
+    };
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      success: true,
+      videoId: 'other-movie',
+      title: 'Other Movie',
+      author: 'Other Creator',
+      thumbnailUrl: 'other-thumbnail',
+    });
+
+    await act(async () => {
+      runtimeListener!({
+        type: 'YOUTUBE_URL_UPDATED',
+        tabId: 3,
+        url: 'https://www.youtube.com/watch?v=other-movie',
+      });
+    });
+
+    await waitFor(() => expect(screen.getByText('Other Movie')).toBeVisible());
+
+    // Now Film A AI fetch completes
+    await act(async () => {
+      resolveAiFetch!({
+        ok: true,
+        json: async () => ({
+          candidates: [
+            { content: { parts: [{ text: 'Old movie AI summary' }] } },
+          ],
+        }),
+      });
+    });
+
+    // Verify that Other Movie does NOT show Film A's summary or error
+    expect(screen.queryByText('Old movie AI summary')).not.toBeInTheDocument();
+    expect(screen.getByText('Other Movie')).toBeVisible();
+    // And storage does not save Film A summary under other-movie
+    expect(
+      (stored.summarizer_history as unknown[]).some(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (r: any) => r.videoId === 'other-movie'
+      )
+    ).toBe(false);
+  });
 });
