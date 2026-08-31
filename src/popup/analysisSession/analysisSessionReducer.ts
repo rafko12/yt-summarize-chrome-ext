@@ -132,11 +132,7 @@ export function analysisSessionReducer(
 
     case 'CHAT_SUCCESS':
       if (action.revision !== state.revision) {
-        return {
-          ...state,
-          isSendingChat: false,
-          isLoading: false,
-        };
+        return state;
       }
       return {
         ...state,
@@ -146,6 +142,9 @@ export function analysisSessionReducer(
       };
 
     case 'CHAT_FAILURE':
+      if (action.revision !== state.revision) {
+        return state;
+      }
       return {
         ...state,
         chatMessages: [

@@ -432,4 +432,361 @@ describe('popup user flow', () => {
       )
     ).toBe(false);
   });
+
+  test('resumes a saved session from History tab and continues conversation updating only target record', async () => {
+    stored.summarizer_history = [
+      {
+        videoId: 'history-vid',
+        title: 'History Video Title',
+        author: 'History Author',
+        thumbnailUrl: 'https://example.com/hist.jpg',
+        summary: 'Saved summary for history video',
+        transcript: [{ start: 0, duration: 3, text: 'Hello history' }],
+        chat: [
+          { role: 'user', message: 'Prior question' },
+          { role: 'model', message: 'Prior answer' },
+        ],
+        createdAt: 1000,
+      },
+      {
+        videoId: 'other-vid',
+        title: 'Other Saved Video',
+        author: 'Other Author',
+        thumbnailUrl: 'https://example.com/other.jpg',
+        summary: 'Other summary',
+        transcript: [],
+        chat: [],
+        createdAt: 900,
+      },
+    ];
+
+    render(<PopupContainer />);
+
+    // Wait for active tab video to load first
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // Switch to History tab
+    fireEvent.click(screen.getByRole('button', { name: 'Historia' }));
+    await waitFor(() =>
+      expect(screen.getByText('History Video Title')).toBeVisible()
+    );
+
+    // Click on the saved history item
+    fireEvent.click(screen.getByText('History Video Title'));
+
+    // Verify active tab switched to analyze with restored data
+    await waitFor(() =>
+      expect(screen.getByText('History Video Title')).toBeVisible()
+    );
+    expect(screen.getByText('Saved summary for history video')).toBeVisible();
+    expect(screen.getByText('Prior question')).toBeVisible();
+    expect(screen.getByText('Prior answer')).toBeVisible();
+
+    // Now send a new question in the resumed session
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        candidates: [{ content: { parts: [{ text: 'Fresh AI chat reply' }] } }],
+      }),
+    })) as unknown as typeof fetch;
+
+    fireEvent.change(screen.getByPlaceholderText(/Zadaj/), {
+      target: { value: 'New follow-up question' },
+    });
+    fireEvent.submit(screen.getByPlaceholderText(/Zadaj/).closest('form')!);
+
+    await waitFor(() =>
+      expect(screen.getByText('Fresh AI chat reply')).toBeVisible()
+    );
+    expect(screen.getByText('New follow-up question')).toBeVisible();
+
+    // Verify storage only updated history-vid
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const updatedHistory = stored.summarizer_history as any[];
+    const historyVid = updatedHistory.find((r) => r.videoId === 'history-vid');
+    const otherVid = updatedHistory.find((r) => r.videoId === 'other-vid');
+
+    expect(historyVid.chat).toHaveLength(4);
+    expect(historyVid.chat[2]).toEqual({
+      role: 'user',
+      message: 'New follow-up question',
+    });
+    expect(historyVid.chat[3]).toEqual({
+      role: 'model',
+      message: 'Fresh AI chat reply',
+    });
+    expect(otherVid.chat).toHaveLength(0);
+  });
+
+  test('sends a chat question when transcript is not pre-fetched, retrieving transcript automatically', async () => {
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        candidates: [
+          { content: { parts: [{ text: 'Response with auto transcript' }] } },
+        ],
+      }),
+    })) as unknown as typeof fetch;
+
+    fireEvent.change(screen.getByPlaceholderText(/Zadaj/), {
+      target: { value: 'Question before summary' },
+    });
+    fireEvent.submit(screen.getByPlaceholderText(/Zadaj/).closest('form')!);
+
+    // Should fetch transcript first and then get chat reply
+    await waitFor(() =>
+      expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(
+        3,
+        expect.objectContaining({ type: 'GET_TRANSCRIPT' })
+      )
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText('Response with auto transcript')).toBeVisible()
+    );
+    expect(screen.getByText('Question before summary')).toBeVisible();
+
+    // Verify history record is created
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const saved = (stored.summarizer_history as any[]).find(
+      (r) => r.videoId === 'movie'
+    );
+    expect(saved).toBeDefined();
+    expect(saved.transcript).toEqual([
+      { start: 0, duration: 2, text: 'Transcript' },
+    ]);
+    expect(saved.chat).toHaveLength(2);
+  });
+
+  test('handles AI error during chat while preserving existing chat history', async () => {
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // First successful message
+    fireEvent.change(screen.getByPlaceholderText(/Zadaj/), {
+      target: { value: 'Initial question' },
+    });
+    fireEvent.submit(screen.getByPlaceholderText(/Zadaj/).closest('form')!);
+    await waitFor(() => expect(screen.getByText('AI response')).toBeVisible());
+
+    // Second message fails
+    global.fetch = vi.fn(async () => ({
+      ok: false,
+      status: 500,
+      json: async () => ({
+        error: { message: 'AI service unavailable' },
+      }),
+    })) as unknown as typeof fetch;
+
+    fireEvent.change(screen.getByPlaceholderText(/Zadaj/), {
+      target: { value: 'Failing question' },
+    });
+    fireEvent.submit(screen.getByPlaceholderText(/Zadaj/).closest('form')!);
+
+    await waitFor(() => expect(screen.getByText(/Błąd czatu/)).toBeVisible());
+
+    // Initial conversation is still preserved!
+    expect(screen.getByText('Initial question')).toBeVisible();
+    expect(screen.getByText('AI response')).toBeVisible();
+    expect(screen.getByText('Failing question')).toBeVisible();
+  });
+
+  test('ignores in-flight chat response if video was changed during request', async () => {
+    stored.summarizer_history = [
+      {
+        videoId: 'movie',
+        title: 'Movie',
+        author: 'Creator',
+        thumbnailUrl: 'thumbnail',
+        summary: null,
+        transcript: [{ start: 0, duration: 2, text: 'Transcript' }],
+        chat: [],
+        createdAt: 1000,
+      },
+    ];
+
+    let resolveChatFetch: (value: unknown) => void;
+    const pendingChatPromise = new Promise((resolve) => {
+      resolveChatFetch = resolve;
+    });
+
+    global.fetch = vi.fn(() => pendingChatPromise) as unknown as typeof fetch;
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // Start chat request on Film A ("movie")
+    fireEvent.change(screen.getByPlaceholderText(/Zadaj/), {
+      target: { value: 'Chat question for Film A' },
+    });
+    fireEvent.submit(screen.getByPlaceholderText(/Zadaj/).closest('form')!);
+
+    await waitFor(() =>
+      expect(screen.getByText('Chat question for Film A')).toBeVisible()
+    );
+
+    // Switch video to Film B ("other-movie") while chat request is pending
+    activeTab = {
+      id: 3,
+      windowId: 4,
+      url: 'https://www.youtube.com/watch?v=other-movie',
+      title: 'Other Movie from tab',
+    };
+    vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
+      success: true,
+      videoId: 'other-movie',
+      title: 'Other Movie',
+      author: 'Other Creator',
+      thumbnailUrl: 'other-thumbnail',
+    });
+
+    await act(async () => {
+      runtimeListener!({
+        type: 'YOUTUBE_URL_UPDATED',
+        tabId: 3,
+        url: 'https://www.youtube.com/watch?v=other-movie',
+      });
+    });
+
+    await waitFor(() => expect(screen.getByText('Other Movie')).toBeVisible());
+
+    // Now Film A chat response completes
+    await act(async () => {
+      resolveChatFetch!({
+        ok: true,
+        json: async () => ({
+          candidates: [{ content: { parts: [{ text: 'Film A Chat Reply' }] } }],
+        }),
+      });
+    });
+
+    // Verify Film B does not display Film A's reply or question
+    expect(screen.queryByText('Film A Chat Reply')).not.toBeInTheDocument();
+    expect(
+      screen.queryByText('Chat question for Film A')
+    ).not.toBeInTheDocument();
+  });
+
+  test('allows user to clear chat and updates stored record', async () => {
+    vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
+    stored.summarizer_history = [
+      {
+        videoId: 'movie',
+        title: 'Movie',
+        author: 'Creator',
+        thumbnailUrl: 'thumbnail',
+        summary: 'Existing summary',
+        transcript: [{ start: 0, duration: 2, text: 'Transcript' }],
+        chat: [
+          { role: 'user', message: 'Hello' },
+          { role: 'model', message: 'Hi there' },
+        ],
+        createdAt: 1000,
+      },
+    ];
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+    expect(screen.getByText('Hi there')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Wyczyść' }));
+
+    await waitFor(() =>
+      expect(screen.queryByText('Hi there')).not.toBeInTheDocument()
+    );
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record = (stored.summarizer_history as any[]).find(
+      (r) => r.videoId === 'movie'
+    );
+    expect(record.chat).toEqual([]);
+  });
+
+  test('cleans up analysis session when current video history record is deleted', async () => {
+    vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
+    stored.summarizer_history = [
+      {
+        videoId: 'movie',
+        title: 'Movie',
+        author: 'Creator',
+        thumbnailUrl: 'thumbnail',
+        summary: 'Summary to delete',
+        transcript: [{ start: 0, duration: 2, text: 'Transcript' }],
+        chat: [],
+        createdAt: 1000,
+      },
+    ];
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+    expect(screen.getByText('Summary to delete')).toBeVisible();
+
+    // Switch to History tab and delete the record
+    fireEvent.click(screen.getByRole('button', { name: 'Historia' }));
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Usuń z historii' }));
+
+    // Switch back to analyze tab
+    fireEvent.click(screen.getByRole('button', { name: 'Analizuj' }));
+
+    await waitFor(() => {
+      expect(screen.queryByText('Summary to delete')).not.toBeInTheDocument();
+      // Should show Generate Summary button again
+      expect(screen.getByRole('button', { name: /Generuj/ })).toBeVisible();
+    });
+  });
+
+  test('clears all API keys and history when user confirms in settings', async () => {
+    vi.spyOn(window, 'confirm').mockImplementation(() => true);
+
+    stored.gemini_api_key = 'some-key';
+    stored.summarizer_history = [
+      {
+        videoId: 'movie',
+        title: 'Movie',
+        author: 'Creator',
+        thumbnailUrl: 'thumbnail',
+        summary: 'Some summary',
+        transcript: [],
+        chat: [],
+        createdAt: 1000,
+      },
+    ];
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // Switch to settings
+    fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+    await waitFor(() => expect(screen.getByText(/Konfiguracja/)).toBeVisible());
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /Usuń wszystkie klucze API i historię/,
+      })
+    );
+
+    await waitFor(() => {
+      expect(stored.gemini_api_key).toBe('');
+      expect(stored.summarizer_history).toEqual([]);
+    });
+
+    // Switch back to analyze tab
+    fireEvent.click(screen.getByRole('button', { name: 'Analizuj' }));
+    await waitFor(() =>
+      expect(screen.getByText('Wymagany klucz API')).toBeVisible()
+    );
+  });
 });

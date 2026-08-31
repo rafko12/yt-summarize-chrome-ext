@@ -113,12 +113,6 @@ export default function useAnalysisSession({
   const ensureVideoAndTranscript = useCallback(
     async (language: string, onInjecting?: () => void) => {
       let targetVideo = stateRef.current.currentVideo!;
-      const activeVideo = await youtubePage.readActiveVideo(targetVideo);
-
-      if (activeVideo && activeVideo.videoId !== targetVideo.videoId) {
-        targetVideo = activeVideo;
-        dispatch({ type: 'SET_ACTIVE_VIDEO', video: targetVideo });
-      }
 
       if (
         stateRef.current.transcript &&
@@ -128,6 +122,13 @@ export default function useAnalysisSession({
           activeTranscript: stateRef.current.transcript,
           targetVideo,
         };
+      }
+
+      const activeVideo = await youtubePage.readActiveVideo(targetVideo);
+
+      if (activeVideo && activeVideo.videoId !== targetVideo.videoId) {
+        targetVideo = activeVideo;
+        dispatch({ type: 'SET_ACTIVE_VIDEO', video: targetVideo });
       }
 
       const response = await youtubePage.fetchActiveTranscript(
@@ -347,6 +348,7 @@ export default function useAnalysisSession({
       } catch (err: unknown) {
         // eslint-disable-next-line no-console
         console.error(err);
+        if (requestRevision !== stateRef.current.revision) return;
         dispatch({
           type: 'CHAT_FAILURE',
           revision: requestRevision,

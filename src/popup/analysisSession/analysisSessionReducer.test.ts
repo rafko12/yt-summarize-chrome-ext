@@ -173,14 +173,21 @@ describe('analysisSessionReducer', () => {
     });
     expect(stopLoading.isLoading).toBe(false);
 
-    // Outdated revision in chat success resets sending flag without adding message
+    // Outdated revision in chat success leaves state completely untouched
     const outdatedSuccess = analysisSessionReducer(stopLoading, {
       type: 'CHAT_SUCCESS',
       revision: 999,
       modelMessage: { role: 'model', message: 'Outdated reply' },
     });
-    expect(outdatedSuccess.isSendingChat).toBe(false);
-    expect(outdatedSuccess.chatMessages).toHaveLength(1);
+    expect(outdatedSuccess).toBe(stopLoading);
+
+    // Outdated revision in chat failure leaves state completely untouched
+    const outdatedFailure = analysisSessionReducer(stopLoading, {
+      type: 'CHAT_FAILURE',
+      revision: 999,
+      errorMessage: 'Outdated error',
+    });
+    expect(outdatedFailure).toBe(stopLoading);
 
     // Matching revision adds reply
     const matchingSuccess = analysisSessionReducer(stopLoading, {
@@ -194,7 +201,7 @@ describe('analysisSessionReducer', () => {
       { role: 'model', message: 'Valid reply' },
     ]);
 
-    // Chat failure adds error chat message
+    // Chat failure with matching revision adds error chat message
     const chatFail = analysisSessionReducer(stopLoading, {
       type: 'CHAT_FAILURE',
       revision: 0,
