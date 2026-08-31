@@ -1,6 +1,12 @@
 /* @vitest-environment jsdom */
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import registerYoutubeUrlUpdates from '../background/youtubeUrlUpdates';
@@ -159,10 +165,12 @@ describe('popup user flow', () => {
 
     vi.mocked(chrome.tabs.query).mockClear();
     expect(runtimeListener).toBeDefined();
-    runtimeListener!({
-      type: 'YOUTUBE_URL_UPDATED',
-      tabId: 3,
-      url: 'https://www.youtube.com/watch?v=movie',
+    await act(async () => {
+      runtimeListener!({
+        type: 'YOUTUBE_URL_UPDATED',
+        tabId: 3,
+        url: 'https://www.youtube.com/watch?v=movie',
+      });
     });
     await waitFor(() =>
       expect(chrome.tabs.query).toHaveBeenCalledWith({
@@ -174,10 +182,12 @@ describe('popup user flow', () => {
     vi.mocked(chrome.tabs.sendMessage).mockClear();
     stored.summarizer_history = [];
     expect(runtimeListener).toBeDefined();
-    runtimeListener!({
-      type: 'YOUTUBE_URL_UPDATED',
-      tabId: 3,
-      url: 'https://www.youtube.com/watch?v=movie',
+    await act(async () => {
+      runtimeListener!({
+        type: 'YOUTUBE_URL_UPDATED',
+        tabId: 3,
+        url: 'https://www.youtube.com/watch?v=movie',
+      });
     });
     await waitFor(() =>
       expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(3, {
@@ -207,13 +217,15 @@ describe('popup user flow', () => {
     });
 
     expect(runtimeListener).toBeDefined();
-    expect(
-      runtimeListener!({
-        type: 'YOUTUBE_URL_UPDATED',
-        tabId: 3,
-        url: 'https://www.youtube.com/watch?v=next-movie',
-      })
-    ).toBe(false);
+    await act(async () => {
+      expect(
+        runtimeListener!({
+          type: 'YOUTUBE_URL_UPDATED',
+          tabId: 3,
+          url: 'https://www.youtube.com/watch?v=next-movie',
+        })
+      ).toBe(false);
+    });
 
     await waitFor(() =>
       expect(chrome.tabs.sendMessage).toHaveBeenCalledWith(3, {
@@ -243,8 +255,10 @@ describe('popup user flow', () => {
 
     const unregister = registerYoutubeUrlUpdates(chrome);
     expect(tabUpdatedListener).toBeDefined();
-    tabUpdatedListener!(3, {
-      url: 'https://www.youtube.com/watch?v=next-movie',
+    await act(async () => {
+      tabUpdatedListener!(3, {
+        url: 'https://www.youtube.com/watch?v=next-movie',
+      });
     });
 
     await waitFor(() =>
