@@ -64,6 +64,36 @@ interface InstallSidePanelControllerOptions {
   reportError(failure: SidePanelFailure): void;
 }
 
+type PanelOpenResult = { success: true } | { success: false; cause: unknown };
+
+interface StartedPanelOpen {
+  result: Promise<PanelOpenResult>;
+}
+
+function startPanelOpen(open: () => Promise<void>): StartedPanelOpen {
+  try {
+    const openResult = open();
+    return {
+      result: openResult.then(
+        () => ({ success: true }),
+        (cause: unknown) => ({ success: false, cause })
+      ),
+    };
+  } catch (cause: unknown) {
+    return { result: Promise.resolve({ success: false, cause }) };
+  }
+}
+
+function continuePanelOpen(
+  startedPanelOpen: StartedPanelOpen | undefined,
+  fallback: () => Promise<void>
+): Promise<void> {
+  if (startedPanelOpen === undefined) return fallback();
+  return startedPanelOpen.result.then((result) => {
+    if (!result.success) throw result.cause;
+  });
+}
+
 export function installSidePanelController({
   platform,
   reportError,
@@ -153,7 +183,10 @@ export function installSidePanelController({
       });
     });
 
-  const processEvent = async (event: SidePanelEvent): Promise<void> => {
+  const processEvent = async (
+    event: SidePanelEvent,
+    startedPanelOpen?: StartedPanelOpen
+  ): Promise<void> => {
     switch (event.type) {
       case 'installed':
         try {
@@ -235,7 +268,12 @@ export function installSidePanelController({
 
         localOpenTabIds.add(tabId);
         try {
-          await Promise.all([platform.openLocal(tabId), persistLocalTabs()]);
+          await Promise.all([
+            continuePanelOpen(startedPanelOpen, () =>
+              platform.openLocal(tabId)
+            ),
+            persistLocalTabs(),
+          ]);
         } catch (cause: unknown) {
           localOpenTabIds.delete(tabId);
           await persistLocalTabs().catch(() => undefined);
@@ -301,7 +339,9 @@ export function installSidePanelController({
 
         try {
           await Promise.all([
-            platform.openGlobal(windowId),
+            continuePanelOpen(startedPanelOpen, () =>
+              platform.openGlobal(windowId)
+            ),
             platform.persistPinned(true),
             persistLocalTabs(),
             platform.persistPinnedWindow(windowId),
@@ -337,8 +377,20 @@ export function installSidePanelController({
   let eventQueue = ready;
 
   const accept = (event: SidePanelEvent): void => {
+    let startedPanelOpen: StartedPanelOpen | undefined;
+    if (
+      event.type === 'action-clicked' &&
+      !isPinnedGlobal &&
+      !localOpenTabIds.has(event.tabId)
+    ) {
+      startedPanelOpen = startPanelOpen(() => platform.openLocal(event.tabId));
+    } else if (event.type === 'pin-global') {
+      startedPanelOpen = startPanelOpen(() =>
+        platform.openGlobal(event.windowId)
+      );
+    }
     eventQueue = eventQueue
-      .then(() => processEvent(event))
+      .then(() => processEvent(event, startedPanelOpen))
       .catch((cause: unknown) => {
         reportError({ message: 'Failed to process side panel event:', cause });
       });

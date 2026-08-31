@@ -143,7 +143,7 @@ describe('side panel controller', () => {
     });
 
     fake.emit({ type: 'action-clicked', tabId: 1, windowId: 10 });
-    expect(fake.platform.openLocal).not.toHaveBeenCalled();
+    expect(fake.platform.openLocal).toHaveBeenCalledWith(1);
     expect(fake.platform.closeLocal).not.toHaveBeenCalled();
 
     restoring.resolve({
@@ -622,5 +622,62 @@ describe('side panel controller', () => {
     const fake = install();
     fake.installed.stop();
     expect(fake.stop).toHaveBeenCalledTimes(1);
+  });
+});
+describe('side panel user gesture', () => {
+  test('opens a local panel before the action-click gesture expires', async () => {
+    const fake = install();
+    await fake.installed.ready;
+    let isUserGestureActive = true;
+    const userGestureFailure = new Error(
+      '`sidePanel.open()` may only be called in response to a user gesture.'
+    );
+    fake.platform.openLocal.mockImplementation(() =>
+      isUserGestureActive
+        ? Promise.resolve(undefined)
+        : Promise.reject(userGestureFailure)
+    );
+
+    fake.emit({ type: 'action-clicked', tabId: 1, windowId: 10 });
+    isUserGestureActive = false;
+    await settlePromises();
+
+    expect(fake.platform.openLocal).toHaveBeenCalledWith(1);
+    expect(fake.reportError).not.toHaveBeenCalledWith({
+      message: 'Failed to open the local side panel:',
+      cause: userGestureFailure,
+    });
+  });
+});
+
+describe('global side panel user gesture', () => {
+  test('opens a global panel before the pin-click gesture expires', async () => {
+    const fake = install();
+    await fake.installed.ready;
+    let isUserGestureActive = true;
+    const userGestureFailure = new Error(
+      '`sidePanel.open()` may only be called in response to a user gesture.'
+    );
+    fake.platform.openGlobal.mockImplementation(() =>
+      isUserGestureActive
+        ? Promise.resolve(undefined)
+        : Promise.reject(userGestureFailure)
+    );
+    const reply = vi.fn();
+
+    fake.emit({
+      type: 'pin-global',
+      tabId: 1,
+      windowId: 10,
+      reply,
+    });
+    isUserGestureActive = false;
+    await settlePromises();
+
+    expect(reply).toHaveBeenCalledWith({ success: true });
+    expect(fake.reportError).not.toHaveBeenCalledWith({
+      message: 'Failed to pin the side panel globally:',
+      cause: userGestureFailure,
+    });
   });
 });
