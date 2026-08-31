@@ -1,8 +1,10 @@
 dist
 coverage
 pnpm-lock.yaml
-apm.lock.yaml
-.agents/skills
-.claude
-.codex
+**/apm.lock.yaml
+**/.agents/skills
+**/.claude
+**/.codex
+**/apm_modules
 src/content/__fixtures__/*.html
+

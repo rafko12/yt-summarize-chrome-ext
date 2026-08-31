@@ -1,0 +1,45 @@
+name: mattpocock-skills
+version: 1.2.3
+description: Portable APM declaration for Matt Pocock's global skills
+targets:
+  - antigravity
+  - claude
+  - codex
+dependencies:
+  apm:
+    - mattpocock/skills/skills/engineering/ask-matt
+    - mattpocock/skills/skills/in-progress/claude-handoff
+    - mattpocock/skills/skills/engineering/code-review
+    - mattpocock/skills/skills/engineering/codebase-design
+    - mattpocock/skills/skills/engineering/diagnosing-bugs
+    - mattpocock/skills/skills/engineering/domain-modeling
+    - mattpocock/skills/skills/misc/git-guardrails-claude-code
+    - mattpocock/skills/skills/productivity/grill-me
+    - mattpocock/skills/skills/engineering/grill-with-docs
+    - mattpocock/skills/skills/productivity/grilling
+    - mattpocock/skills/skills/productivity/handoff
+    - mattpocock/skills/skills/engineering/implement
+    - mattpocock/skills/skills/engineering/improve-codebase-architecture
+    - mattpocock/skills/skills/in-progress/loop-me
+    - mattpocock/skills/skills/misc/migrate-to-shoehorn
+    - mattpocock/skills/skills/engineering/prototype
+    - mattpocock/skills/skills/engineering/research
+    - mattpocock/skills/skills/engineering/resolving-merge-conflicts
+    - mattpocock/skills/skills/misc/scaffold-exercises
+    - mattpocock/skills/skills/engineering/setup-matt-pocock-skills
+    - mattpocock/skills/skills/misc/setup-pre-commit
+    - mattpocock/skills/skills/in-progress/setup-ts-deep-modules
+    - mattpocock/skills/skills/engineering/tdd
+    - mattpocock/skills/skills/productivity/teach
+    - mattpocock/skills/skills/productivity/to-questionnaire
+    - mattpocock/skills/skills/engineering/to-spec
+    - mattpocock/skills/skills/engineering/to-tickets
+    - mattpocock/skills/skills/engineering/triage
+    - mattpocock/skills/skills/productivity/wait-what
+    - mattpocock/skills/skills/engineering/wayfinder
+    - mattpocock/skills/skills/engineering/wizard
+    - mattpocock/skills/skills/in-progress/writing-beats
+    - mattpocock/skills/skills/productivity/writing-for-agents
+    - mattpocock/skills/skills/in-progress/writing-fragments
+    - mattpocock/skills/skills/in-progress/writing-shape
+  mcp: []

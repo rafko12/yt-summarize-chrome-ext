@@ -5,16 +5,16 @@ language: pl, pl_PL, en
 ignorePaths:
   - node_modules
   - .pnpm-store
-  - apm_modules
+  - '**/apm_modules'
   - coverage
   - dist
   - dist_*
   - vendor
   - pnpm-lock.yaml
-  - apm.lock.yaml
-  - '.agents/skills'
-  - '.claude'
-  - '.codex'
+  - '**/apm.lock.yaml'
+  - '**/.agents/skills'
+  - '**/.claude'
+  - '**/.codex'
   - '**/*.map'
   - '**/*.ttf'
   - '.husky'
