@@ -1,0 +1,13 @@
+name: yt-summarizer
+version: 1.2.0
+description: YouTube Summarizer with multi-provider AI support
+targets:
+  - antigravity
+  - claude
+  - codex
+dependencies:
+  apm:
+    - mindrally/skills/chrome-extension-development
+    - wshobson/agents/plugins/frontend-mobile-development/skills/tailwind-design-system
+    - vercel-labs/agent-skills/skills/react-best-practices
+  mcp: []

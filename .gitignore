@@ -9,6 +9,7 @@ lerna-debug.log*
 
 node_modules
 .pnpm-store
+apm_modules
 package-lock.json
 dist
 dist-ssr
@@ -46,3 +47,7 @@ coverage
 # Windows system files
 Thumbs.db
 Desktop.ini
+
+
+# APM dependencies
+apm_modules/
