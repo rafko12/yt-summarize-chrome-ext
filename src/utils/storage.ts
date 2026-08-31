@@ -1,4 +1,14 @@
 import { ChatMessage, TranscriptItem } from '../llm/types';
+import createChromePreferencesPlatform from '../preferences/chromePreferencesPlatform';
+import createUserPreferences, {
+  DEFAULT_SETTINGS,
+  Provider,
+  Settings,
+  Theme,
+} from '../preferences/userPreferences';
+
+export type { Provider, Settings, Theme };
+export { DEFAULT_SETTINGS };
 
 export interface HistoryItem {
   videoId: string;
@@ -9,11 +19,6 @@ export interface HistoryItem {
   transcript: TranscriptItem[];
   chat: ChatMessage[];
   createdAt: number;
-}
-
-export interface Settings {
-  language: string;
-  model: string;
 }
 
 /**
@@ -32,12 +37,9 @@ export const STORAGE_KEYS = {
   UI_THEME: 'ui_theme',
 } as const;
 
-export type Provider = 'gemini' | 'openai' | 'claude';
-
-export const DEFAULT_SETTINGS: Settings = {
-  language: 'Polski',
-  model: 'gemini-3.5-flash',
-};
+const defaultPreferences = createUserPreferences(
+  createChromePreferencesPlatform()
+);
 
 const API_KEY_STORAGE_KEYS: Record<Provider, string> = {
   gemini: STORAGE_KEYS.GEMINI_API_KEY,
@@ -82,78 +84,26 @@ function isHistoryItem(value: unknown): value is HistoryItem {
   );
 }
 
-function readString(value: unknown): string {
-  return typeof value === 'string' ? value : '';
-}
-
 // API Key Management
 export function getApiKey(provider: Provider = 'gemini'): Promise<string> {
-  return new Promise((resolve) => {
-    const key = API_KEY_STORAGE_KEYS[provider];
-    chrome.storage.local.get([key], (result) => {
-      resolve(readString(result[key]));
-    });
-  });
+  return defaultPreferences.getApiKey(provider);
 }
 
 export function setApiKey(provider: Provider, apiKey: string): Promise<void> {
-  return new Promise((resolve) => {
-    const key = API_KEY_STORAGE_KEYS[provider];
-    chrome.storage.local.set({ [key]: apiKey }, () => {
-      resolve();
-    });
-  });
+  return defaultPreferences.setApiKey(provider, apiKey);
 }
 
 export function getAllApiKeys(): Promise<Record<Provider, string>> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get(
-      [
-        STORAGE_KEYS.GEMINI_API_KEY,
-        STORAGE_KEYS.OPENAI_API_KEY,
-        STORAGE_KEYS.CLAUDE_API_KEY,
-      ],
-      (result) => {
-        resolve({
-          gemini: readString(result[STORAGE_KEYS.GEMINI_API_KEY]),
-          openai: readString(result[STORAGE_KEYS.OPENAI_API_KEY]),
-          claude: readString(result[STORAGE_KEYS.CLAUDE_API_KEY]),
-        });
-      }
-    );
-  });
+  return defaultPreferences.getAllApiKeys();
 }
 
 // Settings Management
 export function getSettings(): Promise<Settings> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([STORAGE_KEYS.SETTINGS], (result) => {
-      const storedSettings = result[STORAGE_KEYS.SETTINGS];
-      if (!isRecord(storedSettings)) {
-        resolve(DEFAULT_SETTINGS);
-        return;
-      }
-
-      resolve({
-        language:
-          typeof storedSettings.language === 'string'
-            ? storedSettings.language
-            : DEFAULT_SETTINGS.language,
-        model:
-          typeof storedSettings.model === 'string'
-            ? storedSettings.model
-            : DEFAULT_SETTINGS.model,
-      });
-    });
-  });
+  return defaultPreferences.getSettings();
 }
 
 export function setSettings(settings: Settings): Promise<void> {
-  return new Promise((resolve) => {
-    chrome.storage.local.set({ [STORAGE_KEYS.SETTINGS]: settings }, () => {
-      resolve();
-    });
-  });
+  return defaultPreferences.setSettings(settings);
 }
 
 // History Management
@@ -244,21 +194,12 @@ export function clearApiKeysAndHistory(): Promise<void> {
   });
 }
 
-export function getTheme(): Promise<'night' | 'nord' | null> {
-  return new Promise((resolve) => {
-    chrome.storage.local.get([STORAGE_KEYS.UI_THEME], (result) => {
-      const theme = result[STORAGE_KEYS.UI_THEME];
-      resolve(theme === 'night' || theme === 'nord' ? theme : null);
-    });
-  });
+export function getTheme(): Promise<Theme | null> {
+  return defaultPreferences.getTheme();
 }
 
-export function setTheme(theme: 'night' | 'nord'): Promise<void> {
-  return new Promise((resolve) => {
-    chrome.storage.local.set({ [STORAGE_KEYS.UI_THEME]: theme }, () => {
-      resolve();
-    });
-  });
+export function setTheme(theme: Theme): Promise<void> {
+  return defaultPreferences.setTheme(theme);
 }
 
 // Pin State Management

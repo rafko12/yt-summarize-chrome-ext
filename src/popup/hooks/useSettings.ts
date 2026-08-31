@@ -1,20 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { validateApiKey } from '../../llm/client';
-import {
-  getAllApiKeys,
-  getSettings,
-  getTheme,
+import createChromePreferencesPlatform from '../../preferences/chromePreferencesPlatform';
+import createUserPreferences, {
   Provider,
-  setTheme as saveTheme,
-  setApiKey,
-  setSettings,
   Settings,
-} from '../../utils/storage';
+  Theme,
+  UserPreferences,
+} from '../../preferences/userPreferences';
 
-export default function useSettings() {
+export default function useSettings(preferencesOverride?: UserPreferences) {
+  const preferences = useMemo(
+    () =>
+      preferencesOverride ||
+      createUserPreferences(createChromePreferencesPlatform()),
+    [preferencesOverride]
+  );
+
   // Theme state
-  const [theme, setTheme] = useState<'night' | 'nord'>(() =>
+  const [theme, setTheme] = useState<Theme>(() =>
     window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'nord'
   );
 
@@ -39,19 +43,20 @@ export default function useSettings() {
 
   useEffect(() => {
     const init = async () => {
-      const savedKeys = await getAllApiKeys();
+      const {
+        apiKeys: savedKeys,
+        settings: savedSettings,
+        theme: savedTheme,
+      } = await preferences.readInitialPreferences();
+
       setApiKeysVal(savedKeys);
       setApiKeyInput(savedKeys[selectedProvider]);
-
-      const savedSettings = await getSettings();
       setSettingsVal(savedSettings);
-
-      const savedTheme = await getTheme();
       if (savedTheme) setTheme(savedTheme);
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [preferences]);
 
   // Sync the host document body background to match the theme
   useEffect(() => {
@@ -63,7 +68,7 @@ export default function useSettings() {
   const toggleTheme = async () => {
     const nextTheme = theme === 'night' ? 'nord' : 'night';
     setTheme(nextTheme);
-    await saveTheme(nextTheme);
+    await preferences.setTheme(nextTheme);
   };
 
   const handleSelectProvider = (p: Provider) => {
@@ -87,7 +92,7 @@ export default function useSettings() {
 
     setIsCheckingKey(false);
     if (valid) {
-      await setApiKey(selectedProvider, trimmedKey);
+      await preferences.setApiKey(selectedProvider, trimmedKey);
       setApiKeysVal((prev) => ({ ...prev, [selectedProvider]: trimmedKey }));
       setKeyValidationMsg({
         text: 'Klucz API jest poprawny i został zapisany!',
@@ -101,7 +106,7 @@ export default function useSettings() {
   };
 
   const handleDeleteApiKey = async (provider: Provider) => {
-    await setApiKey(provider, '');
+    await preferences.setApiKey(provider, '');
     setApiKeysVal((prev) => ({ ...prev, [provider]: '' }));
     if (selectedProvider === provider) {
       setApiKeyInput('');
@@ -116,13 +121,13 @@ export default function useSettings() {
 
   const handleLanguageChange = async (lang: string) => {
     const updatedSettings = { ...settings, language: lang };
-    await setSettings(updatedSettings);
+    await preferences.setSettings(updatedSettings);
     setSettingsVal(updatedSettings);
   };
 
   const handleModelChange = async (model: string) => {
     const updatedSettings = { ...settings, model };
-    await setSettings(updatedSettings);
+    await preferences.setSettings(updatedSettings);
     setSettingsVal(updatedSettings);
   };
 
