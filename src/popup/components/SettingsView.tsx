@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import { CircleNotch, Eye, EyeSlash, Key, Trash } from '@phosphor-icons/react';
 
+import { AI_MODELS, AI_PROVIDERS } from '../../llm/registry';
 import { Provider, Settings } from '../../utils/storage';
 
 interface SettingsViewProps {
@@ -44,6 +45,10 @@ export default function SettingsView({
   onClearHistory,
   onClearApiKeysAndHistory,
 }: SettingsViewProps) {
+  const selectedProviderConfig = AI_PROVIDERS.find(
+    (provider) => provider.id === selectedProvider
+  )!;
+
   return (
     <div className='flex min-h-0 flex-1 flex-col gap-3.5 overflow-y-auto'>
       <h2 className='flex items-center gap-1.5 text-sm font-bold'>
@@ -64,22 +69,16 @@ export default function SettingsView({
           onChange={(e) => onSelectProvider(e.target.value as Provider)}
           className='select-bordered select select-sm bg-base-100 mb-2 w-full rounded-lg text-xs focus:outline-none'
         >
-          <option value='gemini'>Google Gemini</option>
-          <option value='openai'>OpenAI</option>
-          <option value='claude'>Anthropic Claude</option>
+          {AI_PROVIDERS.map((provider) => (
+            <option key={provider.id} value={provider.id}>
+              {provider.label}
+            </option>
+          ))}
         </select>
 
         <label htmlFor='api-key-input' className='label mb-0.5 py-0.5'>
           <span className='label-text text-xs font-bold'>
-            Klucz API (
-            {
-              {
-                gemini: 'Google AI Studio',
-                openai: 'OpenAI',
-                claude: 'Anthropic',
-              }[selectedProvider]
-            }
-            )
+            Klucz API ({selectedProviderConfig.apiKeySourceLabel})
           </span>
         </label>
 
@@ -129,50 +128,18 @@ export default function SettingsView({
           </div>
         )}
 
-        {selectedProvider === 'gemini' && (
-          <p className='text-base-content/75 mt-2 text-[11px] leading-relaxed'>
-            Klucz Gemini API uzyskasz bezpłatnie na stronie{' '}
-            <a
-              href='https://aistudio.google.com'
-              target='_blank'
-              rel='noreferrer'
-              className='link link-primary font-semibold'
-            >
-              Google AI Studio
-            </a>
-            .
-          </p>
-        )}
-
-        {selectedProvider === 'openai' && (
-          <p className='text-base-content/75 mt-2 text-[11px] leading-relaxed'>
-            Klucz OpenAI API uzyskasz na stronie{' '}
-            <a
-              href='https://platform.openai.com/api-keys'
-              target='_blank'
-              rel='noreferrer'
-              className='link link-primary font-semibold'
-            >
-              OpenAI API keys
-            </a>
-            .
-          </p>
-        )}
-
-        {selectedProvider === 'claude' && (
-          <p className='text-base-content/75 mt-2 text-[11px] leading-relaxed'>
-            Klucz Anthropic Claude API uzyskasz na stronie{' '}
-            <a
-              href='https://console.anthropic.com/settings/keys'
-              target='_blank'
-              rel='noreferrer'
-              className='link link-primary font-semibold'
-            >
-              Anthropic Console
-            </a>
-            .
-          </p>
-        )}
+        <p className='text-base-content/75 mt-2 text-[11px] leading-relaxed'>
+          {selectedProviderConfig.apiKeyHelpPrefix}{' '}
+          <a
+            href={selectedProviderConfig.apiKeyHelpUrl}
+            target='_blank'
+            rel='noreferrer'
+            className='link link-primary font-semibold'
+          >
+            {selectedProviderConfig.apiKeyHelpLinkLabel}
+          </a>
+          .
+        </p>
 
         <div className='border-base-300/50 mt-3 border-t pt-2.5'>
           <h4 className='mb-1.5 text-xs font-bold'>Zapisane klucze:</h4>
@@ -234,27 +201,20 @@ export default function SettingsView({
               onChange={(e) => onModelChange(e.target.value)}
               className='select-bordered select select-sm bg-base-100 mt-0.5 w-full rounded-lg text-xs focus:outline-none'
             >
-              {apiKeys.gemini && (
-                <optgroup label='Google Gemini'>
-                  <option value='gemini-3.6-flash'>Gemini 3.6 Flash</option>
-                  <option value='gemini-3.5-flash-lite'>
-                    Gemini 3.5 Flash-Lite
-                  </option>
-                  <option value='gemini-3.1-pro'>Gemini 3.1 Pro</option>
-                </optgroup>
-              )}
-              {apiKeys.openai && (
-                <optgroup label='OpenAI'>
-                  <option value='gpt-5.6-luna'>GPT-5.6 Luna</option>
-                  <option value='gpt-5.6-terra'>GPT-5.6 Terra</option>
-                </optgroup>
-              )}
-              {apiKeys.claude && (
-                <optgroup label='Anthropic Claude'>
-                  <option value='claude-sonnet-5'>Claude 5 Sonnet</option>
-                  <option value='claude-opus-5'>Claude 5 Opus</option>
-                  <option value='claude-haiku-4-5'>Claude 4.5 Haiku</option>
-                </optgroup>
+              {AI_PROVIDERS.map((provider) =>
+                apiKeys[provider.id] ? (
+                  <optgroup key={provider.id} label={provider.label}>
+                    {AI_MODELS.filter(
+                      (model) =>
+                        model.provider === provider.id &&
+                        model.visibleInSettings
+                    ).map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.label}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null
               )}
             </select>
           )}

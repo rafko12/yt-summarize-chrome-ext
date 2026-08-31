@@ -1,12 +1,25 @@
+// cspell:ignore generativelanguage
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   formatTranscript,
   generateSummary,
   getProvider,
-  MODEL_PROVIDER_CONFIG,
   validateApiKey,
 } from './client';
+
+const existingModelProviders = {
+  'gemini-3.6-flash': 'gemini',
+  'gemini-3.5-flash': 'gemini',
+  'gemini-3.5-flash-lite': 'gemini',
+  'gemini-3.1-pro': 'gemini',
+  'gpt-5.6-luna': 'openai',
+  'gpt-5.6-terra': 'openai',
+  'gpt-4o-mini': 'openai',
+  'claude-sonnet-5': 'claude',
+  'claude-opus-5': 'claude',
+  'claude-haiku-4-5': 'claude',
+} as const;
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -31,8 +44,8 @@ describe('LLM client', () => {
   });
 
   describe('getProvider', () => {
-    it('maps every configured model to its provider', () => {
-      Object.entries(MODEL_PROVIDER_CONFIG).forEach(([model, provider]) => {
+    it('maps every previously supported model to its provider', () => {
+      Object.entries(existingModelProviders).forEach(([model, provider]) => {
         expect(getProvider(model)).toBe(provider);
       });
     });
@@ -77,4 +90,29 @@ describe('LLM client', () => {
       error: 'Nie udało się uzyskać odpowiedzi od dostawcy openai.',
     });
   });
+
+  it.each([
+    ['gemini', 'gemini-3.5-flash-lite'],
+    ['openai', 'gpt-4o-mini'],
+    ['claude', 'claude-haiku-4-5'],
+  ] as const)(
+    'uses %s validation model for %s',
+    async (provider, expectedModel) => {
+      const fetchMock = vi
+        .fn()
+        .mockRejectedValue(new TypeError('Failed to fetch'));
+      vi.stubGlobal('fetch', fetchMock);
+
+      await validateApiKey('test-key', undefined, provider);
+
+      const [url, options] = fetchMock.mock.calls[0];
+      const requestedModel = String(url).includes('generativelanguage')
+        ? new URL(String(url)).pathname
+            .split('/')
+            .at(-1)
+            ?.replace(':generateContent', '')
+        : JSON.parse(options.body).model;
+      expect(requestedModel).toBe(expectedModel);
+    }
+  );
 });

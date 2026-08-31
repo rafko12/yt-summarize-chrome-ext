@@ -8,6 +8,7 @@ import {
 import anthropicProvider from './providers/anthropic';
 import geminiProvider from './providers/gemini';
 import openaiProvider from './providers/openai';
+import { getAiModel, getAiProvider } from './registry';
 import {
   ChatMessage,
   getSafeErrorMessage,
@@ -22,19 +23,6 @@ export interface ValidationResult {
   valid: boolean;
   error?: string;
 }
-
-export const MODEL_PROVIDER_CONFIG: Record<string, LlmProviderName> = {
-  'gemini-3.6-flash': 'gemini',
-  'gemini-3.5-flash': 'gemini',
-  'gemini-3.5-flash-lite': 'gemini',
-  'gemini-3.1-pro': 'gemini',
-  'gpt-5.6-luna': 'openai',
-  'gpt-5.6-terra': 'openai',
-  'gpt-4o-mini': 'openai',
-  'claude-sonnet-5': 'claude',
-  'claude-opus-5': 'claude',
-  'claude-haiku-4-5': 'claude',
-};
 
 const providers: Record<LlmProviderName, LlmProvider> = {
   gemini: geminiProvider,
@@ -52,8 +40,8 @@ export const formatTranscript = (transcript: TranscriptItem[]) =>
     .join('\n');
 
 export function getProvider(model: string): LlmProviderName {
-  const provider = MODEL_PROVIDER_CONFIG[model];
-  if (provider) return provider;
+  const configuredModel = getAiModel(model);
+  if (configuredModel) return configuredModel.provider;
   throw new LlmRequestError(
     'unknown',
     'Wybrany model nie jest obsługiwany przez rozszerzenie.'
@@ -92,16 +80,10 @@ export async function validateApiKey(
   if (!trimmedKey)
     return { valid: false, error: 'Klucz API nie może być pusty.' };
 
-  const validationModels: Record<LlmProviderName, string> = {
-    gemini: 'gemini-3.5-flash-lite',
-    openai: 'gpt-4o-mini',
-    claude: 'claude-haiku-4-5',
-  };
-
   try {
     await requestProvider(provider, {
       apiKey: trimmedKey,
-      model: validationModels[provider] || _model,
+      model: getAiProvider(provider).validationModel || _model,
       systemInstruction: getValidationSystemInstruction(),
       userMessage: getValidationUserMessage(),
       chatHistory: [],

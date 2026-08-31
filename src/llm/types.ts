@@ -1,4 +1,6 @@
-export type LlmProviderName = 'gemini' | 'openai' | 'claude';
+import { AiProvider } from './registry';
+
+export type LlmProviderName = AiProvider;
 export type LlmErrorProviderName = LlmProviderName | 'unknown';
 
 export interface TranscriptItem {

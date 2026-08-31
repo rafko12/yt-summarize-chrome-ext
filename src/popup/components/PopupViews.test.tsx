@@ -173,6 +173,52 @@ describe('widoki panelu', () => {
     expect(screen.getByText('Zapisano')).toBeVisible();
   });
 
+  test('ekran ustawień udostępnia modele wszystkich skonfigurowanych dostawców', () => {
+    render(
+      <SettingsView
+        selectedProvider='gemini'
+        apiKeys={{
+          gemini: 'gemini-key',
+          openai: 'openai-key',
+          claude: 'claude-key',
+        }}
+        apiKeyInput=''
+        showKey={false}
+        isCheckingKey={false}
+        keyValidationMsg={null}
+        settings={settings}
+        hasAnyKey
+        historyListLength={0}
+        onSelectProvider={callbacks.provider}
+        onApiKeyInputChange={callbacks.input}
+        onToggleShowKey={callbacks.toggleKey}
+        onSaveApiKey={callbacks.save}
+        onDeleteApiKey={callbacks.delete}
+        onModelChange={callbacks.model}
+        onLanguageChange={callbacks.language}
+        onClearHistory={callbacks.clear}
+        onClearApiKeysAndHistory={callbacks.clear}
+      />
+    );
+
+    const modelSelect = screen.getByRole('combobox', { name: /Model/ });
+    expect(
+      Array.from(
+        (modelSelect as HTMLSelectElement).options,
+        (option) => option.value
+      )
+    ).toEqual([
+      'gemini-3.6-flash',
+      'gemini-3.5-flash-lite',
+      'gemini-3.1-pro',
+      'gpt-5.6-luna',
+      'gpt-5.6-terra',
+      'claude-sonnet-5',
+      'claude-opus-5',
+      'claude-haiku-4-5',
+    ]);
+  });
+
   test('ekran ustawie? blokuje opcje zale?ne od klucza i pracy w toku', () => {
     render(
       <SettingsView

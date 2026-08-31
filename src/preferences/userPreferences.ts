@@ -1,4 +1,6 @@
-export type Provider = 'gemini' | 'openai' | 'claude';
+import { AiProvider } from '../llm/registry';
+
+export type Provider = AiProvider;
 
 export interface Settings {
   language: string;
