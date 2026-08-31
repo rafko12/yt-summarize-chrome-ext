@@ -29,8 +29,8 @@ wspieraną platformą.
 | Izolacja stylów     | Shadow DOM i PostCSS        | Izolacja UI rozszerzenia od CSS strony YouTube | [`src/utils/createShadowRoot.tsx`](src/utils/createShadowRoot.tsx), [`postcss.config.js`](postcss.config.js) |
 | Typografia i ikony  | Geist Sans, Phosphor Icons  | Font i ikony interfejsu                        | [`package.json`](package.json), [`src/assets/`](src/assets/)                                                 |
 
-Bootstrap content scriptu nadal korzysta z Reacta, choć niczego nie renderuje.
-Usunięcie tego narzutu jest osobnym, zatwierdzonym etapem refaktoru.
+Bootstrap content scriptu jest zwykłym modułem TypeScript bez zależności od
+Reacta.
 
 ## Build i zależności
 

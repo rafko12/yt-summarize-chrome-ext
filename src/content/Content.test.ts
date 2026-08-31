@@ -81,7 +81,22 @@ describe('content script messages', () => {
     ).toBe(false);
   });
 
-  test('normalizes transcript durations and uses the fallback language', async () => {
+  test('returns an error when video ID is missing in transcript request', () => {
+    const reply = vi.fn();
+
+    expect(
+      listener(
+        { type: 'GET_TRANSCRIPT', videoId: '', targetLang: 'pl' },
+        {} as chrome.runtime.MessageSender,
+        reply
+      )
+    ).toBe(false);
+    expect(reply).toHaveBeenCalledWith({
+      error: 'Brak identyfikatora wideo.',
+    });
+  });
+
+  test('normalizes transcript durations in milliseconds and uses the fallback language', async () => {
     fetchTranscript
       .mockRejectedValueOnce(new Error('language unavailable'))
       .mockResolvedValueOnce([
@@ -107,7 +122,29 @@ describe('content script messages', () => {
     expect(fetchTranscript).toHaveBeenNthCalledWith(2, 'movie');
   });
 
-  test('reports transcript failures and handles player seeking synchronously', async () => {
+  test('preserves transcript durations when already in seconds', async () => {
+    fetchTranscript.mockResolvedValueOnce([
+      { offset: 15, duration: 3, text: 'line in seconds' },
+    ]);
+    const reply = vi.fn();
+
+    expect(
+      listener(
+        { type: 'GET_TRANSCRIPT', videoId: 'movie', targetLang: 'en' },
+        {} as chrome.runtime.MessageSender,
+        reply
+      )
+    ).toBe(true);
+
+    await vi.waitFor(() =>
+      expect(reply).toHaveBeenCalledWith({
+        success: true,
+        transcript: [{ start: 15, duration: 3, text: 'line in seconds' }],
+      })
+    );
+  });
+
+  test('reports an error when transcript is empty', async () => {
     fetchTranscript.mockResolvedValueOnce([]);
     const reply = vi.fn();
 
@@ -118,13 +155,41 @@ describe('content script messages', () => {
         reply
       )
     ).toBe(true);
-    await vi.waitFor(() =>
-      expect(reply).toHaveBeenCalledWith({ error: expect.any(String) })
-    );
 
+    await vi.waitFor(() =>
+      expect(reply).toHaveBeenCalledWith({
+        error:
+          'Transkrypcja jest pusta — film może nie mieć napisów z treścią.',
+      })
+    );
+  });
+
+  test('reports YouTube errors with fallback message', async () => {
+    fetchTranscript.mockRejectedValueOnce(new Error('Network error'));
+    fetchTranscript.mockRejectedValueOnce(new Error(''));
+    const reply = vi.fn();
+
+    expect(
+      listener(
+        { type: 'GET_TRANSCRIPT', videoId: 'movie', targetLang: 'pl' },
+        {} as chrome.runtime.MessageSender,
+        reply
+      )
+    ).toBe(true);
+
+    await vi.waitFor(() =>
+      expect(reply).toHaveBeenCalledWith({
+        error: 'Nie udało się pobrać napisów z YouTube.',
+      })
+    );
+  });
+
+  test('seeks video player when present and handles missing player', () => {
+    const reply = vi.fn();
     const video = document.createElement('video');
     video.play = vi.fn(async () => undefined);
     document.body.appendChild(video);
+
     expect(
       listener(
         { type: 'SEEK_TO', seconds: 19 },
@@ -133,6 +198,7 @@ describe('content script messages', () => {
       )
     ).toBe(false);
     expect(video.currentTime).toBe(19);
+    expect(video.play).toHaveBeenCalled();
     expect(reply).toHaveBeenLastCalledWith({ success: true });
 
     document.body.innerHTML = '';
@@ -143,6 +209,8 @@ describe('content script messages', () => {
         reply
       )
     ).toBe(false);
-    expect(reply).toHaveBeenLastCalledWith({ error: expect.any(String) });
+    expect(reply).toHaveBeenLastCalledWith({
+      error: 'Nie znaleziono odtwarzacza wideo na tej stronie.',
+    });
   });
 });

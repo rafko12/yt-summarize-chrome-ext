@@ -38,9 +38,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      js: isDev
-        ? ['src/content/index.dev.tsx']
-        : ['src/content/index.prod.tsx'],
+      js: isDev ? ['src/content/index.dev.ts'] : ['src/content/index.prod.ts'],
       matches: ['https://*.youtube.com/*'],
     },
   ],

@@ -29,7 +29,7 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 - przesunięcie odtwarzacza do wskazanego czasu;
 - obsługę wiadomości wysłanych z panelu.
 
-`playerResponseExtractor.ts` izoluje parsowanie `ytInitialPlayerResponse` i jest testowany na zapisanych przykładach HTML. Obecny bootstrap content scriptu korzysta z Reacta, choć niczego nie renderuje; plan usunięcia tego narzutu opisuje `REFACTOR.md`.
+`playerResponseExtractor.ts` izoluje parsowanie `ytInitialPlayerResponse` i jest testowany na zapisanych przykładach HTML. Bootstrap content scriptu jest zwykłym modułem TypeScript bez zależności od Reacta.
 
 ### Panel boczny
 
