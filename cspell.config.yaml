@@ -29,13 +29,20 @@ words:
   - buildu
   - checklistę
   - checklisty
+  - checkoutu
+  - Codexa
   - Commity
+  - commitowane
+  - commitowanych
+  - commitujemy
   - CRX
   - crxjs
   - Discardable
   - cyklomatyczna
   - DaisyUI
+  - driftu
   - fallbacków
+  - hashe
   - HMR
   - ianvs
   - Inicjalizacja
@@ -47,9 +54,13 @@ words:
   - minifikacji
   - mockuj
   - MV3
+  - niecommitowany
   - pluginami
   - pluginem
+  - Pococka
   - pnpm
+  - podpakiet
+  - podpakietu
   - polyfillu
   - Polyfillów
   - promptów
@@ -65,6 +76,9 @@ words:
   - scriptu
   - serializowane
   - sidepanel
+  - skille
+  - skilli
+  - skillami
   - stringu
   - Tailwind
   - thedutchcoder
@@ -72,6 +86,7 @@ words:
   - testowalnością
   - Tracklist
   - tsconfig
+  - upstreamu
   - wshobson
   - tsx
   - unionami

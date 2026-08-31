@@ -71,6 +71,21 @@ Klucze API i dane potrzebne do wygenerowania odpowiedzi trafiają bezpośrednio
 do interfejsu sieciowego wybranego Dostawcy AI. Rozszerzenie nie utrzymuje
 własnego serwera pośredniczącego.
 
+## Narzędzia agentów i zarządzanie skillami
+
+| Obszar                | Technologia                        | Zastosowanie                                                           | Źródło prawdy                                                                                                       |
+| --------------------- | ---------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Menedżer pakietów AI  | Agent Package Manager (APM) 0.29.0 | Zarządzanie deklaratywnymi zależnościami skilli dla agentów AI         | [`apm.yml`](apm.yml), [`apm.lock.yaml`](apm.lock.yaml), [ADR-0003](docs/adr/0003-zarzadzanie-skillami-przez-apm.md) |
+| Targety dystrybucji   | Claude, Codex, Antigravity         | Środowiska asystentów korzystające z commitowanych skilli projektu     | [`apm.yml`](apm.yml), [`.agents/`](.agents/), [`.claude/`](.claude/)                                                |
+| Weryfikacja driftu CI | APM CLI via GitHub Actions         | Niezależny audyt integralności manifestu, lockfile i wdrożonych skilli | [`.github/workflows/apm.yml`](.github/workflows/apm.yml)                                                            |
+| Pakiet globalny       | Podpakiet APM `mattpocock-skills`  | Przenośna deklaracja globalnego zestawu skilli użytkownika             | [`packages/mattpocock-skills/`](packages/mattpocock-skills/)                                                        |
+
+### Rola i zasady działania APM
+
+1. **Przypinanie wersji i odtwarzalność**: Wersja narzędzia CLI jest przypięta w CI (`0.29.0` z opcją `setup-only: 'true'` w [`.github/workflows/apm.yml`](.github/workflows/apm.yml)). Manifest projektu [`apm.yml`](apm.yml) deklaruje wymagane zależności skilli, a [`apm.lock.yaml`](apm.lock.yaml) przypina konkretne commity oraz skróty SHA-256 plików. Wygenerowane skille dla obsługiwanych targetów (`.agents/skills`, `.claude/skills`, `.codex`) są commitowane do repozytorium, zapewniając gotowość środowiska zaraz po sklonowaniu bez uruchamiania instalatora. Cache `apm_modules/` jest ignorowany przez Gita.
+2. **Wspierane targety i brak translacji semantyki**: APM dystrybuuje identyczne pliki skilli do zadeklarowanych targetów (`antigravity`, `claude`, `codex`). Narzędzie odpowiada za bezpieczną dystrybucję plików i weryfikację ich integralności, lecz nie tłumaczy automatycznie składni ani zachowań specyficznych dla poszczególnych platform (np. specyficznych instrukcji Claude).
+3. **Ograniczenie wyszukiwania**: Polecenie `apm search` przeszukuje wyłącznie zarejestrowane repozytoria marketplace (dodane do lokalnego rejestru APM) i nie zastępuje pełnotekstowego wyszukiwania skilli w serwisie GitHub.
+
 ## Aktualizacja dokumentu
 
 Aktualizuj tę mapę, gdy zmienia się wspierana platforma, główna technologia,
