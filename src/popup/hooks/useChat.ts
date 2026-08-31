@@ -1,19 +1,24 @@
-import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
+import {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
+import createAnalysisHistory, {
+  AnalysisHistory,
+} from '../../analysisHistory/analysisHistory';
+import createChromeAnalysisHistoryPlatform from '../../analysisHistory/chromeAnalysisHistoryPlatform';
 import {
   generateChatResponse,
   generateSummary,
   getProvider,
 } from '../../llm/client';
 import { ChatMessage, TranscriptItem } from '../../llm/types';
+import { Provider, Settings } from '../../preferences/userPreferences';
 import { VideoSession } from '../../shared/video';
-import {
-  getHistory,
-  Provider,
-  saveHistoryItem,
-  Settings,
-  updateHistoryItemChat,
-} from '../../utils/storage';
 
 interface UseChatProps {
   settings: Settings;
@@ -29,6 +34,7 @@ interface UseChatProps {
   }>;
   onHistoryUpdated: () => void;
   onRequireSettings: (msg: string) => void;
+  historyOverride?: AnalysisHistory;
 }
 
 export default function useChat({
@@ -39,6 +45,7 @@ export default function useChat({
   ensureVideoAndTranscript,
   onHistoryUpdated,
   onRequireSettings,
+  historyOverride,
 }: UseChatProps) {
   const [summary, setSummary] = useState<string | null>(null);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -47,6 +54,13 @@ export default function useChat({
   const [chatInput, setChatInput] = useState<string>('');
   const [isSendingChat, setIsSendingChat] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const history = useMemo(
+    () =>
+      historyOverride ||
+      createAnalysisHistory(createChromeAnalysisHistoryPlatform()),
+    [historyOverride]
+  );
 
   const chatListRef = useRef<HTMLDivElement>(null);
   const analysisRevision = useRef(0);
@@ -122,7 +136,7 @@ export default function useChat({
       setSummary(generatedSummary);
       setChatMessages([]);
 
-      await saveHistoryItem({
+      await history.saveRecord({
         videoId: targetVideo.videoId,
         title: targetVideo.title,
         author: targetVideo.author,
@@ -201,15 +215,15 @@ export default function useChat({
       ];
       setChatMessages(finalChat);
 
-      const currentHistory = await getHistory();
+      const currentHistory = await history.getRecords();
       const existingItem = currentHistory.find(
         (i) => i.videoId === targetVideo.videoId
       );
 
       if (existingItem) {
-        await updateHistoryItemChat(targetVideo.videoId, finalChat);
+        await history.updateRecordChat(targetVideo.videoId, finalChat);
       } else {
-        await saveHistoryItem({
+        await history.saveRecord({
           videoId: targetVideo.videoId,
           title: targetVideo.title,
           author: targetVideo.author,
@@ -242,7 +256,7 @@ export default function useChat({
     if (window.confirm('Wyczyścić rozmowę dla tego filmu?')) {
       setChatMessages([]);
       if (currentVideo) {
-        updateHistoryItemChat(currentVideo.videoId, []);
+        history.updateRecordChat(currentVideo.videoId, []);
       }
     }
   };

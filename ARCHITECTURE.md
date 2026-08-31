@@ -50,7 +50,9 @@ Panel komunikuje się ze skryptem treści i backgroundem przez wiadomości Chrom
 - `src/shared/messages.ts` — typy wiadomości, odpowiedzi i ich walidacja; transport i retry mają docelowo zostać wydzielone zgodnie z planem refaktoru.
 - `src/shared/video.ts` — współdzielone typy Filmu.
 - `src/llm/` — wspólny klient i adaptery Gemini, OpenAI oraz Anthropic.
-- `src/utils/storage.ts` — stabilne klucze, walidacja i operacje na danych użytkownika.
+- `src/preferences/` — operacje na preferencjach użytkownika, kluczach API, motywie i ustawieniach z adapterem Chrome.
+- `src/analysisHistory/` — operacje wysokiego poziomu na Historii analiz i Zapisach analiz z adapterem Chrome.
+- `src/utils/storage.ts` — fasada zgodności wstecznej dla storage.
 - `src/utils/prompts.ts` — treść promptów analizy i rozmowy.
 - `src/utils/createShadowRoot.tsx` — tworzenie izolowanego korzenia UI.
 - `src/assets/` — style i fonty.

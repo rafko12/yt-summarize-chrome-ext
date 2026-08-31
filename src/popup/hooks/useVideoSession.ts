@@ -1,18 +1,23 @@
 import { useCallback, useMemo, useState } from 'react';
 
+import createAnalysisHistory, {
+  AnalysisHistory,
+} from '../../analysisHistory/analysisHistory';
+import createChromeAnalysisHistoryPlatform from '../../analysisHistory/chromeAnalysisHistoryPlatform';
 import { TranscriptItem } from '../../llm/types';
 import { isErrorResponse } from '../../shared/messages';
 import { VideoSession } from '../../shared/video';
-import { getHistory } from '../../utils/storage';
 import createChromeYoutubePagePlatform from '../youtubePage/chromeYoutubePagePlatform';
 import createYoutubePage from '../youtubePage/youtubePage';
 
 interface UseVideoSessionProps {
   onVideoChanged?: () => void;
+  historyOverride?: AnalysisHistory;
 }
 
 export default function useVideoSession({
   onVideoChanged,
+  historyOverride,
 }: UseVideoSessionProps = {}) {
   const [currentVideo, setCurrentVideo] = useState<VideoSession | null>(null);
   const [isSearchingVideo, setIsSearchingVideo] = useState<boolean>(false);
@@ -21,6 +26,12 @@ export default function useVideoSession({
   const youtubePage = useMemo(
     () => createYoutubePage(createChromeYoutubePagePlatform()),
     []
+  );
+  const history = useMemo(
+    () =>
+      historyOverride ||
+      createAnalysisHistory(createChromeAnalysisHistoryPlatform()),
+    [historyOverride]
   );
 
   const loadActiveVideo = useCallback(async () => {
@@ -35,7 +46,7 @@ export default function useVideoSession({
         return null;
       }
 
-      const savedHistory = await getHistory();
+      const savedHistory = await history.getRecords();
       const existingSession = savedHistory.find(
         (item) => item.videoId === activeVideo.videoId
       );
@@ -61,7 +72,7 @@ export default function useVideoSession({
       setIsSearchingVideo(false);
     }
     return null;
-  }, [onVideoChanged, youtubePage]);
+  }, [history, onVideoChanged, youtubePage]);
 
   // Sync video and fetch transcript if missing
   const ensureVideoAndTranscript = useCallback(

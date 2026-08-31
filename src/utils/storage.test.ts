@@ -5,9 +5,15 @@ import {
   clearApiKeysAndHistory,
   clearHistory,
   deleteHistoryItem,
+  getAllApiKeys,
   getHistory,
+  getSettings,
+  getTheme,
   HistoryItem,
   saveHistoryItem,
+  setApiKey,
+  setSettings,
+  setTheme,
   updateHistoryItemChat,
 } from './storage';
 
@@ -127,30 +133,26 @@ describe('storage history operations', () => {
     ]);
   });
 
-  it('removes every API key together with history', async () => {
+  it('removes every API key together with history while preserving settings and theme', async () => {
     await saveHistoryItem(dummyItem);
-    await new Promise<void>((resolve) => {
-      chrome.storage.local.set(
-        {
-          gemini_api_key: 'gemini',
-          openai_api_key: 'openai',
-          claude_api_key: 'claude',
-        },
-        resolve
-      );
-    });
+    await setApiKey('gemini', 'gemini-key');
+    await setApiKey('openai', 'openai-key');
+    await setApiKey('claude', 'claude-key');
+    await setSettings({ language: 'English', model: 'gpt-5.6-luna' });
+    await setTheme('nord');
 
     await clearApiKeysAndHistory();
 
-    expect(global.chrome.storage.local.remove).toHaveBeenCalledWith(
-      [
-        'gemini_api_key',
-        'openai_api_key',
-        'claude_api_key',
-        'summarizer_history',
-      ],
-      expect.any(Function)
-    );
+    await expect(getAllApiKeys()).resolves.toEqual({
+      gemini: '',
+      openai: '',
+      claude: '',
+    });
     await expect(getHistory()).resolves.toEqual([]);
+    await expect(getSettings()).resolves.toEqual({
+      language: 'English',
+      model: 'gpt-5.6-luna',
+    });
+    await expect(getTheme()).resolves.toBe('nord');
   });
 });

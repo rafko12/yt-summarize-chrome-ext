@@ -1,29 +1,34 @@
-import { MouseEvent, useEffect, useState } from 'react';
+import { MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import {
-  clearHistory,
-  deleteHistoryItem,
-  getHistory,
-  HistoryItem,
-} from '../../utils/storage';
+import createAnalysisHistory, {
+  AnalysisHistory,
+  AnalysisRecord,
+} from '../../analysisHistory/analysisHistory';
+import createChromeAnalysisHistoryPlatform from '../../analysisHistory/chromeAnalysisHistoryPlatform';
 
-export default function useHistory() {
-  const [historyList, setHistoryList] = useState<HistoryItem[]>([]);
+export default function useHistory(historyOverride?: AnalysisHistory) {
+  const history = useMemo(
+    () =>
+      historyOverride ||
+      createAnalysisHistory(createChromeAnalysisHistoryPlatform()),
+    [historyOverride]
+  );
+  const [historyList, setHistoryList] = useState<AnalysisRecord[]>([]);
 
-  const loadHistory = async () => {
-    const savedHistory = await getHistory();
+  const loadHistory = useCallback(async () => {
+    const savedHistory = await history.getRecords();
     setHistoryList(savedHistory);
-  };
+  }, [history]);
 
   useEffect(() => {
     loadHistory();
-  }, []);
+  }, [loadHistory]);
 
   const handleDeleteHistory = async (e: MouseEvent, videoId: string) => {
     e.stopPropagation();
     // eslint-disable-next-line no-alert
     if (window.confirm('Czy chcesz usunąć to podsumowanie z historii?')) {
-      const updated = await deleteHistoryItem(videoId);
+      const updated = await history.deleteRecord(videoId);
       setHistoryList(updated);
       return true; // Indicate it was deleted
     }
@@ -35,7 +40,7 @@ export default function useHistory() {
       // eslint-disable-next-line no-alert -- intentional user confirmation
       window.confirm('Czy na pewno chcesz usunąć całą historię podsumowań?')
     ) {
-      await clearHistory();
+      await history.clearRecords();
       setHistoryList([]);
     }
   };

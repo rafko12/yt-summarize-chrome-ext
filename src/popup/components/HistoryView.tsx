@@ -1,11 +1,14 @@
 import { MouseEvent } from 'react';
 import { ClockCounterClockwise, Trash } from '@phosphor-icons/react';
 
-import { HistoryItem } from '../../utils/storage';
+import { AnalysisRecord } from '../../analysisHistory/analysisHistory';
+
+export type { AnalysisRecord };
+export type HistoryItem = AnalysisRecord;
 
 interface HistoryViewProps {
-  historyList: HistoryItem[];
-  onResumeSession: (item: HistoryItem) => void;
+  historyList: AnalysisRecord[];
+  onResumeSession: (item: AnalysisRecord) => void;
   onDeleteHistory: (e: MouseEvent, videoId: string) => void;
 }
 

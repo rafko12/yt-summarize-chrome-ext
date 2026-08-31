@@ -8,9 +8,10 @@ import {
 } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
+import { AnalysisRecord } from '../analysisHistory/analysisHistory';
 import { sendMessageToBackground } from '../shared/chromeMessageTransport';
 import { isBackgroundMessage, isErrorResponse } from '../shared/messages';
-import { clearApiKeysAndHistory, HistoryItem } from '../utils/storage';
+import { clearApiKeysAndHistory } from '../utils/storage';
 import AnalyzeView from './components/AnalyzeView';
 import { Header, PopupTab } from './components/Header';
 import HistoryView from './components/HistoryView';
@@ -124,7 +125,7 @@ export default function PopupContainer(): JSX.Element {
       });
   };
 
-  const handleResumeSession = (item: HistoryItem) => {
+  const handleResumeSession = (item: AnalysisRecord) => {
     chatHook.resetAnalysisState();
     videoHook.setCurrentVideo({
       videoId: item.videoId,
