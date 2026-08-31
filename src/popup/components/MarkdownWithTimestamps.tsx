@@ -1,25 +1,21 @@
 import { JSX } from 'react';
 
-import { sendMessageToTabWithRetry } from '../../shared/chromeMessageTransport';
 import { parseTimestamp } from '../../utils/time';
+import createChromeYoutubePagePlatform from '../youtubePage/chromeYoutubePagePlatform';
+import createYoutubePage from '../youtubePage/youtubePage';
 
 const timestampRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
+
+const youtubePage = createYoutubePage(createChromeYoutubePagePlatform());
 
 function handleTimestampClick(timeStr: string) {
   const seconds = parseTimestamp(timeStr);
 
-  chrome.tabs.query({ active: true, currentWindow: true }).then(([tab]) => {
-    if (!tab?.id) return;
-
-    sendMessageToTabWithRetry(tab.id, { type: 'SEEK_TO', seconds }).catch(
-      (error: unknown) => {
-        // eslint-disable-next-line no-console
-        console.error('Failed to seek player:', error);
-      }
-    );
+  youtubePage.seekToTimestamp(seconds).catch((error: unknown) => {
+    // eslint-disable-next-line no-console
+    console.error('Failed to seek player:', error);
   });
 }
-
 export function MarkdownLine({ text }: { text: string }) {
   const boldParts = text.split('**');
 

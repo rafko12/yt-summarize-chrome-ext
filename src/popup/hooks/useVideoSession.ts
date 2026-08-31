@@ -1,7 +1,6 @@
 import { useCallback, useMemo, useState } from 'react';
 
 import { TranscriptItem } from '../../llm/types';
-import { sendMessageToTabWithRetry } from '../../shared/chromeMessageTransport';
 import { isErrorResponse } from '../../shared/messages';
 import { VideoSession } from '../../shared/video';
 import { getHistory } from '../../utils/storage';
@@ -67,31 +66,11 @@ export default function useVideoSession({
   // Sync video and fetch transcript if missing
   const ensureVideoAndTranscript = useCallback(
     async (language: string, onInjecting?: () => void) => {
-      const [tab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      if (!tab || !tab.id) {
-        throw new Error('Nie znaleziono aktywnej karty.');
-      }
-
-      const url = new URL(tab.url || '');
-      const currentTabVideoId = url.searchParams.get('v');
-
       let targetVideo = currentVideo!;
+      const activeVideo = await youtubePage.readActiveVideo(currentVideo!);
 
-      if (currentTabVideoId && currentTabVideoId !== currentVideo?.videoId) {
-        const activeVideo = await youtubePage.readActiveVideo();
-        if (activeVideo) {
-          targetVideo = activeVideo;
-        } else {
-          targetVideo = {
-            ...currentVideo!,
-            videoId: currentTabVideoId,
-            title: tab.title || 'Film YouTube',
-            thumbnailUrl: `https://img.youtube.com/vi/${currentTabVideoId}/hqdefault.jpg`,
-          };
-        }
+      if (activeVideo && activeVideo.videoId !== currentVideo?.videoId) {
+        targetVideo = activeVideo;
         setCurrentVideo(targetVideo);
         setTranscript(null);
         onVideoChanged?.();
@@ -102,13 +81,9 @@ export default function useVideoSession({
         return { activeTranscript: transcript, targetVideo };
       }
 
-      const response = await sendMessageToTabWithRetry(
-        tab.id,
-        {
-          type: 'GET_TRANSCRIPT',
-          videoId: targetVideo.videoId,
-          targetLang: language === 'Polski' ? 'pl' : 'en',
-        },
+      const response = await youtubePage.fetchActiveTranscript(
+        targetVideo.videoId,
+        language === 'Polski' ? 'pl' : 'en',
         { onInjecting }
       );
 
