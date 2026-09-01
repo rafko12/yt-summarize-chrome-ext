@@ -117,9 +117,9 @@ export default function AnalyzeView({
       )}
 
       {hasAnyKey && !isSearchingVideo && !!currentVideo && (
-        <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
+        <div className='flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2'>
           {/* Video Info Header Card */}
-          <div className='bg-base-100 border-base-200 mb-2 flex shrink-0 items-center rounded-xl border p-2 shadow-sm'>
+          <div className='bg-base-100 border-base-200 flex shrink-0 items-center rounded-xl border p-2 shadow-sm'>
             <figure className='w-14 shrink-0 overflow-hidden rounded-md'>
               <img
                 src={currentVideo.thumbnailUrl}
@@ -145,9 +145,7 @@ export default function AnalyzeView({
           </div>
 
           {!isLoading && (
-            <div
-              className={`mb-3 flex shrink-0 flex-col ${summary ? '' : 'mt-2'}`}
-            >
+            <div className='flex shrink-0 flex-col'>
               <div className='bg-base-100 border-base-200 flex shrink-0 flex-col rounded-xl border shadow-sm'>
                 {chatMessages.length > 0 && (
                   <div className='bg-base-100 border-base-200 flex items-center justify-between border-b px-3 py-1.5'>
@@ -166,10 +164,7 @@ export default function AnalyzeView({
                 )}
 
                 {(chatMessages.length > 0 || isSendingChat) && (
-                  <div
-                    ref={chatListRef}
-                    className='max-h-60 space-y-2.5 overflow-y-auto px-3 py-2.5'
-                  >
+                  <div ref={chatListRef} className='space-y-2.5 px-3 py-2.5'>
                     {chatMessages.map((msg) => (
                       <div
                         key={`chat-${msg.role}-${msg.message.slice(0, 20).replace(/\s/g, '_')}`}
@@ -179,7 +174,7 @@ export default function AnalyzeView({
                           {msg.role === 'user' ? 'Ty' : 'AI'}
                         </div>
                         <div
-                          className={`chat-bubble max-w-[85%] text-xs leading-relaxed ${
+                          className={`chat-bubble max-w-[85%] break-words text-xs leading-relaxed ${
                             msg.role === 'user'
                               ? 'chat-bubble-primary text-primary-content shadow-sm'
                               : 'chat-bubble-base-300 bg-base-300/80 text-base-content shadow-sm'

@@ -96,6 +96,7 @@ export default function SettingsView({
             <button
               type='button'
               onClick={onToggleShowKey}
+              aria-label={showKey ? 'Ukryj klucz API' : 'Pokaż klucz API'}
               className='text-base-content/75 hover:text-base-content absolute right-2 top-2'
             >
               {showKey ? (

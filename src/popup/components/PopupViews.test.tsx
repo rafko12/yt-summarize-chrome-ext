@@ -151,7 +151,7 @@ describe('widoki panelu', () => {
     fireEvent.change(screen.getByLabelText(/Klucz/), {
       target: { value: 'zmieniony' },
     });
-    fireEvent.click(screen.getAllByRole('button', { name: '' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: /Pokaż klucz API/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
     fireEvent.change(screen.getByRole('combobox', { name: /Model/ }), {
       target: { value: 'gpt-5.6-luna' },
@@ -289,6 +289,7 @@ describe('widoki panelu', () => {
         currentVideo={video}
         chatMessages={[{ role: 'user', message: 'Pytanie [01:30]' }]}
         chatInput='Wiadomo??'
+        summary='To jest długie podsumowanie [00:45]'
       />
     );
     fireEvent.error(screen.getByAltText('Thumbnail'));
@@ -299,14 +300,17 @@ describe('widoki panelu', () => {
     fireEvent.submit(
       screen.getByPlaceholderText(/Zadaj pytanie/).closest('form')!
     );
-    fireEvent.click(
-      screen.getByRole('button', { name: /Generuj Podsumowanie/ })
-    );
+    fireEvent.click(screen.getByRole('button', { name: '00:45' }));
 
     expect(callbacks.clear).toHaveBeenCalled();
     expect(callbacks.input).toHaveBeenCalledWith('Inne pytanie');
     expect(callbacks.send).toHaveBeenCalled();
-    expect(callbacks.summarize).toHaveBeenCalledOnce();
+
+    const scrollContainer = screen
+      .getByText(video.title)
+      .closest('.overflow-y-auto');
+    expect(scrollContainer).toBeInTheDocument();
+    expect(scrollContainer).toHaveClass('flex', 'flex-col', 'gap-3');
 
     rerender(
       <AnalyzeView
