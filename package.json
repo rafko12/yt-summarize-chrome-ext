@@ -6,8 +6,8 @@
   "version": "1.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode chrome",
-    "build": "tsc && vite build --mode chrome",
+    "dev": "vite",
+    "build": "tsc && vite build",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",

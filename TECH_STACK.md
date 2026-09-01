@@ -14,9 +14,15 @@ je w dokumentacji.
 
 Wspieranym artefaktem jest wyłącznie build Chrome w `dist_chrome`. Minimalną
 wersję przeglądarki wyznacza `minimum_chrome_version` w `src/manifest.ts`.
-Pozostałości wariantu Firefoksa w `vite.config.ts` są kodem przejściowym
-przeznaczonym do usunięcia zgodnie z [`REFACTOR.md`](REFACTOR.md), a nie drugą
-wspieraną platformą.
+Udokumentowana allowlista artefaktu obejmuje wyłącznie:
+
+- `manifest.json` (wygenerowany z `src/manifest.ts`);
+- punkty wejścia i chunki skryptów (`service-worker-loader.js`, skrypty background, content scriptu, popupu i opcji);
+- szablony HTML punktów wejścia (`src/popup/index.html`, `src/options/index.html`);
+- style i fonty (`assets/fonts/*.woff2`);
+- ikony produktu (`icon16.png`, `icon32.png`, `icon48.png`, `icon128.png`, `icon.png`).
+
+Artefakt nie zawiera konfiguracji deweloperskich, testów, mocków ani plików tymczasowych.
 
 ## Język i interfejs użytkownika
 

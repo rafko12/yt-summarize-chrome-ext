@@ -24,7 +24,6 @@ export default function createShadowRoot(styles: string) {
 
   const shadow = host.attachShadow({ mode: 'open' });
 
-  // Create an internal mount node to avoid Xray wrapper issues in Firefox.
   // pointer-events: auto re-enables interaction for visible UI (popup).
   const mount = document.createElement('div');
   if (window.location.protocol.startsWith('chrome-extension')) {

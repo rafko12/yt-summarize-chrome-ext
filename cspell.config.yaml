@@ -25,11 +25,15 @@ dictionaries: en_US
   - node
 words:
   - actioned
+  - allowlista
+  - allowlistę
+  - allowlisty
   - buildzie
   - buildu
   - checklistę
   - checklisty
   - checkoutu
+  - chunki
   - Codexa
   - Commity
   - commitowane
@@ -63,6 +67,7 @@ words:
   - podpakietu
   - polyfillu
   - Polyfillów
+  - popupu
   - promptów
   - Reacta
   - Reactowy

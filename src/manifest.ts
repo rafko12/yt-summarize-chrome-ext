@@ -36,16 +36,15 @@ export default defineManifest({
   side_panel: {
     default_path: 'src/popup/index.html',
   },
+  options_page: 'src/options/index.html',
+  background: {
+    service_worker: 'src/background/index.ts',
+    type: 'module',
+  },
   content_scripts: [
     {
       js: isDev ? ['src/content/index.dev.ts'] : ['src/content/index.prod.ts'],
       matches: ['https://*.youtube.com/*'],
-    },
-  ],
-  web_accessible_resources: [
-    {
-      resources: ['*.js', '*.css', 'public/*', 'assets/fonts/*'],
-      matches: ['<all_urls>'],
     },
   ],
 });
