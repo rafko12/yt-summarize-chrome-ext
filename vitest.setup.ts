@@ -25,7 +25,7 @@ global.chrome = {
   } as unknown as typeof chrome.tabs,
   runtime: {
     id: 'test-ext-id',
-    getManifest: vi.fn(() => ({ version: '1.0' })),
+    getManifest: vi.fn(() => ({ version: '1.0.0' })),
     getURL: vi.fn((path) => `chrome-extension://test-ext-id/${path}`),
     sendMessage: vi.fn(),
     onMessage: {

@@ -267,7 +267,7 @@ export default function SettingsView({
 
       {/* Info footer */}
       <div className='text-base-content/75 mt-2 text-center text-[11px] font-medium'>
-        Wersja rozszerzenia: 1.2.0 • Obsługuje wielu dostawców AI
+        Wersja rozszerzenia: 1.0.0 • Obsługuje wielu dostawców AI
       </div>
     </div>
   );
