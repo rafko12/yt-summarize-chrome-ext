@@ -2,7 +2,7 @@
 
 ## Status
 
-Plan został zatwierdzony 20 sierpnia 2026 r. Status etapu można zmienić dopiero po przejściu jego automatycznej i manualnej bramki. Sama obecność nowych plików w drzewie roboczym nie oznacza ukończenia etapu.
+Refaktor został pomyślnie ukończony i zweryfikowany 1 września 2026 r. Wszystkie etapy 0–8 spełniają zatwierdzone kryteria akceptacji, automatyczna bramka `pnpm check` jest w pełni zielona (100% testów przechodzi, brak ostrzeżeń, zachowane wymagane progi coverage), a pełna manualna lista kontrolna regresji potwierdza brak niezamierzonych zmian w zachowaniu, wyglądzie, UX i kompatybilności danych użytkownika.
 
 Bieżące technologie i ich źródła prawdy mapuje [`TECH_STACK.md`](TECH_STACK.md). Ten plan opisuje zamierzone przejścia, dlatego nie należy traktować jego etapów jako opisu już wdrożonego stosu.
 
