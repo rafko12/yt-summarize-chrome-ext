@@ -12,6 +12,20 @@ Rozszerzenie dla Google Chrome, które pobiera transkrypcję filmu z YouTube, tw
 - jasny i ciemny motyw;
 - lokalny lub przypięty panel boczny.
 
+## Obsługiwani Dostawcy i Modele AI
+
+- **Google Gemini**:
+  - Gemini 3.6 Flash (domyślny)
+  - Gemini 3.5 Flash-Lite (model do walidacji klucza)
+  - Gemini 3.1 Pro
+- **OpenAI**:
+  - GPT-5.6 Luna (domyślny)
+  - GPT-5.6 Terra
+- **Anthropic Claude**:
+  - Claude 5 Sonnet (domyślny)
+  - Claude 5 Opus
+  - Claude 4.5 Haiku (model do walidacji klucza)
+
 ## Wymagania
 
 - Google Chrome w wersji zgodnej z `minimum_chrome_version` w
@@ -61,6 +75,6 @@ W ustawieniach rozszerzenia można usunąć zapisane klucze API i Historię anal
 - [Decyzje architektoniczne](docs/adr/)
 - [Manualna lista kontrolna regresji](docs/manual-regression-checklist.md)
 
-## Quality baseline (2026-08-28)
+## Quality baseline (2026-09-01)
 
-`pnpm check`: 80 tests, 84.05% line coverage, 75.22% branch coverage.
+`pnpm check`: 207 tests, 93.67% line coverage, 88.92% branch coverage.
