@@ -7,6 +7,7 @@ export const AI_PROVIDERS = [
     apiKeyHelpUrl: 'https://aistudio.google.com',
     apiKeyHelpLinkLabel: 'Google AI Studio',
     validationModel: 'gemini-3.5-flash-lite',
+    defaultModel: 'gemini-3.6-flash',
   },
   {
     id: 'openai',
@@ -16,6 +17,7 @@ export const AI_PROVIDERS = [
     apiKeyHelpUrl: 'https://platform.openai.com/api-keys',
     apiKeyHelpLinkLabel: 'OpenAI API keys',
     validationModel: 'gpt-4o-mini',
+    defaultModel: 'gpt-5.6-luna',
   },
   {
     id: 'claude',
@@ -25,6 +27,7 @@ export const AI_PROVIDERS = [
     apiKeyHelpUrl: 'https://console.anthropic.com/settings/keys',
     apiKeyHelpLinkLabel: 'Anthropic Console',
     validationModel: 'claude-haiku-4-5',
+    defaultModel: 'claude-sonnet-5',
   },
 ] as const;
 
@@ -99,4 +102,8 @@ export function getAiProvider(provider: AiProvider) {
 
 export function getAiModel(model: string) {
   return AI_MODELS.find((entry) => entry.id === model);
+}
+
+export function getDefaultAiModel(provider: AiProvider): string {
+  return getAiProvider(provider).defaultModel;
 }

@@ -1,3 +1,4 @@
+import { isModelAvailable, resolveCompatibleModel } from '../llm/modelPolicy';
 import { AiProvider } from '../llm/registry';
 
 export type Provider = AiProvider;
@@ -105,10 +106,32 @@ export default function createUserPreferences(
   return {
     async readInitialPreferences(): Promise<InitialPreferences> {
       const raw = await platform.read(ALL_PREFERENCE_KEYS);
+      const apiKeys = normalizeApiKeys(raw);
+      let settings = normalizeSettings(raw[PREFERENCE_STORAGE_KEYS.SETTINGS]);
+      const theme = normalizeTheme(raw[PREFERENCE_STORAGE_KEYS.UI_THEME]);
+
+      const hasAnyAvailableKey = Object.values(apiKeys).some(
+        (key) => key.trim().length > 0
+      );
+
+      if (hasAnyAvailableKey && !isModelAvailable(settings.model, apiKeys)) {
+        const compatibleModel = resolveCompatibleModel({
+          currentModel: settings.model,
+          apiKeys,
+        });
+
+        if (compatibleModel !== settings.model) {
+          settings = { ...settings, model: compatibleModel };
+          await platform.write({
+            [PREFERENCE_STORAGE_KEYS.SETTINGS]: settings,
+          });
+        }
+      }
+
       return {
-        apiKeys: normalizeApiKeys(raw),
-        settings: normalizeSettings(raw[PREFERENCE_STORAGE_KEYS.SETTINGS]),
-        theme: normalizeTheme(raw[PREFERENCE_STORAGE_KEYS.UI_THEME]),
+        apiKeys,
+        settings,
+        theme,
       };
     },
 

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
 import { validateApiKey } from '../../llm/client';
+import { resolveCompatibleModel } from '../../llm/modelPolicy';
 import createChromePreferencesPlatform from '../../preferences/chromePreferencesPlatform';
 import createUserPreferences, {
   Provider,
@@ -92,8 +93,25 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
 
     setIsCheckingKey(false);
     if (valid) {
+      const nextApiKeys: Record<Provider, string> = {
+        ...apiKeys,
+        [selectedProvider]: trimmedKey,
+      };
+
+      const compatibleModel = resolveCompatibleModel({
+        currentModel: settings.model,
+        apiKeys: nextApiKeys,
+        preferredProvider: selectedProvider,
+      });
+
+      if (compatibleModel !== settings.model) {
+        const nextSettings = { ...settings, model: compatibleModel };
+        await preferences.setSettings(nextSettings);
+        setSettingsVal(nextSettings);
+      }
+
       await preferences.setApiKey(selectedProvider, trimmedKey);
-      setApiKeysVal((prev) => ({ ...prev, [selectedProvider]: trimmedKey }));
+      setApiKeysVal(nextApiKeys);
       setKeyValidationMsg({
         text: 'Klucz API jest poprawny i został zapisany!',
         success: true,
@@ -106,8 +124,24 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
   };
 
   const handleDeleteApiKey = async (provider: Provider) => {
+    const nextApiKeys: Record<Provider, string> = {
+      ...apiKeys,
+      [provider]: '',
+    };
+
+    const compatibleModel = resolveCompatibleModel({
+      currentModel: settings.model,
+      apiKeys: nextApiKeys,
+    });
+
+    if (compatibleModel !== settings.model) {
+      const nextSettings = { ...settings, model: compatibleModel };
+      await preferences.setSettings(nextSettings);
+      setSettingsVal(nextSettings);
+    }
+
     await preferences.setApiKey(provider, '');
-    setApiKeysVal((prev) => ({ ...prev, [provider]: '' }));
+    setApiKeysVal(nextApiKeys);
     if (selectedProvider === provider) {
       setApiKeyInput('');
     }

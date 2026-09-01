@@ -41,6 +41,8 @@ beforeEach(() => {
     ok: true,
     json: async () => ({
       candidates: [{ content: { parts: [{ text: 'AI response' }] } }],
+      content: [{ type: 'text', text: 'AI response' }],
+      choices: [{ message: { content: 'AI response' } }],
     }),
   })) as unknown as typeof fetch;
   window.matchMedia = vi.fn(() => ({
@@ -293,19 +295,53 @@ describe('popup user flow', () => {
     expect(screen.getByText('Existing chat message')).toBeVisible();
   });
 
-  test('handles missing API key for selected provider when requesting summary by switching to settings view', async () => {
-    stored.gemini_api_key = '';
-    stored.openai_api_key = 'openai-fallback-key';
+  test('automatically switches active model to remaining available provider when active key is deleted and successfully generates summary', async () => {
+    stored.gemini_api_key = 'gemini-key';
+    stored.openai_api_key = 'openai-key';
+    stored.summarizer_settings = {
+      language: 'Polski',
+      model: 'gemini-3.6-flash',
+    };
+
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: 'OpenAI podsumowanie po usunięciu klucza Gemini',
+            },
+          },
+        ],
+      }),
+    })) as unknown as typeof fetch;
 
     render(<PopupContainer />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // Switch to settings and delete Gemini key while OpenAI key remains
+    fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+    await waitFor(() => expect(screen.getByText(/Konfiguracja/)).toBeVisible());
+    fireEvent.click(screen.getByRole('button', { name: 'Usuń klucz gemini' }));
+
+    // Verify storage was synchronized to OpenAI default model
+    await waitFor(() => {
+      expect(stored.gemini_api_key).toBe('');
+      expect(stored.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gpt-5.6-luna',
+      });
+    });
+
+    // Switch back to analyze and generate summary
+    fireEvent.click(screen.getByRole('button', { name: 'Analizuj' }));
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Konfiguracja/)).toBeVisible();
       expect(
-        screen.getByText(/Aby podsumować film, musisz najpierw podać klucz API/)
+        screen.getByText('OpenAI podsumowanie po usunięciu klucza Gemini')
       ).toBeVisible();
     });
   });
@@ -868,6 +904,613 @@ describe('popup user flow', () => {
     await waitFor(() => {
       expect(rootElement).toHaveAttribute('data-theme', 'night');
       expect(stored.ui_theme).toBe('night');
+    });
+  });
+
+  test('normalizes active model on initialization when opening with OpenAI key and un-normalized storage state', async () => {
+    stored.gemini_api_key = '';
+    stored.openai_api_key = 'openai-initial-key';
+    stored.summarizer_settings = {
+      language: 'Polski',
+      model: 'gemini-3.5-flash', // legacy or unavailable model
+    };
+
+    global.fetch = vi.fn(async () => ({
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: 'OpenAI podsumowanie filmu',
+            },
+          },
+        ],
+      }),
+    })) as unknown as typeof fetch;
+
+    render(<PopupContainer />);
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // Storage should be normalized to gpt-5.6-luna
+    expect(stored.summarizer_settings).toEqual({
+      language: 'Polski',
+      model: 'gpt-5.6-luna',
+    });
+
+    // Clicking generate should use OpenAI key without error
+    fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
+
+    await waitFor(() => {
+      expect(screen.getByText('OpenAI podsumowanie filmu')).toBeVisible();
+    });
+  });
+
+  describe('model synchronization on API key save and delete (Issue #39)', () => {
+    test('saving first OpenAI key synchronizes model to gpt-5.6-luna and displays success message after sync', async () => {
+      stored.gemini_api_key = '';
+      stored.openai_api_key = '';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      };
+
+      render(<PopupContainer />);
+      await waitFor(() =>
+        expect(screen.getByText('Wymagany klucz API')).toBeVisible()
+      );
+
+      // Open settings tab
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Verify no model selector exists yet (no keys)
+      expect(
+        screen.getByText('Dodaj klucz API, aby móc wybrać model.')
+      ).toBeVisible();
+
+      // Select OpenAI provider and enter API key
+      fireEvent.change(screen.getByLabelText(/Wybierz Dostawcę AI/), {
+        target: { value: 'openai' },
+      });
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'sk-new-openai-key' },
+      });
+
+      // Save key
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
+
+      // Wait for success message which must appear after sync
+      await waitFor(() => {
+        expect(
+          screen.getByText('Klucz API jest poprawny i został zapisany!')
+        ).toBeVisible();
+      });
+
+      // Assert storage state is consistent
+      expect(stored.openai_api_key).toBe('sk-new-openai-key');
+      expect(stored.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gpt-5.6-luna',
+      });
+
+      // Assert visible selector reflects the active model
+      const modelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(modelSelect.value).toBe('gpt-5.6-luna');
+      expect(Array.from(modelSelect.options).map((opt) => opt.value)).toContain(
+        'gpt-5.6-luna'
+      );
+    });
+
+    test('saving first Claude key synchronizes model to claude-sonnet-5', async () => {
+      stored.gemini_api_key = '';
+      stored.openai_api_key = '';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      };
+
+      render(<PopupContainer />);
+      await waitFor(() =>
+        expect(screen.getByText('Wymagany klucz API')).toBeVisible()
+      );
+
+      // Open settings tab
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Select Claude provider and enter API key
+      fireEvent.change(screen.getByLabelText(/Wybierz Dostawcę AI/), {
+        target: { value: 'claude' },
+      });
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'sk-ant-claude-key' },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Klucz API jest poprawny i został zapisany!')
+        ).toBeVisible();
+      });
+
+      expect(stored.claude_api_key).toBe('sk-ant-claude-key');
+      expect(stored.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'claude-sonnet-5',
+      });
+
+      const modelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(modelSelect.value).toBe('claude-sonnet-5');
+    });
+
+    test('saving first Gemini key synchronizes model to gemini-3.6-flash', async () => {
+      stored.gemini_api_key = '';
+      stored.openai_api_key = '';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.5-flash', // hidden legacy model
+      };
+
+      render(<PopupContainer />);
+      await waitFor(() =>
+        expect(screen.getByText('Wymagany klucz API')).toBeVisible()
+      );
+
+      // Open settings tab
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Select Gemini provider and enter API key
+      fireEvent.change(screen.getByLabelText(/Wybierz Dostawcę AI/), {
+        target: { value: 'gemini' },
+      });
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'gemini-new-key' },
+      });
+
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Klucz API jest poprawny i został zapisany!')
+        ).toBeVisible();
+      });
+
+      expect(stored.gemini_api_key).toBe('gemini-new-key');
+      expect(stored.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      });
+
+      const modelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(modelSelect.value).toBe('gemini-3.6-flash');
+    });
+
+    test('adding a second API key preserves user manual model choice without overwriting', async () => {
+      stored.gemini_api_key = '';
+      stored.openai_api_key = 'sk-existing-openai';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'English',
+        model: 'gpt-5.6-terra', // user manually picked terra
+      };
+
+      render(<PopupContainer />);
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      // Open settings tab
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Add Gemini key as second key
+      fireEvent.change(screen.getByLabelText(/Wybierz Dostawcę AI/), {
+        target: { value: 'gemini' },
+      });
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'gemini-second-key' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Klucz API jest poprawny i został zapisany!')
+        ).toBeVisible();
+      });
+
+      // Storage keeps gpt-5.6-terra intact
+      expect(stored.gemini_api_key).toBe('gemini-second-key');
+      expect(stored.openai_api_key).toBe('sk-existing-openai');
+      expect(stored.summarizer_settings).toEqual({
+        language: 'English',
+        model: 'gpt-5.6-terra',
+      });
+
+      // Selector still displays gpt-5.6-terra
+      const modelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(modelSelect.value).toBe('gpt-5.6-terra');
+    });
+
+    test('deleting active provider key switches model to another available provider', async () => {
+      stored.gemini_api_key = '';
+      stored.openai_api_key = 'sk-openai';
+      stored.claude_api_key = 'sk-claude';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gpt-5.6-luna',
+      };
+
+      render(<PopupContainer />);
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      // Open settings tab
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Delete active OpenAI key
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Usuń klucz openai' })
+      );
+
+      await waitFor(() => {
+        expect(stored.openai_api_key).toBe('');
+        // Switched to Claude default model
+        expect(stored.summarizer_settings).toEqual({
+          language: 'Polski',
+          model: 'claude-sonnet-5',
+        });
+      });
+
+      // Selector reflects claude-sonnet-5
+      const modelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(modelSelect.value).toBe('claude-sonnet-5');
+    });
+
+    test('deleting inactive provider key preserves active model', async () => {
+      stored.gemini_api_key = 'sk-gemini';
+      stored.openai_api_key = 'sk-openai';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      };
+
+      render(<PopupContainer />);
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      // Open settings tab
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Delete inactive OpenAI key
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Usuń klucz openai' })
+      );
+
+      await waitFor(() => {
+        expect(stored.openai_api_key).toBe('');
+        // Model stays gemini-3.6-flash
+        expect(stored.summarizer_settings).toEqual({
+          language: 'Polski',
+          model: 'gemini-3.6-flash',
+        });
+      });
+
+      const modelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(modelSelect.value).toBe('gemini-3.6-flash');
+    });
+
+    test('deleting the last remaining key leaves generation unavailable without phantom model selector', async () => {
+      stored.gemini_api_key = 'only-gemini-key';
+      stored.openai_api_key = '';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      };
+
+      render(<PopupContainer />);
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      // Open settings tab
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Delete last remaining key
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Usuń klucz gemini' })
+      );
+
+      await waitFor(() => {
+        expect(stored.gemini_api_key).toBe('');
+        // Model selector is replaced with prompt
+        expect(
+          screen.getByText('Dodaj klucz API, aby móc wybrać model.')
+        ).toBeVisible();
+        expect(
+          screen.queryByRole('combobox', { name: /Wybór Modelu API/ })
+        ).not.toBeInTheDocument();
+      });
+
+      // Switch to Analyze tab and verify generation is blocked
+      fireEvent.click(screen.getByRole('button', { name: 'Analizuj' }));
+      await waitFor(() => {
+        expect(screen.getByText('Wymagany klucz API')).toBeVisible();
+        expect(
+          screen.queryByRole('button', { name: /Generuj/ })
+        ).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('integration regression: first API key flow -> summary generation (Issue #40)', () => {
+    test('complete user journey: fresh install -> add first OpenAI key -> generate summary -> reload panel', async () => {
+      // 1. Fresh installation state
+      stored.gemini_api_key = '';
+      stored.openai_api_key = '';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      };
+      stored.summarizer_history = [];
+
+      global.fetch = vi.fn(async (input) => {
+        const url = String(input);
+        if (url.includes('api.openai.com')) {
+          return {
+            ok: true,
+            json: async () => ({
+              choices: [
+                {
+                  message: {
+                    content: 'Podsumowanie filmu wygenerowane przez OpenAI',
+                  },
+                },
+              ],
+            }),
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            candidates: [{ content: { parts: [{ text: 'AI response' }] } }],
+            content: [{ type: 'text', text: 'AI response' }],
+            choices: [{ message: { content: 'AI response' } }],
+          }),
+        };
+      }) as unknown as typeof fetch;
+
+      // 2. Render initial popup
+      const { unmount } = render(<PopupContainer />);
+      await waitFor(() =>
+        expect(screen.getByText('Wymagany klucz API')).toBeVisible()
+      );
+
+      // Analyze view warns about missing API key and does not allow generation
+      expect(
+        screen.queryByRole('button', { name: /Generuj/ })
+      ).not.toBeInTheDocument();
+
+      // 3. Open settings tab and configure OpenAI key
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      // Model selector is absent before any key is added
+      expect(
+        screen.getByText('Dodaj klucz API, aby móc wybrać model.')
+      ).toBeVisible();
+      expect(
+        screen.queryByRole('combobox', { name: /Wybór Modelu API/ })
+      ).not.toBeInTheDocument();
+
+      // Select OpenAI and enter valid key
+      fireEvent.change(screen.getByLabelText(/Wybierz Dostawcę AI/), {
+        target: { value: 'openai' },
+      });
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'sk-first-openai-key' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
+
+      // Wait for success confirmation
+      await waitFor(() => {
+        expect(
+          screen.getByText('Klucz API jest poprawny i został zapisany!')
+        ).toBeVisible();
+      });
+
+      // Storage has key and normalized default model
+      expect(stored.openai_api_key).toBe('sk-first-openai-key');
+      expect(stored.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gpt-5.6-luna',
+      });
+
+      // Model selector displays the registered OpenAI model
+      const modelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(modelSelect.value).toBe('gpt-5.6-luna');
+
+      // 4. Return to Analyze view and generate summary
+      fireEvent.click(screen.getByRole('button', { name: 'Analizuj' }));
+      await waitFor(() =>
+        expect(screen.queryByText('Wymagany klucz API')).not.toBeInTheDocument()
+      );
+
+      const generateBtn = screen.getByRole('button', { name: /Generuj/ });
+      expect(generateBtn).toBeVisible();
+      fireEvent.click(generateBtn);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Podsumowanie filmu wygenerowane przez OpenAI')
+        ).toBeVisible();
+      });
+
+      // Verify OpenAI endpoint and bearer token were used
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.openai.com/v1/chat/completions',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            Authorization: 'Bearer sk-first-openai-key',
+          }),
+          body: expect.stringContaining('"model":"gpt-5.6-luna"'),
+        })
+      );
+
+      // Verify storage recorded history
+      expect(stored.summarizer_history).toHaveLength(1);
+
+      // 5. Simulate reopening / reloading the panel
+      unmount();
+
+      render(<PopupContainer />);
+      await waitFor(() =>
+        expect(
+          screen.getByText('Podsumowanie filmu wygenerowane przez OpenAI')
+        ).toBeVisible()
+      );
+
+      // Open settings in reloaded panel: selector still shows gpt-5.6-luna
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      const reloadedModelSelect = screen.getByRole('combobox', {
+        name: /Wybór Modelu API/,
+      }) as HTMLSelectElement;
+      expect(reloadedModelSelect.value).toBe('gpt-5.6-luna');
+    });
+
+    test('edge cases: adding second key preserves model choice, deleting active key switches provider and generating works', async () => {
+      // Setup with active OpenAI key and custom choice gpt-5.6-terra
+      stored.gemini_api_key = '';
+      stored.openai_api_key = 'sk-existing-openai';
+      stored.claude_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gpt-5.6-terra',
+      };
+      stored.summarizer_history = [];
+
+      global.fetch = vi.fn(async (input) => {
+        const url = String(input);
+        if (url.includes('anthropic.com')) {
+          return {
+            ok: true,
+            json: async () => ({
+              content: [{ type: 'text', text: 'Podsumowanie z Claude' }],
+            }),
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({
+            choices: [{ message: { content: 'Podsumowanie z OpenAI' } }],
+          }),
+        };
+      }) as unknown as typeof fetch;
+
+      render(<PopupContainer />);
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      // Open Settings and add Claude as second key
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      fireEvent.change(screen.getByLabelText(/Wybierz Dostawcę AI/), {
+        target: { value: 'claude' },
+      });
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'sk-second-claude-key' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText('Klucz API jest poprawny i został zapisany!')
+        ).toBeVisible();
+      });
+
+      // Storage still preserves user choice gpt-5.6-terra
+      expect(stored.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gpt-5.6-terra',
+      });
+
+      // Delete active OpenAI key
+      fireEvent.click(
+        screen.getByRole('button', { name: 'Usuń klucz openai' })
+      );
+
+      await waitFor(() => {
+        expect(stored.openai_api_key).toBe('');
+        // Automatically switches to Claude default model
+        expect(stored.summarizer_settings).toEqual({
+          language: 'Polski',
+          model: 'claude-sonnet-5',
+        });
+      });
+
+      // Return to Analyze tab and generate summary with Claude
+      fireEvent.click(screen.getByRole('button', { name: 'Analizuj' }));
+      await waitFor(() =>
+        expect(
+          screen.getByRole('button', { name: /Generuj/ })
+        ).toBeInTheDocument()
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
+      await waitFor(() => {
+        expect(screen.getByText('Podsumowanie z Claude')).toBeVisible();
+      });
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'https://api.anthropic.com/v1/messages',
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            'x-api-key': 'sk-second-claude-key',
+          }),
+          body: expect.stringContaining('"model":"claude-sonnet-5"'),
+        })
+      );
     });
   });
 });

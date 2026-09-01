@@ -29,6 +29,7 @@ describe('UserPreferences', () => {
       const initial = await preferences.readInitialPreferences();
 
       expect(platform.read).toHaveBeenCalledTimes(1);
+      expect(platform.write).not.toHaveBeenCalled();
       expect(initial).toEqual({
         apiKeys: {
           gemini: '',
@@ -53,6 +54,7 @@ describe('UserPreferences', () => {
       const initial = await preferences.readInitialPreferences();
 
       expect(platform.read).toHaveBeenCalledTimes(1);
+      expect(platform.write).not.toHaveBeenCalled();
       expect(initial).toEqual({
         apiKeys: {
           gemini: 'gemini-secret',
@@ -65,6 +67,210 @@ describe('UserPreferences', () => {
         },
         theme: 'nord',
       });
+    });
+  });
+
+  describe('initial preferences active model normalization', () => {
+    it('preserves valid user-selected model when corresponding API key exists without modifying storage', async () => {
+      // Valid Gemini model
+      storageData.gemini_api_key = 'gemini-key';
+      storageData.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.1-pro',
+      };
+      const geminiResult = await preferences.readInitialPreferences();
+      expect(geminiResult.settings.model).toBe('gemini-3.1-pro');
+      expect(platform.write).not.toHaveBeenCalled();
+
+      // Valid OpenAI model
+      storageData.gemini_api_key = '';
+      storageData.openai_api_key = 'openai-key';
+      storageData.summarizer_settings = {
+        language: 'English',
+        model: 'gpt-5.6-terra',
+      };
+      const openaiResult = await preferences.readInitialPreferences();
+      expect(openaiResult.settings.model).toBe('gpt-5.6-terra');
+      expect(platform.write).not.toHaveBeenCalled();
+
+      // Valid Claude model
+      storageData.openai_api_key = '';
+      storageData.claude_api_key = 'claude-key';
+      storageData.summarizer_settings = {
+        language: 'English',
+        model: 'claude-opus-5',
+      };
+      const claudeResult = await preferences.readInitialPreferences();
+      expect(claudeResult.settings.model).toBe('claude-opus-5');
+      expect(platform.write).not.toHaveBeenCalled();
+    });
+
+    it('normalizes model and persists it to storage when saved model belongs to a provider without API key', async () => {
+      // Saved model is Gemini, but user only configured OpenAI key
+      storageData.gemini_api_key = '';
+      storageData.openai_api_key = 'openai-key';
+      storageData.claude_api_key = '';
+      storageData.summarizer_settings = {
+        language: 'English',
+        model: 'gemini-3.6-flash',
+      };
+
+      const initial = await preferences.readInitialPreferences();
+
+      expect(initial.settings).toEqual({
+        language: 'English',
+        model: 'gpt-5.6-luna',
+      });
+      expect(platform.write).toHaveBeenCalledWith({
+        summarizer_settings: {
+          language: 'English',
+          model: 'gpt-5.6-luna',
+        },
+      });
+      expect(storageData.summarizer_settings).toEqual({
+        language: 'English',
+        model: 'gpt-5.6-luna',
+      });
+    });
+
+    it('normalizes unknown or invalid model to the default model of available provider and persists to storage', async () => {
+      storageData.claude_api_key = 'claude-key';
+      storageData.summarizer_settings = {
+        language: 'Polski',
+        model: 'non-existent-legacy-model',
+      };
+
+      const initial = await preferences.readInitialPreferences();
+
+      expect(initial.settings.model).toBe('claude-sonnet-5');
+      expect(platform.write).toHaveBeenCalledWith({
+        summarizer_settings: {
+          language: 'Polski',
+          model: 'claude-sonnet-5',
+        },
+      });
+      expect(storageData.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'claude-sonnet-5',
+      });
+    });
+
+    it('normalizes hidden models (e.g. gemini-3.5-flash or gpt-4o-mini) to visible registered models', async () => {
+      // gemini-3.5-flash is hidden in settings catalog
+      storageData.gemini_api_key = 'gemini-key';
+      storageData.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.5-flash',
+      };
+
+      const initialGemini = await preferences.readInitialPreferences();
+      expect(initialGemini.settings.model).toBe('gemini-3.6-flash');
+      expect(storageData.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      });
+
+      // gpt-4o-mini is hidden in settings catalog
+      storageData.gemini_api_key = '';
+      storageData.openai_api_key = 'openai-key';
+      storageData.summarizer_settings = {
+        language: 'English',
+        model: 'gpt-4o-mini',
+      };
+
+      const initialOpenAi = await preferences.readInitialPreferences();
+      expect(initialOpenAi.settings.model).toBe('gpt-5.6-luna');
+      expect(storageData.summarizer_settings).toEqual({
+        language: 'English',
+        model: 'gpt-5.6-luna',
+      });
+    });
+
+    it('deterministically selects the first available provider in registry order when multiple keys exist and current model is unavailable', async () => {
+      // Order is gemini -> openai -> claude
+      // Here: OpenAI and Claude have keys, current model is invalid Gemini model
+      storageData.openai_api_key = 'openai-key';
+      storageData.claude_api_key = 'claude-key';
+      storageData.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.6-flash', // no gemini key
+      };
+
+      const initial = await preferences.readInitialPreferences();
+
+      expect(initial.settings.model).toBe('gpt-5.6-luna');
+      expect(storageData.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gpt-5.6-luna',
+      });
+    });
+
+    it('does not write to storage or create phantom active model when no API keys are present', async () => {
+      storageData.gemini_api_key = '';
+      storageData.openai_api_key = '   ';
+      storageData.claude_api_key = undefined;
+      storageData.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.5-flash',
+      };
+
+      const initial = await preferences.readInitialPreferences();
+
+      expect(initial.settings).toEqual({
+        language: 'Polski',
+        model: 'gemini-3.5-flash',
+      });
+      expect(platform.write).not.toHaveBeenCalled();
+    });
+
+    it('subsequent read after normalization yields the normalized model directly without redundant writes', async () => {
+      storageData.openai_api_key = 'openai-key';
+      storageData.summarizer_settings = {
+        language: 'Polski',
+        model: 'unknown-model',
+      };
+
+      // First read: normalizes and writes
+      const firstRead = await preferences.readInitialPreferences();
+      expect(firstRead.settings.model).toBe('gpt-5.6-luna');
+      expect(platform.write).toHaveBeenCalledTimes(1);
+
+      // Reset mock tracking
+      vi.clearAllMocks();
+
+      // Second read (simulating reopening the panel): storage already holds gpt-5.6-luna
+      const secondRead = await preferences.readInitialPreferences();
+      expect(secondRead.settings.model).toBe('gpt-5.6-luna');
+      expect(platform.read).toHaveBeenCalledTimes(1);
+      expect(platform.write).not.toHaveBeenCalled();
+    });
+
+    it('preserves backward compatibility with existing storage keys and summarizer_settings format', async () => {
+      // Legacy storage record with all existing key names
+      storageData.gemini_api_key = 'legacy-gemini-key';
+      storageData.openai_api_key = 'legacy-openai-key';
+      storageData.claude_api_key = 'legacy-claude-key';
+      storageData.summarizer_settings = {
+        language: 'English',
+        model: 'gpt-5.6-luna',
+      };
+      storageData.ui_theme = 'night';
+
+      const initial = await preferences.readInitialPreferences();
+
+      expect(initial).toEqual({
+        apiKeys: {
+          gemini: 'legacy-gemini-key',
+          openai: 'legacy-openai-key',
+          claude: 'legacy-claude-key',
+        },
+        settings: {
+          language: 'English',
+          model: 'gpt-5.6-luna',
+        },
+        theme: 'night',
+      });
+      expect(platform.write).not.toHaveBeenCalled();
     });
   });
 
