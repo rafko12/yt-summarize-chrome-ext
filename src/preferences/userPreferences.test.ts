@@ -311,7 +311,7 @@ describe('UserPreferences', () => {
     it('persists and retrieves valid settings', async () => {
       const newSettings = {
         language: 'English',
-        model: 'claude-3-7-sonnet',
+        model: 'claude-sonnet-5',
       };
       await preferences.setSettings(newSettings);
 
