@@ -45,7 +45,7 @@ async function extractPlayerResponse(videoId: string): Promise<PlayerResponse> {
   );
 }
 
-export default function initializeContentScript(): void {
+export default function initializeYoutubeContentScript(): void {
   const handleMessage = (
     message: unknown,
     _sender: chrome.runtime.MessageSender,

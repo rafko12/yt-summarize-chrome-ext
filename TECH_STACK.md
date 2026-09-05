@@ -17,8 +17,8 @@ wersję przeglądarki wyznacza `minimum_chrome_version` w `src/manifest.ts`.
 Udokumentowana allowlista artefaktu obejmuje wyłącznie:
 
 - `manifest.json` (wygenerowany z `src/manifest.ts`);
-- punkty wejścia i chunki skryptów (`service-worker-loader.js`, skrypty background, content scriptu, popupu i opcji);
-- szablony HTML punktów wejścia (`src/popup/index.html`, `src/options/index.html`);
+- punkty wejścia i chunki skryptów (`service-worker-loader.js`, skrypty background, content scriptu, panelu bocznego i opcji);
+- szablony HTML punktów wejścia (`src/sidepanel/index.html`, `src/options/index.html`);
 - style i fonty (`assets/fonts/*.woff2`);
 - ikony produktu (`icon16.png`, `icon32.png`, `icon48.png`, `icon128.png`, `icon.png`).
 
@@ -29,7 +29,7 @@ Artefakt nie zawiera konfiguracji deweloperskich, testów, mocków ani plików t
 | Obszar              | Technologia                 | Zastosowanie                                   | Źródło prawdy                                                                                                |
 | ------------------- | --------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
 | Język               | TypeScript w trybie ścisłym | Kod produkcyjny, konfiguracja buildu i testy   | [`tsconfig.json`](tsconfig.json), [`package.json`](package.json)                                             |
-| UI                  | React i React DOM           | Panel boczny oraz strona opcji                 | [`package.json`](package.json), [`src/popup/`](src/popup/), [`src/options/`](src/options/)                   |
+| UI                  | React i React DOM           | Panel boczny oraz strona opcji                 | [`package.json`](package.json), [`src/sidepanel/`](src/sidepanel/), [`src/options/`](src/options/)           |
 | Style               | Tailwind CSS 4              | Klasy narzędziowe i konfiguracja CSS-first     | [`src/assets/styles/index.css`](src/assets/styles/index.css), [`postcss.config.js`](postcss.config.js)       |
 | Komponenty i motywy | DaisyUI 5                   | Komponenty oraz motywy `night` i `nord`        | [`src/assets/styles/index.css`](src/assets/styles/index.css)                                                 |
 | Izolacja stylów     | Shadow DOM i PostCSS        | Izolacja UI rozszerzenia od CSS strony YouTube | [`src/utils/createShadowRoot.tsx`](src/utils/createShadowRoot.tsx), [`postcss.config.js`](postcss.config.js) |

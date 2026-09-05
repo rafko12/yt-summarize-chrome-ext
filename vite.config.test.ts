@@ -35,12 +35,13 @@ describe('konfiguracja buildu Vite i manifestu', () => {
       'https://api.anthropic.com/*',
       'https://generativelanguage.googleapis.com/*',
     ]);
-    expect(manifest.side_panel?.default_path).toBe('src/popup/index.html');
+    expect(manifest.side_panel?.default_path).toBe('src/sidepanel/index.html');
     expect(manifest.options_page).toBe('src/options/index.html');
     expect(manifest.background).toEqual({
       service_worker: 'src/background/index.ts',
       type: 'module',
     });
+    expect(manifest.content_scripts?.[0]?.js).toEqual(['src/content/index.ts']);
     expect(manifest.content_scripts?.[0]?.matches).toEqual([
       'https://*.youtube.com/*',
     ]);

@@ -34,7 +34,7 @@ export default defineManifest({
     'https://generativelanguage.googleapis.com/*',
   ],
   side_panel: {
-    default_path: 'src/popup/index.html',
+    default_path: 'src/sidepanel/index.html',
   },
   options_page: 'src/options/index.html',
   background: {
@@ -43,7 +43,7 @@ export default defineManifest({
   },
   content_scripts: [
     {
-      js: isDev ? ['src/content/index.dev.ts'] : ['src/content/index.prod.ts'],
+      js: ['src/content/index.ts'],
       matches: ['https://*.youtube.com/*'],
     },
   ],

@@ -2,7 +2,7 @@
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import initializeContentScript from './Content';
+import initializeYoutubeContentScript from './youtubeContentScript';
 
 const { fetchTranscript } = vi.hoisted(() => ({ fetchTranscript: vi.fn() }));
 vi.mock('youtube-transcript', () => ({
@@ -33,7 +33,7 @@ beforeEach(() => {
       },
     },
   } as unknown as typeof chrome;
-  initializeContentScript();
+  initializeYoutubeContentScript();
   window.history.replaceState({}, '', '/watch?v=movie');
 });
 

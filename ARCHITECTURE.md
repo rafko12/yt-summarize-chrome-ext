@@ -15,8 +15,8 @@ Technologie, ich role i pliki konfiguracyjne mapuje [`TECH_STACK.md`](TECH_STACK
 
 - `index.ts` uruchamia moduły background.
 - `sidePanelController.ts` ukrywa stan panelu, odtwarzanie, kolejność operacji i kompensacje.
-- `chromeSidePanelPlatform.ts` jest adapterem interfejsów `chrome.sidePanel`, `chrome.tabs`, `chrome.runtime` i `chrome.storage`.
-- `youtubeUrlUpdates.ts` pozostaje niezależnym przepływem powiadomień `YOUTUBE_URL_UPDATED`.
+- `chromeSidePanelAdapter.ts` jest adapterem interfejsów `chrome.sidePanel`, `chrome.tabs`, `chrome.runtime` i `chrome.storage`.
+- `youtubeNavigationEvents.ts` pozostaje niezależnym przepływem powiadomień `YOUTUBE_URL_UPDATED`.
 
 Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002-sterownik-stanu-panelu-z-adapterem-chrome.md).
 
@@ -29,13 +29,13 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 - przesunięcie odtwarzacza do wskazanego czasu;
 - obsługę wiadomości wysłanych z panelu.
 
-`playerResponseExtractor.ts` izoluje parsowanie `ytInitialPlayerResponse` i jest testowany na zapisanych przykładach HTML. Bootstrap content scriptu jest zwykłym modułem TypeScript bez zależności od Reacta.
+`playerResponseExtractor.ts` izoluje parsowanie `ytInitialPlayerResponse` i jest testowany na zapisanych przykładach HTML. Bootstrap content scriptu (`youtubeContentScript.ts`) i jego punkt wejścia (`index.ts`) są zwykłymi modułami TypeScript bez zależności od Reacta.
 
 ### Panel boczny
 
-`src/popup/` jest aplikacją React obsługującą analizę, Historię analiz i ustawienia.
+`src/sidepanel/` jest aplikacją React obsługującą analizę, Historię analiz i ustawienia.
 
-- `PopupContainer.tsx` składa widoki i hooki.
+- `SidePanelApp.tsx` składa widoki i hooki jako composition root panelu.
 - `analysisSession/` zarządza stanem analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`).
 - `youtubePage/` obsługuje odczyt metadanych bieżącej karty YouTube przez dedykowany moduł i adapter platformy Chrome (`chromeYoutubePagePlatform.ts`).
 - `hooks/` obsługuje ustawienia (`useSettings.ts`) oraz Historię analiz (`useHistory.ts`).

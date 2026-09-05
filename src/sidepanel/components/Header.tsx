@@ -1,12 +1,13 @@
 import { Moon, PushPin, Sparkle, Sun } from '@phosphor-icons/react';
 
-export type PopupTab = 'analyze' | 'history' | 'settings';
+export type SidePanelTab = 'analyze' | 'history' | 'settings';
+export type PopupTab = SidePanelTab;
 
 interface HeaderProps {
-  activeTab: PopupTab;
+  activeTab: SidePanelTab;
   theme: 'night' | 'nord';
   isPinned: boolean;
-  onSelectTab: (tab: PopupTab) => void;
+  onSelectTab: (tab: SidePanelTab) => void;
   onPin: () => void;
   onToggleTheme: () => void;
 }
@@ -19,7 +20,7 @@ export function Header({
   onPin,
   onToggleTheme,
 }: HeaderProps) {
-  const tabClass = (tab: PopupTab) =>
+  const tabClass = (tab: SidePanelTab) =>
     `btn btn-xs rounded-md font-bold transition-all duration-200 ${activeTab === tab ? 'shadow-primary/25 btn-primary text-primary-content shadow-md' : 'bg-base-200/50 text-base-content border-base-200 btn-ghost border hover:bg-base-200 hover:text-base-content'}`;
 
   return (

@@ -36,7 +36,7 @@ export type SidePanelEvent =
       ) => void;
     };
 
-export interface SidePanelPlatform {
+export interface SidePanelAdapter {
   restore(): Promise<SidePanelRestoreData>;
   listen(accept: (event: SidePanelEvent) => void): () => void;
   configureExistingTabs(): Promise<void>;
@@ -51,6 +51,8 @@ export interface SidePanelPlatform {
   closeEveryPanelInWindow(windowId: number): Promise<void>;
 }
 
+export type SidePanelPlatform = SidePanelAdapter;
+
 export interface SidePanelFailure {
   message: string;
   cause: unknown;
@@ -62,7 +64,7 @@ export interface InstalledSidePanelController {
 }
 
 interface InstallSidePanelControllerOptions {
-  platform: SidePanelPlatform;
+  platform: SidePanelAdapter;
   reportError(failure: SidePanelFailure): void;
 }
 

@@ -1,12 +1,12 @@
 import { STORAGE_KEYS } from '../utils/storage';
-import createChromeSidePanelPlatform from './chromeSidePanelPlatform';
+import createChromeSidePanelAdapter from './chromeSidePanelAdapter';
 import {
   installSidePanelController,
   SidePanelFailure,
 } from './sidePanelController';
-import registerYoutubeUrlUpdates from './youtubeUrlUpdates';
+import registerYoutubeNavigationEvents from './youtubeNavigationEvents';
 
-const PANEL_PATH = 'src/popup/index.html';
+const PANEL_PATH = 'src/sidepanel/index.html';
 const LOCAL_OPEN_TABS_KEY = 'local_open_panel_tab_ids';
 
 const PINNED_WINDOW_KEY = 'pinned_panel_window_id';
@@ -16,7 +16,7 @@ function reportSidePanelFailure({ message, cause }: SidePanelFailure): void {
 }
 
 installSidePanelController({
-  platform: createChromeSidePanelPlatform(chrome, {
+  platform: createChromeSidePanelAdapter(chrome, {
     panelPath: PANEL_PATH,
     localOpenTabsKey: LOCAL_OPEN_TABS_KEY,
     pinStateKey: STORAGE_KEYS.PANEL_PIN_STATE,
@@ -25,4 +25,4 @@ installSidePanelController({
   reportError: reportSidePanelFailure,
 });
 
-registerYoutubeUrlUpdates(chrome);
+registerYoutubeNavigationEvents(chrome);

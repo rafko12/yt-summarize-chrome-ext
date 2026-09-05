@@ -7,14 +7,14 @@ import { isErrorResponse, isPanelNotification } from '../shared/messages';
 import { clearApiKeysAndHistory } from '../utils/storage';
 import useAnalysisSession from './analysisSession/useAnalysisSession';
 import AnalyzeView from './components/AnalyzeView';
-import { Header, PopupTab } from './components/Header';
+import { Header, SidePanelTab } from './components/Header';
 import HistoryView from './components/HistoryView';
 import SettingsView from './components/SettingsView';
 import useHistory from './hooks/useHistory';
 import useSettings from './hooks/useSettings';
 
-export default function PopupContainer(): JSX.Element {
-  const [activeTab, setActiveTab] = useState<PopupTab>('analyze');
+export default function SidePanelApp(): JSX.Element {
+  const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');
   const [isPinnedGlobal, setIsPinnedGlobal] = useState<boolean>(false);
   const panelContextRef = useRef<{ tabId: number; windowId: number } | null>(
     null
@@ -215,3 +215,5 @@ export default function PopupContainer(): JSX.Element {
     </div>
   );
 }
+
+export { SidePanelApp as PopupContainer };

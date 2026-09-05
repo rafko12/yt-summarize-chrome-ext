@@ -1,5 +1,5 @@
 import { isBackgroundMessage } from '../shared/messages';
-import { SidePanelPlatform, SidePanelRestoreData } from './sidePanelController';
+import { SidePanelAdapter, SidePanelRestoreData } from './sidePanelController';
 
 type SidePanelWithClose = typeof chrome.sidePanel & {
   close(options: { tabId?: number; windowId?: number }): Promise<void>;
@@ -13,22 +13,22 @@ type SidePanelWithClose = typeof chrome.sidePanel & {
   };
 };
 
-interface ChromeSidePanelPlatformOptions {
+interface ChromeSidePanelAdapterOptions {
   panelPath: string;
   localOpenTabsKey: string;
   pinStateKey: string;
   pinnedWindowKey: string;
 }
 
-export default function createChromeSidePanelPlatform(
+export default function createChromeSidePanelAdapter(
   chromeApi: typeof chrome,
   {
     panelPath,
     localOpenTabsKey,
     pinStateKey,
     pinnedWindowKey,
-  }: ChromeSidePanelPlatformOptions
-): SidePanelPlatform {
+  }: ChromeSidePanelAdapterOptions
+): SidePanelAdapter {
   const sidePanel = chromeApi.sidePanel as SidePanelWithClose;
 
   const configureTab = (tabId: number) =>

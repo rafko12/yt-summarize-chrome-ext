@@ -1,6 +1,6 @@
 import { describe, expect, test, vi } from 'vitest';
 
-import createChromeSidePanelPlatform from './chromeSidePanelPlatform';
+import createChromeSidePanelAdapter from './chromeSidePanelAdapter';
 
 function event<T extends (...args: never[]) => unknown>() {
   const listeners: T[] = [];
@@ -15,7 +15,7 @@ function event<T extends (...args: never[]) => unknown>() {
   };
 }
 
-function platformFixture() {
+function adapterFixture() {
   const installed = event<() => void>();
   const startup = event<() => void>();
   const created = event<(tab: chrome.tabs.Tab) => void>();
@@ -86,25 +86,25 @@ function platformFixture() {
   };
 }
 
-describe('Chrome side panel platform', () => {
+describe('Chrome side panel adapter', () => {
   test('restores persistent state and configures existing tabs', async () => {
-    const fake = platformFixture();
-    const platform = createChromeSidePanelPlatform(fake.chromeApi, {
+    const fake = adapterFixture();
+    const adapter = createChromeSidePanelAdapter(fake.chromeApi, {
       panelPath: 'popup.html',
       localOpenTabsKey: 'localTabs',
       pinStateKey: 'pinned',
       pinnedWindowKey: 'pinnedWindow',
     });
 
-    await expect(platform.restore()).resolves.toEqual({
+    await expect(adapter.restore()).resolves.toEqual({
       storedLocalTabIds: [1, 'wrong'],
       storedPinned: true,
       storedPinnedWindowId: 4,
       existingTabIds: [1, 2],
       existingWindowIds: [4, 5],
     });
-    await platform.configureExistingTabs();
-    await platform.configureTab(9);
+    await adapter.configureExistingTabs();
+    await adapter.configureTab(9);
     expect(fake.chromeApi.sidePanel.setOptions).toHaveBeenNthCalledWith(1, {
       tabId: 1,
       path: 'popup.html',
@@ -118,15 +118,15 @@ describe('Chrome side panel platform', () => {
   });
 
   test('translates Chrome events, messages, persistence and close operations', async () => {
-    const fake = platformFixture();
-    const platform = createChromeSidePanelPlatform(fake.chromeApi, {
+    const fake = adapterFixture();
+    const adapter = createChromeSidePanelAdapter(fake.chromeApi, {
       panelPath: 'popup.html',
       localOpenTabsKey: 'localTabs',
       pinStateKey: 'pinned',
       pinnedWindowKey: 'pinnedWindow',
     });
     const accepted: unknown[] = [];
-    const stop = platform.listen((entry) => accepted.push(entry));
+    const stop = adapter.listen((entry) => accepted.push(entry));
 
     fake.events.installed.emit();
     fake.events.startup.emit();
@@ -196,19 +196,19 @@ describe('Chrome side panel platform', () => {
       ])
     );
 
-    await platform.persistLocalTabs([3]);
-    await platform.persistPinned(false);
-    await platform.persistPinnedWindow(4);
-    await platform.persistPinnedWindow(undefined);
-    await platform.openLocal(3);
-    await platform.closeLocal(3);
-    await platform.openGlobal(4);
-    await platform.closeGlobal(4);
+    await adapter.persistLocalTabs([3]);
+    await adapter.persistPinned(false);
+    await adapter.persistPinnedWindow(4);
+    await adapter.persistPinnedWindow(undefined);
+    await adapter.openLocal(3);
+    await adapter.closeLocal(3);
+    await adapter.openGlobal(4);
+    await adapter.closeGlobal(4);
     vi.mocked(
       (fake.chromeApi.sidePanel as unknown as { close: () => Promise<void> })
         .close
     ).mockRejectedValueOnce(new Error('closed'));
-    await platform.closeEveryPanelInWindow(4);
+    await adapter.closeEveryPanelInWindow(4);
 
     expect(fake.chromeApi.storage.session.set).toHaveBeenCalledWith({
       localTabs: [3],

@@ -1,6 +1,6 @@
 import { YoutubeUrlUpdatedNotification } from '../shared/messages';
 
-export default function registerYoutubeUrlUpdates(
+export default function registerYoutubeNavigationEvents(
   chromeApi: typeof chrome
 ): () => void {
   const onTabUpdated = (

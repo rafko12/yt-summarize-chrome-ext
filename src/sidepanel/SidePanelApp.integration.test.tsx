@@ -9,8 +9,8 @@ import {
 } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import registerYoutubeUrlUpdates from '../background/youtubeUrlUpdates';
-import PopupContainer from './PopupContainer';
+import registerYoutubeNavigationEvents from '../background/youtubeNavigationEvents';
+import SidePanelApp from './SidePanelApp';
 
 type RuntimeListener = (message: unknown) => boolean;
 type TabUpdatedListener = (
@@ -126,9 +126,9 @@ beforeEach(() => {
   } as unknown as typeof chrome;
 });
 
-describe('popup user flow', () => {
+describe('side panel user flow', () => {
   test('loads a video, changes user preferences, and reacts to a URL update', async () => {
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
@@ -199,7 +199,7 @@ describe('popup user flow', () => {
   });
 
   test('refreshes the visible Film after a YouTube URL update', async () => {
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -238,7 +238,7 @@ describe('popup user flow', () => {
   });
 
   test('refreshes the visible Film from a YouTube tab update event', async () => {
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     activeTab = {
@@ -255,7 +255,7 @@ describe('popup user flow', () => {
       thumbnailUrl: 'next-thumbnail',
     });
 
-    const unregister = registerYoutubeUrlUpdates(chrome);
+    const unregister = registerYoutubeNavigationEvents(chrome);
     expect(tabUpdatedListener).toBeDefined();
     await act(async () => {
       tabUpdatedListener!(3, {
@@ -286,7 +286,7 @@ describe('popup user flow', () => {
       },
     ];
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() =>
       expect(screen.getByText('Saved Movie Title')).toBeVisible()
@@ -316,7 +316,7 @@ describe('popup user flow', () => {
       }),
     })) as unknown as typeof fetch;
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -355,7 +355,7 @@ describe('popup user flow', () => {
       }),
     })) as unknown as typeof fetch;
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
@@ -387,7 +387,7 @@ describe('popup user flow', () => {
       }
     );
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
@@ -405,7 +405,7 @@ describe('popup user flow', () => {
 
     global.fetch = vi.fn(() => pendingFetchPromise) as unknown as typeof fetch;
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -496,7 +496,7 @@ describe('popup user flow', () => {
       },
     ];
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     // Wait for active tab video to load first
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
@@ -555,7 +555,7 @@ describe('popup user flow', () => {
   });
 
   test('sends a chat question when transcript is not pre-fetched, retrieving transcript automatically', async () => {
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -599,7 +599,7 @@ describe('popup user flow', () => {
   });
 
   test('handles AI error during chat while preserving existing chat history', async () => {
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -653,7 +653,7 @@ describe('popup user flow', () => {
 
     global.fetch = vi.fn(() => pendingChatPromise) as unknown as typeof fetch;
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -728,7 +728,7 @@ describe('popup user flow', () => {
       },
     ];
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     expect(screen.getByText('Hi there')).toBeVisible();
@@ -762,7 +762,7 @@ describe('popup user flow', () => {
       },
     ];
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     expect(screen.getByText('Summary to delete')).toBeVisible();
@@ -800,7 +800,7 @@ describe('popup user flow', () => {
       },
     ];
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -846,7 +846,7 @@ describe('popup user flow', () => {
       },
     ];
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() =>
       expect(
@@ -883,7 +883,7 @@ describe('popup user flow', () => {
   });
 
   test('toggles theme between night and nord maintaining data-theme attribute on extension root', async () => {
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -928,7 +928,7 @@ describe('popup user flow', () => {
       }),
     })) as unknown as typeof fetch;
 
-    render(<PopupContainer />);
+    render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -956,7 +956,7 @@ describe('popup user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1016,7 +1016,7 @@ describe('popup user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1064,7 +1064,7 @@ describe('popup user flow', () => {
         model: 'gemini-3.5-flash', // hidden legacy model
       };
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1112,7 +1112,7 @@ describe('popup user flow', () => {
         model: 'gpt-5.6-terra', // user manually picked terra
       };
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1160,7 +1160,7 @@ describe('popup user flow', () => {
         model: 'gpt-5.6-luna',
       };
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1199,7 +1199,7 @@ describe('popup user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1237,7 +1237,7 @@ describe('popup user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1312,7 +1312,7 @@ describe('popup user flow', () => {
       }) as unknown as typeof fetch;
 
       // 2. Render initial popup
-      const { unmount } = render(<PopupContainer />);
+      const { unmount } = render(<SidePanelApp />);
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1398,7 +1398,7 @@ describe('popup user flow', () => {
       // 5. Simulate reopening / reloading the panel
       unmount();
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() =>
         expect(
           screen.getByText('Podsumowanie filmu wygenerowane przez OpenAI')
@@ -1446,7 +1446,7 @@ describe('popup user flow', () => {
         };
       }) as unknown as typeof fetch;
 
-      render(<PopupContainer />);
+      render(<SidePanelApp />);
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open Settings and add Claude as second key
