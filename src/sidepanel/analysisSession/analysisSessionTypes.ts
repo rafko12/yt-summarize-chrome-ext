@@ -1,5 +1,5 @@
-import { ChatMessage, TranscriptItem } from '../../llm/types';
 import { VideoSession } from '../../shared/video';
+import { ChatMessage, TranscriptItem } from '../ai';
 
 export interface AnalysisSessionState {
   currentVideo: VideoSession | null;

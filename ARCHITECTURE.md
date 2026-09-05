@@ -38,10 +38,11 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 - `SidePanelApp.tsx` składa widoki i hooki jako composition root panelu.
 - `analysisSession/` zarządza stanem analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`).
 - `youtubePage/` obsługuje odczyt metadanych bieżącej karty YouTube przez dedykowany moduł i adapter platformy Chrome (`chromeYoutubePagePlatform.ts`).
+- `ai/` integruje Dostawców AI: wspólnego klienta (`client.ts`), rejestr modeli i dostawców (`registry.ts`), politykę modeli (`modelPolicy.ts`), prompty (`prompts.ts`), typy (`types.ts`) oraz adaptery Gemini, OpenAI i Anthropic (`providers/`).
 - `hooks/` obsługuje ustawienia (`useSettings.ts`) oraz Historię analiz (`useHistory.ts`).
 - `components/` renderuje widoki bez przejmowania integracji z Chrome lub Dostawcami AI.
 
-Panel komunikuje się ze skryptem treści i backgroundem przez transport wiadomości Chrome (`src/shared/chromeMessageTransport.ts`). Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/llm/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
+Panel komunikuje się ze skryptem treści i backgroundem przez transport wiadomości Chrome (`src/shared/chromeMessageTransport.ts`). Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
 
 ### Strona opcji
 
@@ -52,11 +53,9 @@ Panel komunikuje się ze skryptem treści i backgroundem przez transport wiadomo
 - `src/shared/messages.ts` — typy wiadomości, odpowiedzi i ich walidacja.
 - `src/shared/chromeMessageTransport.ts` — transport wiadomości Chrome z obsługą błędów, ponawiania i ponownego wstrzykiwania content scriptu.
 - `src/shared/video.ts` — współdzielone typy Filmu.
-- `src/llm/` — wspólny klient (`client.ts`), rejestr modeli i dostawców (`registry.ts`), typy (`types.ts`) oraz adaptery Gemini, OpenAI oraz Anthropic (`providers/`).
 - `src/preferences/` — operacje na preferencjach użytkownika, kluczach API, motywie i ustawieniach (`userPreferences.ts`) z adapterem Chrome (`chromePreferencesPlatform.ts`).
 - `src/analysisHistory/` — operacje wysokiego poziomu na Historii analiz i Zapisach analiz (`analysisHistory.ts`) z adapterem Chrome (`chromeAnalysisHistoryPlatform.ts`).
 - `src/utils/storage.ts` — fasada zgodności wstecznej dla storage.
-- `src/utils/prompts.ts` — treść promptów analizy i rozmowy.
 - `src/utils/createShadowRoot.tsx` — tworzenie izolowanego korzenia UI.
 - `src/assets/` — style i fonty (`geistFonts.ts`).
 

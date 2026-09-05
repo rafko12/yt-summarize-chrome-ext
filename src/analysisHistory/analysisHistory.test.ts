@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChatMessage, TranscriptItem } from '../llm/types';
+import { ChatMessage, TranscriptItem } from '../sidepanel/ai';
 import createAnalysisHistory, {
   AnalysisHistoryPlatform,
   AnalysisRecord,

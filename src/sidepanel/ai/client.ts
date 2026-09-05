@@ -4,7 +4,7 @@ import {
   getSummaryUserMessage,
   getValidationSystemInstruction,
   getValidationUserMessage,
-} from '../utils/prompts';
+} from './prompts';
 import { createAnthropicProvider } from './providers/anthropic';
 import { createGeminiProvider } from './providers/gemini';
 import { createOpenaiProvider } from './providers/openai';

@@ -3,7 +3,6 @@ import createAnalysisHistory, {
   AnalysisRecordInput,
 } from '../analysisHistory/analysisHistory';
 import createChromeAnalysisHistoryPlatform from '../analysisHistory/chromeAnalysisHistoryPlatform';
-import { ChatMessage } from '../llm/types';
 import createChromePreferencesPlatform from '../preferences/chromePreferencesPlatform';
 import createUserPreferences, {
   DEFAULT_SETTINGS,
@@ -11,6 +10,7 @@ import createUserPreferences, {
   Settings,
   Theme,
 } from '../preferences/userPreferences';
+import { ChatMessage } from '../sidepanel/ai';
 
 export type { Provider, Settings, Theme };
 export { DEFAULT_SETTINGS };

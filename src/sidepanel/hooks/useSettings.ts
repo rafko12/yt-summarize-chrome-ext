@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import { validateApiKey } from '../../llm/client';
-import { resolveCompatibleModel } from '../../llm/modelPolicy';
 import createChromePreferencesPlatform from '../../preferences/chromePreferencesPlatform';
 import createUserPreferences, {
   Provider,
@@ -9,6 +7,7 @@ import createUserPreferences, {
   Theme,
   UserPreferences,
 } from '../../preferences/userPreferences';
+import { resolveCompatibleModel, validateApiKey } from '../ai';
 
 export default function useSettings(preferencesOverride?: UserPreferences) {
   const preferences = useMemo(

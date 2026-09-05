@@ -1,8 +1,8 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import { CircleNotch, Eye, EyeSlash, Key, Trash } from '@phosphor-icons/react';
 
-import { AI_MODELS, AI_PROVIDERS } from '../../llm/registry';
 import { Provider, Settings } from '../../utils/storage';
+import { AI_MODELS, AI_PROVIDERS } from '../ai';
 
 interface SettingsViewProps {
   selectedProvider: Provider;

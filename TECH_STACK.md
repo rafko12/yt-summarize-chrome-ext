@@ -66,12 +66,12 @@ pozostaje skrypt `check` z `package.json`.
 
 ## Integracje zewnętrzne
 
-| Integracja                 | Sposób użycia                                             | Źródło prawdy                                                  |
-| -------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
-| Gemini, OpenAI i Anthropic | Bezpośrednie żądania z panelu przez adaptery Dostawców AI | [`src/llm/`](src/llm/), [`src/manifest.ts`](src/manifest.ts)   |
-| `youtube-transcript`       | Pobieranie transkrypcji Filmu                             | [`package.json`](package.json), [`src/content/`](src/content/) |
-| `chrome.storage.local`     | Trwałe dane użytkownika                                   | [`src/utils/storage.ts`](src/utils/storage.ts)                 |
-| `chrome.storage.session`   | Stan bieżącej sesji panelu                                | [`ARCHITECTURE.md`](ARCHITECTURE.md)                           |
+| Integracja                 | Sposób użycia                                             | Źródło prawdy                                                                  |
+| -------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Gemini, OpenAI i Anthropic | Bezpośrednie żądania z panelu przez adaptery Dostawców AI | [`src/sidepanel/ai/`](src/sidepanel/ai/), [`src/manifest.ts`](src/manifest.ts) |
+| `youtube-transcript`       | Pobieranie transkrypcji Filmu                             | [`package.json`](package.json), [`src/content/`](src/content/)                 |
+| `chrome.storage.local`     | Trwałe dane użytkownika                                   | [`src/utils/storage.ts`](src/utils/storage.ts)                                 |
+| `chrome.storage.session`   | Stan bieżącej sesji panelu                                | [`ARCHITECTURE.md`](ARCHITECTURE.md)                                           |
 
 Klucze API i dane potrzebne do wygenerowania odpowiedzi trafiają bezpośrednio
 do interfejsu sieciowego wybranego Dostawcy AI. Rozszerzenie nie utrzymuje

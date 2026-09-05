@@ -1,5 +1,8 @@
-import { isModelAvailable, resolveCompatibleModel } from '../llm/modelPolicy';
-import { AiProvider } from '../llm/registry';
+import {
+  AiProvider,
+  isModelAvailable,
+  resolveCompatibleModel,
+} from '../sidepanel/ai';
 
 export type Provider = AiProvider;
 

@@ -8,8 +8,8 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 
-import { ChatMessage } from '../../llm/types';
 import { Settings } from '../../utils/storage';
+import { ChatMessage } from '../ai';
 import { MarkdownLine } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';
 

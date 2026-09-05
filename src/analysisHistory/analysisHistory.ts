@@ -1,4 +1,4 @@
-import { ChatMessage, TranscriptItem } from '../llm/types';
+import { ChatMessage, TranscriptItem } from '../sidepanel/ai';
 
 export interface AnalysisRecord {
   videoId: string;

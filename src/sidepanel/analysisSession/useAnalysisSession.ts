@@ -12,14 +12,14 @@ import createAnalysisHistory, {
   AnalysisRecord,
 } from '../../analysisHistory/analysisHistory';
 import createChromeAnalysisHistoryPlatform from '../../analysisHistory/chromeAnalysisHistoryPlatform';
+import { Provider, Settings } from '../../preferences/userPreferences';
+import { isErrorResponse } from '../../shared/messages';
 import {
+  ChatMessage,
   generateChatResponse,
   generateSummary,
   getProvider,
-} from '../../llm/client';
-import { ChatMessage } from '../../llm/types';
-import { Provider, Settings } from '../../preferences/userPreferences';
-import { isErrorResponse } from '../../shared/messages';
+} from '../ai';
 import createChromeYoutubePagePlatform from '../youtubePage/chromeYoutubePagePlatform';
 import createYoutubePage, { YoutubePage } from '../youtubePage/youtubePage';
 import {
