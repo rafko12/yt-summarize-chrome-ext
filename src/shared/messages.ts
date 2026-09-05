@@ -23,7 +23,7 @@ export interface TranscriptResponse extends SuccessResponse {
   transcript: TranscriptItemResponse[];
 }
 
-export interface PinStateResponse extends SuccessResponse {
+export interface PinStateResponse {
   isPinnedGlobal: boolean;
 }
 
@@ -60,27 +60,34 @@ export interface PinGlobalMessage {
   windowId: number;
 }
 
-export interface YoutubeUrlUpdatedMessage {
+export interface GetPinStateMessage {
+  type: 'GET_PIN_STATE';
+}
+
+export interface YoutubeUrlUpdatedNotification {
   type: 'YOUTUBE_URL_UPDATED';
   url: string;
   tabId: number;
 }
 
-export interface GetPinStateMessage {
-  type: 'GET_PIN_STATE';
-}
+export type YoutubeUrlUpdatedMessage = YoutubeUrlUpdatedNotification;
 
 export type ContentMessage =
   | GetVideoDataMessage
   | GetTranscriptMessage
   | SeekToMessage;
+
 export type BackgroundMessage =
   | PanelInitMessage
   | PinGlobalMessage
-  | YoutubeUrlUpdatedMessage
   | GetPinStateMessage;
 
-export type ExtensionMessage = ContentMessage | BackgroundMessage;
+export type PanelNotification = YoutubeUrlUpdatedNotification;
+
+export type ExtensionMessage =
+  | ContentMessage
+  | BackgroundMessage
+  | PanelNotification;
 
 type ContentResponseMap = {
   GET_VIDEO_DATA: VideoDataResponse | ErrorResponse;
@@ -91,7 +98,6 @@ type ContentResponseMap = {
 type BackgroundResponseMap = {
   PANEL_INIT: PinStateResponse;
   PIN_GLOBAL: SuccessResponse | ErrorResponse;
-  YOUTUBE_URL_UPDATED: undefined;
   GET_PIN_STATE: PinStateResponse;
 };
 
@@ -148,6 +154,21 @@ export function isBackgroundMessage(
         'windowId' in message &&
         typeof message.windowId === 'number'
       );
+    case 'GET_PIN_STATE':
+      return true;
+    default:
+      return false;
+  }
+}
+
+export function isPanelNotification(
+  message: unknown
+): message is PanelNotification {
+  if (message === null || typeof message !== 'object' || !('type' in message)) {
+    return false;
+  }
+
+  switch (message.type) {
     case 'YOUTUBE_URL_UPDATED':
       return (
         'tabId' in message &&
@@ -155,8 +176,6 @@ export function isBackgroundMessage(
         'url' in message &&
         typeof message.url === 'string'
       );
-    case 'GET_PIN_STATE':
-      return true;
     default:
       return false;
   }

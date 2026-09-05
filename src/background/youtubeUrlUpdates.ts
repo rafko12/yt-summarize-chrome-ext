@@ -1,3 +1,5 @@
+import { YoutubeUrlUpdatedNotification } from '../shared/messages';
+
 export default function registerYoutubeUrlUpdates(
   chromeApi: typeof chrome
 ): () => void {
@@ -7,15 +9,15 @@ export default function registerYoutubeUrlUpdates(
   ) => {
     if (!changeInfo.url?.includes('youtube.com/watch')) return;
 
-    chromeApi.runtime
-      .sendMessage({
-        type: 'YOUTUBE_URL_UPDATED',
-        url: changeInfo.url,
-        tabId,
-      })
-      .catch(() => {
-        // The side panel may not be open or listening.
-      });
+    const notification: YoutubeUrlUpdatedNotification = {
+      type: 'YOUTUBE_URL_UPDATED',
+      url: changeInfo.url,
+      tabId,
+    };
+
+    chromeApi.runtime.sendMessage(notification).catch(() => {
+      // The side panel may not be open or listening.
+    });
   };
 
   chromeApi.tabs.onUpdated.addListener(onTabUpdated);

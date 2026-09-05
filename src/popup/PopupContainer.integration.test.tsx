@@ -113,7 +113,7 @@ beforeEach(() => {
           return undefined;
         }
         return message.type === 'PANEL_INIT'
-          ? { success: true, isPinnedGlobal: false }
+          ? { isPinnedGlobal: false }
           : { success: true };
       }),
       onMessage: {

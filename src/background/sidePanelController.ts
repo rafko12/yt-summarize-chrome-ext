@@ -1,3 +1,5 @@
+import { PinStateResponse } from '../shared/messages';
+
 export interface SidePanelRestoreData {
   storedLocalTabIds: unknown;
   storedPinned: unknown;
@@ -17,11 +19,11 @@ export type SidePanelEvent =
   | { type: 'panel-closed'; tabId?: number; windowId: number }
   | {
       type: 'panel-init';
-      reply: (response: { isPinnedGlobal: boolean }) => void;
+      reply: (response: PinStateResponse) => void;
     }
   | {
       type: 'get-pin-state';
-      reply: (response: { isPinnedGlobal: boolean }) => void;
+      reply: (response: PinStateResponse) => void;
     }
   | {
       type: 'pin-global';

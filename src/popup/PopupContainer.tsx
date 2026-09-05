@@ -3,7 +3,7 @@ import { WarningCircle } from '@phosphor-icons/react';
 
 import { AnalysisRecord } from '../analysisHistory/analysisHistory';
 import { sendMessageToBackground } from '../shared/chromeMessageTransport';
-import { isBackgroundMessage, isErrorResponse } from '../shared/messages';
+import { isErrorResponse, isPanelNotification } from '../shared/messages';
 import { clearApiKeysAndHistory } from '../utils/storage';
 import useAnalysisSession from './analysisSession/useAnalysisSession';
 import AnalyzeView from './components/AnalyzeView';
@@ -53,7 +53,7 @@ export default function PopupContainer(): JSX.Element {
           type: 'PANEL_INIT',
           tabId: currentTab.id,
         });
-        if (!isErrorResponse(response) && 'isPinnedGlobal' in response) {
+        if (response && typeof response.isPinnedGlobal === 'boolean') {
           setIsPinnedGlobal(response.isPinnedGlobal);
         }
       }
@@ -67,7 +67,7 @@ export default function PopupContainer(): JSX.Element {
   useEffect(() => {
     const handleRuntimeMessage = (message: unknown): false => {
       if (
-        isBackgroundMessage(message) &&
+        isPanelNotification(message) &&
         message.type === 'YOUTUBE_URL_UPDATED'
       ) {
         loadActiveVideo();

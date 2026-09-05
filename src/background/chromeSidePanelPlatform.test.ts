@@ -168,6 +168,17 @@ describe('Chrome side panel platform', () => {
         reply
       )
     ).toEqual([false]);
+    expect(
+      fake.events.message.emit(
+        {
+          type: 'YOUTUBE_URL_UPDATED',
+          url: 'https://youtube.com/watch?v=film',
+          tabId: 3,
+        },
+        {} as chrome.runtime.MessageSender,
+        reply
+      )
+    ).toEqual([false]);
 
     expect(accepted).toEqual(
       expect.arrayContaining([
