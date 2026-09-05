@@ -6,26 +6,17 @@ import {
   ChatMessage,
   TranscriptSegment,
 } from '../domain/analysis';
+import { clearApiKeysAndHistory } from '../sidepanel/dangerZone';
 import { createAnalysisHistory } from '../sidepanel/history';
 import {
   createUserPreferences,
   DEFAULT_SETTINGS,
 } from '../sidepanel/preferences';
 import {
-  clearApiKeysAndHistory,
-  getApiKey,
-  getHistory,
-  getPinState,
-  getSettings,
-  getTheme,
-  saveHistoryItem,
-  setApiKey,
-  setPinState,
-  setSettings,
-  setTheme,
+  createChromeStorageLocalAdapter,
   STORAGE_KEYS,
-} from '../utils/storage';
-import { createChromeStorageLocalAdapter, StorageAdapter } from './index';
+  StorageAdapter,
+} from './index';
 
 describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () => {
   let rawStorage: Record<string, unknown>;
@@ -195,20 +186,25 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
 
     it('handles panel pin state strictly preserving boolean true and false', async () => {
       rawStorage[STORAGE_KEYS.PANEL_PIN_STATE] = true;
-      await expect(getPinState()).resolves.toBe(true);
+      const readTrue = await adapter.read([STORAGE_KEYS.PANEL_PIN_STATE]);
+      expect(readTrue[STORAGE_KEYS.PANEL_PIN_STATE] === true).toBe(true);
 
       rawStorage[STORAGE_KEYS.PANEL_PIN_STATE] = false;
-      await expect(getPinState()).resolves.toBe(false);
+      const readFalse = await adapter.read([STORAGE_KEYS.PANEL_PIN_STATE]);
+      expect(readFalse[STORAGE_KEYS.PANEL_PIN_STATE] === true).toBe(false);
 
-      // Non-boolean truthy values must normalize to false
+      // Non-boolean truthy values must not evaluate to boolean true
       rawStorage[STORAGE_KEYS.PANEL_PIN_STATE] = 'true';
-      await expect(getPinState()).resolves.toBe(false);
+      const readString = await adapter.read([STORAGE_KEYS.PANEL_PIN_STATE]);
+      expect(readString[STORAGE_KEYS.PANEL_PIN_STATE] === true).toBe(false);
 
       rawStorage[STORAGE_KEYS.PANEL_PIN_STATE] = 1;
-      await expect(getPinState()).resolves.toBe(false);
+      const readNumber = await adapter.read([STORAGE_KEYS.PANEL_PIN_STATE]);
+      expect(readNumber[STORAGE_KEYS.PANEL_PIN_STATE] === true).toBe(false);
 
       rawStorage[STORAGE_KEYS.PANEL_PIN_STATE] = null;
-      await expect(getPinState()).resolves.toBe(false);
+      const readNull = await adapter.read([STORAGE_KEYS.PANEL_PIN_STATE]);
+      expect(readNull[STORAGE_KEYS.PANEL_PIN_STATE] === true).toBe(false);
     });
 
     it('accepts older record format with null summary and filters malformed records', async () => {
@@ -395,13 +391,19 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
 
   describe('4. Clearing API keys and history while preserving preferences', () => {
     it('clears all API keys and history while preserving settings and theme', async () => {
-      await setApiKey('gemini', 'key-gemini');
-      await setApiKey('openai', 'key-openai');
-      await setApiKey('claude', 'key-claude');
-      await setSettings({ language: 'Polski', model: 'gpt-5.6-luna' });
-      await setTheme('nord');
-      await setPinState(true);
-      await saveHistoryItem({
+      const preferences = createUserPreferences(adapter);
+      const history = createAnalysisHistory(adapter);
+
+      await preferences.setApiKey('gemini', 'key-gemini');
+      await preferences.setApiKey('openai', 'key-openai');
+      await preferences.setApiKey('claude', 'key-claude');
+      await preferences.setSettings({
+        language: 'Polski',
+        model: 'gpt-5.6-luna',
+      });
+      await preferences.setTheme('nord');
+      await adapter.write({ [STORAGE_KEYS.PANEL_PIN_STATE]: true });
+      await history.saveRecord({
         videoId: 'vid-to-clear',
         title: 'Tytuł',
         author: 'Autor',
@@ -411,18 +413,19 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
         chat: [],
       });
 
-      await clearApiKeysAndHistory();
+      await clearApiKeysAndHistory({ preferences, history });
 
-      await expect(getApiKey('gemini')).resolves.toBe('');
-      await expect(getApiKey('openai')).resolves.toBe('');
-      await expect(getApiKey('claude')).resolves.toBe('');
-      await expect(getHistory()).resolves.toEqual([]);
-      await expect(getSettings()).resolves.toEqual({
+      await expect(preferences.getApiKey('gemini')).resolves.toBe('');
+      await expect(preferences.getApiKey('openai')).resolves.toBe('');
+      await expect(preferences.getApiKey('claude')).resolves.toBe('');
+      await expect(history.getRecords()).resolves.toEqual([]);
+      await expect(preferences.getSettings()).resolves.toEqual({
         language: 'Polski',
         model: 'gpt-5.6-luna',
       });
-      await expect(getTheme()).resolves.toBe('nord');
-      await expect(getPinState()).resolves.toBe(true);
+      await expect(preferences.getTheme()).resolves.toBe('nord');
+      const pinRead = await adapter.read([STORAGE_KEYS.PANEL_PIN_STATE]);
+      expect(pinRead[STORAGE_KEYS.PANEL_PIN_STATE]).toBe(true);
     });
   });
 

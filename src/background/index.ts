@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from '../utils/storage';
+import { STORAGE_KEYS } from '../storage';
 import createChromeSidePanelAdapter from './chromeSidePanelAdapter';
 import {
   installSidePanelController,

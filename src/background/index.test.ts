@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { STORAGE_KEYS } from '../utils/storage';
+import { STORAGE_KEYS } from '../storage';
 
 type Listener = (...args: never[]) => unknown;
 

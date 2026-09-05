@@ -9,12 +9,9 @@ import {
 
 import { AnalysisRecord, ChatMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../shared/messages';
+import { createChromeStorageLocalAdapter } from '../../storage';
 import { generateChatResponse, generateSummary, getProvider } from '../ai';
-import {
-  AnalysisHistory,
-  createAnalysisHistory,
-  createChromeAnalysisHistoryPlatform,
-} from '../history';
+import { AnalysisHistory, createAnalysisHistory } from '../history';
 import { AiProvider, Settings } from '../preferences';
 import { createYoutube, YoutubeIntegration } from '../youtube';
 import {
@@ -52,7 +49,7 @@ export default function useAnalysisSession({
   const history = useMemo(
     () =>
       historyOverride ||
-      createAnalysisHistory(createChromeAnalysisHistoryPlatform()),
+      createAnalysisHistory(createChromeStorageLocalAdapter()),
     [historyOverride]
   );
 

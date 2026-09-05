@@ -3,9 +3,9 @@ import { WarningCircle } from '@phosphor-icons/react';
 
 import { AnalysisRecord } from '../domain/analysis';
 import { isErrorResponse, isPanelNotification } from '../shared/messages';
-import { clearApiKeysAndHistory } from '../utils/storage';
 import { AnalyzeView, useAnalysisSession } from './analysis';
 import sendMessageToBackground from './chromeBackgroundTransport';
+import { clearApiKeysAndHistory } from './dangerZone';
 import { HistoryView, useHistory } from './history';
 import { SettingsView, useSettings } from './preferences';
 import { Header, SidePanelTab } from './shell';
@@ -112,7 +112,10 @@ export default function SidePanelApp(): JSX.Element {
         'Czy na pewno chcesz usunąć wszystkie klucze API oraz całą historię? Tej operacji nie można cofnąć.'
       )
     ) {
-      await clearApiKeysAndHistory();
+      await clearApiKeysAndHistory({
+        preferences: settingsHook,
+        history: historyHook,
+      });
       settingsHook.clearApiKeyState();
       await historyHook.loadHistory();
       analysisSession.handleClearSession();

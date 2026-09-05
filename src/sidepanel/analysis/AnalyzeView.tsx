@@ -9,7 +9,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { ChatMessage, Film } from '../../domain/analysis';
-import { Settings } from '../../utils/storage';
+import { Settings } from '../preferences';
 import { MarkdownLine } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';
 

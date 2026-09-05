@@ -171,6 +171,11 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
 
   const hasAnyKey = Object.values(apiKeys).some((k) => !!k.trim());
 
+  const clearApiKeys = async () => {
+    await preferences.clearApiKeys();
+    clearApiKeyState();
+  };
+
   return {
     theme,
     toggleTheme,
@@ -188,6 +193,7 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
     handleSaveApiKey,
     handleDeleteApiKey,
     clearApiKeyState,
+    clearApiKeys,
     handleModelChange,
     handleLanguageChange,
   };
