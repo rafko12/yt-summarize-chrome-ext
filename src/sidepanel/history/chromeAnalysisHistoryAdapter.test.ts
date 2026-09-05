@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import createChromeAnalysisHistoryPlatform from './chromeAnalysisHistoryPlatform';
+import {
+  createChromeAnalysisHistoryAdapter,
+  createChromeAnalysisHistoryPlatform,
+} from './index';
 
-describe('createChromeAnalysisHistoryPlatform', () => {
+describe('createChromeAnalysisHistoryAdapter (src/sidepanel/history)', () => {
   let mockStorageData: Record<string, unknown>;
   let mockStorageLocal: typeof chrome.storage.local;
 
@@ -30,7 +33,7 @@ describe('createChromeAnalysisHistoryPlatform', () => {
 
   it('reads keys from chrome.storage.local via injected storage', async () => {
     mockStorageData.summarizer_history = [{ videoId: 'vid-123' }];
-    const platform = createChromeAnalysisHistoryPlatform(mockStorageLocal);
+    const platform = createChromeAnalysisHistoryAdapter(mockStorageLocal);
 
     const result = await platform.read(['summarizer_history']);
     expect(result).toEqual({
@@ -43,7 +46,7 @@ describe('createChromeAnalysisHistoryPlatform', () => {
   });
 
   it('writes values to chrome.storage.local via injected storage', async () => {
-    const platform = createChromeAnalysisHistoryPlatform(mockStorageLocal);
+    const platform = createChromeAnalysisHistoryAdapter(mockStorageLocal);
 
     await platform.write({ summarizer_history: [] });
 

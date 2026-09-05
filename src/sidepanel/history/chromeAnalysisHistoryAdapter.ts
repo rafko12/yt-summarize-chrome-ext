@@ -1,6 +1,6 @@
-import { AnalysisHistoryPlatform } from './analysisHistory';
+import { AnalysisHistoryPlatform } from './types';
 
-export default function createChromeAnalysisHistoryPlatform(
+export default function createChromeAnalysisHistoryAdapter(
   storageLocal?: typeof chrome.storage.local
 ): AnalysisHistoryPlatform {
   const getStorage = () => storageLocal || chrome.storage.local;
@@ -22,3 +22,5 @@ export default function createChromeAnalysisHistoryPlatform(
     },
   };
 }
+
+export { createChromeAnalysisHistoryAdapter as createChromeAnalysisHistoryPlatform };

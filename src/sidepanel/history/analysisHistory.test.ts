@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChatMessage, TranscriptItem } from '../sidepanel/ai';
-import createAnalysisHistory, {
+import { ChatMessage, TranscriptItem } from '../ai';
+import {
   AnalysisHistoryPlatform,
   AnalysisRecord,
   AnalysisRecordInput,
-} from './analysisHistory';
+  createAnalysisHistory,
+} from './index';
 
 function createMemoryPlatform(
   initialData: Record<string, unknown> = {}
@@ -42,7 +43,7 @@ const sampleRecordInput: AnalysisRecordInput = {
   chat: sampleChat,
 };
 
-describe('AnalysisHistory', () => {
+describe('AnalysisHistory (src/sidepanel/history)', () => {
   it('returns empty array when storage is empty or contains non-array data', async () => {
     const emptyPlatform = createMemoryPlatform({});
     const history = createAnalysisHistory(emptyPlatform);

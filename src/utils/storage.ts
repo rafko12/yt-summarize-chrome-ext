@@ -1,8 +1,3 @@
-import createAnalysisHistory, {
-  AnalysisRecord,
-  AnalysisRecordInput,
-} from '../analysisHistory/analysisHistory';
-import createChromeAnalysisHistoryPlatform from '../analysisHistory/chromeAnalysisHistoryPlatform';
 import createChromePreferencesPlatform from '../preferences/chromePreferencesPlatform';
 import createUserPreferences, {
   DEFAULT_SETTINGS,
@@ -11,6 +6,12 @@ import createUserPreferences, {
   Theme,
 } from '../preferences/userPreferences';
 import { ChatMessage } from '../sidepanel/ai';
+import {
+  AnalysisRecord,
+  AnalysisRecordInput,
+  createAnalysisHistory,
+  createChromeAnalysisHistoryPlatform,
+} from '../sidepanel/history';
 
 export type { Provider, Settings, Theme };
 export { DEFAULT_SETTINGS };

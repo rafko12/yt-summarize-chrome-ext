@@ -1,16 +1,14 @@
 import { MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
 
-import createAnalysisHistory, {
-  AnalysisHistory,
-  AnalysisRecord,
-} from '../../analysisHistory/analysisHistory';
-import createChromeAnalysisHistoryPlatform from '../../analysisHistory/chromeAnalysisHistoryPlatform';
+import createAnalysisHistory from './analysisHistory';
+import createChromeAnalysisHistoryAdapter from './chromeAnalysisHistoryAdapter';
+import { AnalysisHistory, AnalysisRecord } from './types';
 
 export default function useHistory(historyOverride?: AnalysisHistory) {
   const history = useMemo(
     () =>
       historyOverride ||
-      createAnalysisHistory(createChromeAnalysisHistoryPlatform()),
+      createAnalysisHistory(createChromeAnalysisHistoryAdapter()),
     [historyOverride]
   );
   const [historyList, setHistoryList] = useState<AnalysisRecord[]>([]);

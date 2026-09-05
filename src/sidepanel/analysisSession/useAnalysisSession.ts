@@ -7,11 +7,6 @@ import {
   useRef,
 } from 'react';
 
-import createAnalysisHistory, {
-  AnalysisHistory,
-  AnalysisRecord,
-} from '../../analysisHistory/analysisHistory';
-import createChromeAnalysisHistoryPlatform from '../../analysisHistory/chromeAnalysisHistoryPlatform';
 import { Provider, Settings } from '../../preferences/userPreferences';
 import { isErrorResponse } from '../../shared/messages';
 import {
@@ -20,6 +15,12 @@ import {
   generateSummary,
   getProvider,
 } from '../ai';
+import {
+  AnalysisHistory,
+  AnalysisRecord,
+  createAnalysisHistory,
+  createChromeAnalysisHistoryPlatform,
+} from '../history';
 import { createYoutube, YoutubeIntegration } from '../youtube';
 import {
   analysisSessionReducer,

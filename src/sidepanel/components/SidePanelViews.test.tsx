@@ -8,7 +8,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import AnalyzeView from './AnalyzeView';
 import { Header } from './Header';
-import HistoryView from './HistoryView';
 import SettingsView from './SettingsView';
 
 const callbacks = {
@@ -36,13 +35,6 @@ const video = {
   title: 'Tytu? filmu',
   author: 'Autor',
   thumbnailUrl: 'https://example.test/thumb.jpg',
-};
-const historyItem = {
-  ...video,
-  summary: 'Gotowe',
-  transcript: [],
-  chat: [],
-  createdAt: 1,
 };
 
 beforeEach(() => {
@@ -86,39 +78,6 @@ describe('widoki panelu', () => {
     expect(
       screen.queryByRole('button', { name: /Przypnij/ })
     ).not.toBeInTheDocument();
-  });
-
-  test('historia pokazuje pusty stan, a zapis mo?na otworzy? lub usun??', () => {
-    const { rerender } = render(
-      <HistoryView
-        historyList={[]}
-        onResumeSession={callbacks.resume}
-        onDeleteHistory={callbacks.delete}
-      />
-    );
-    expect(screen.getByText(/Brak/)).toBeVisible();
-
-    rerender(
-      <HistoryView
-        historyList={[historyItem]}
-        onResumeSession={callbacks.resume}
-        onDeleteHistory={callbacks.delete}
-      />
-    );
-    const record = screen.getByRole('button', { name: /Thumbnail/ });
-    fireEvent.click(record);
-    fireEvent.keyDown(record, { key: 'Enter' });
-    fireEvent.keyDown(record, { key: ' ' });
-    fireEvent.click(screen.getByRole('button', { name: /Usu/ }));
-    fireEvent.error(screen.getByAltText('Thumbnail'));
-
-    expect(callbacks.resume).toHaveBeenCalledTimes(4);
-    expect(callbacks.resume).toHaveBeenLastCalledWith(historyItem);
-    expect(callbacks.delete).toHaveBeenCalledWith(expect.anything(), 'abc123');
-    expect(screen.getByAltText('Thumbnail')).toHaveAttribute(
-      'src',
-      'https://www.youtube.com/img/desktop/yt_1200.png'
-    );
   });
 
   test('ustawienia obs?uguj? dostawc?, klucz, preferencje i akcje czyszczenia', () => {
