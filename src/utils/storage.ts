@@ -1,10 +1,3 @@
-import createChromePreferencesPlatform from '../preferences/chromePreferencesPlatform';
-import createUserPreferences, {
-  DEFAULT_SETTINGS,
-  Provider,
-  Settings,
-  Theme,
-} from '../preferences/userPreferences';
 import { ChatMessage } from '../sidepanel/ai';
 import {
   AnalysisRecord,
@@ -12,6 +5,14 @@ import {
   createAnalysisHistory,
   createChromeAnalysisHistoryPlatform,
 } from '../sidepanel/history';
+import {
+  createChromePreferencesPlatform,
+  createUserPreferences,
+  DEFAULT_SETTINGS,
+  Provider,
+  Settings,
+  Theme,
+} from '../sidepanel/preferences';
 
 export type { Provider, Settings, Theme };
 export { DEFAULT_SETTINGS };

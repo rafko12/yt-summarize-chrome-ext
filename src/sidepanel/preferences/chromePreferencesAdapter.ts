@@ -1,6 +1,6 @@
-import { PreferencesPlatform } from './userPreferences';
+import { PreferencesPlatform } from './types';
 
-export default function createChromePreferencesPlatform(
+export default function createChromePreferencesAdapter(
   storageLocal?: typeof chrome.storage.local
 ): PreferencesPlatform {
   const getStorage = () => storageLocal || chrome.storage.local;
@@ -22,3 +22,5 @@ export default function createChromePreferencesPlatform(
     },
   };
 }
+
+export { createChromePreferencesAdapter as createChromePreferencesPlatform };

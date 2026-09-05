@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import createChromePreferencesPlatform from './chromePreferencesPlatform';
+import createChromePreferencesAdapter, {
+  createChromePreferencesPlatform,
+} from './chromePreferencesAdapter';
 
-describe('createChromePreferencesPlatform', () => {
+describe('createChromePreferencesAdapter', () => {
   it('reads keys from storage.local', async () => {
     const mockStorage = {
       get: vi.fn(
@@ -16,7 +18,7 @@ describe('createChromePreferencesPlatform', () => {
       set: vi.fn(),
     } as unknown as typeof chrome.storage.local;
 
-    const platform = createChromePreferencesPlatform(mockStorage);
+    const platform = createChromePreferencesAdapter(mockStorage);
     const result = await platform.read(['some_key']);
 
     expect(mockStorage.get).toHaveBeenCalledWith(
@@ -34,12 +36,18 @@ describe('createChromePreferencesPlatform', () => {
       }),
     } as unknown as typeof chrome.storage.local;
 
-    const platform = createChromePreferencesPlatform(mockStorage);
+    const platform = createChromePreferencesAdapter(mockStorage);
     await platform.write({ some_key: 'new-val' });
 
     expect(mockStorage.set).toHaveBeenCalledWith(
       { some_key: 'new-val' },
       expect.any(Function)
+    );
+  });
+
+  it('provides createChromePreferencesPlatform alias identical to createChromePreferencesAdapter', () => {
+    expect(createChromePreferencesPlatform).toBe(
+      createChromePreferencesAdapter
     );
   });
 });

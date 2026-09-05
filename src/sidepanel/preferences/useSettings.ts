@@ -1,25 +1,24 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import createChromePreferencesPlatform from '../../preferences/chromePreferencesPlatform';
-import createUserPreferences, {
-  Provider,
-  Settings,
-  Theme,
-  UserPreferences,
-} from '../../preferences/userPreferences';
 import { resolveCompatibleModel, validateApiKey } from '../ai';
+import createChromePreferencesAdapter from './chromePreferencesAdapter';
+import { Provider, Settings, Theme, UserPreferences } from './types';
+import createUserPreferences from './userPreferences';
 
 export default function useSettings(preferencesOverride?: UserPreferences) {
   const preferences = useMemo(
     () =>
       preferencesOverride ||
-      createUserPreferences(createChromePreferencesPlatform()),
+      createUserPreferences(createChromePreferencesAdapter()),
     [preferencesOverride]
   );
 
   // Theme state
   const [theme, setTheme] = useState<Theme>(() =>
-    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'night' : 'nord'
+    typeof window !== 'undefined' &&
+    window.matchMedia?.('(prefers-color-scheme: dark)').matches
+      ? 'night'
+      : 'nord'
   );
 
   // Key & Settings state
@@ -60,9 +59,14 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
 
   // Sync the host document body background to match the theme
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    document.documentElement.classList.add('bg-base-100', 'text-base-content');
-    document.body.classList.add('bg-base-100', 'text-base-content');
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.documentElement.classList.add(
+        'bg-base-100',
+        'text-base-content'
+      );
+      document.body.classList.add('bg-base-100', 'text-base-content');
+    }
   }, [theme]);
 
   const toggleTheme = async () => {

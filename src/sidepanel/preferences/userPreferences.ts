@@ -1,23 +1,14 @@
+import { isModelAvailable, resolveCompatibleModel } from '../ai';
 import {
-  AiProvider,
-  isModelAvailable,
-  resolveCompatibleModel,
-} from '../sidepanel/ai';
+  InitialPreferences,
+  PreferencesPlatform,
+  Provider,
+  Settings,
+  Theme,
+  UserPreferences,
+} from './types';
 
-export type Provider = AiProvider;
-
-export interface Settings {
-  language: string;
-  model: string;
-}
-
-export type Theme = 'night' | 'nord';
-
-export interface InitialPreferences {
-  apiKeys: Record<Provider, string>;
-  settings: Settings;
-  theme: Theme | null;
-}
+export * from './types';
 
 export const DEFAULT_SETTINGS: Settings = {
   language: 'Polski',
@@ -49,23 +40,6 @@ const ALL_PREFERENCE_KEYS = [
   PREFERENCE_STORAGE_KEYS.SETTINGS,
   PREFERENCE_STORAGE_KEYS.UI_THEME,
 ] as const;
-
-export interface PreferencesPlatform {
-  read(keys: readonly string[]): Promise<Record<string, unknown>>;
-  write(values: Record<string, unknown>): Promise<void>;
-}
-
-export interface UserPreferences {
-  readInitialPreferences(): Promise<InitialPreferences>;
-  getSettings(): Promise<Settings>;
-  setSettings(settings: Settings): Promise<void>;
-  getApiKey(provider?: Provider): Promise<string>;
-  setApiKey(provider: Provider, apiKey: string): Promise<void>;
-  getAllApiKeys(): Promise<Record<Provider, string>>;
-  getTheme(): Promise<Theme | null>;
-  setTheme(theme: Theme): Promise<void>;
-  clearApiKeys(): Promise<void>;
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;

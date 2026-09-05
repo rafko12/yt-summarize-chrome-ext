@@ -7,7 +7,6 @@ import {
   useRef,
 } from 'react';
 
-import { Provider, Settings } from '../../preferences/userPreferences';
 import { isErrorResponse } from '../../shared/messages';
 import {
   ChatMessage,
@@ -21,6 +20,7 @@ import {
   createAnalysisHistory,
   createChromeAnalysisHistoryPlatform,
 } from '../history';
+import { Provider, Settings } from '../preferences';
 import { createYoutube, YoutubeIntegration } from '../youtube';
 import {
   analysisSessionReducer,

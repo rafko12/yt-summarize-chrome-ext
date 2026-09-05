@@ -7,9 +7,8 @@ import useAnalysisSession from './analysisSession/useAnalysisSession';
 import sendMessageToBackground from './chromeBackgroundTransport';
 import AnalyzeView from './components/AnalyzeView';
 import { Header, SidePanelTab } from './components/Header';
-import SettingsView from './components/SettingsView';
 import { AnalysisRecord, HistoryView, useHistory } from './history';
-import useSettings from './hooks/useSettings';
+import { SettingsView, useSettings } from './preferences';
 
 export default function SidePanelApp(): JSX.Element {
   const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');
