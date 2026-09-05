@@ -54,7 +54,7 @@ Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/
 
 - `src/domain/analysis.ts` — kanoniczne typy domeny analizy (Film, segment transkrypcji, wiadomość rozmowy, Zapis analizy).
 - `src/shared/messages.ts` — typy wiadomości, odpowiedzi i ich walidacja.
-- `src/storage/` — operacje persistence i stabilne klucze storage (w trakcie rozszerzania; `src/utils/storage.ts` pozostaje tymczasową fasadą zgodności wstecznej).
+- `src/storage/` — kanoniczne źródło stabilnych kluczy storage (`keys.ts`) oraz wspólny adapter `chrome.storage.local` (`chromeStorageLocalAdapter.ts`); `src/utils/storage.ts` pozostaje tymczasową fasadą zgodności wstecznej.
 - `src/ui/createShadowRoot.tsx` — tworzenie izolowanego korzenia UI (host, Shadow DOM, pointer events, fonty, arkusz stylów, fallback i React root).
 - `src/assets/` — style i fonty (`geistFonts.ts`).
 
