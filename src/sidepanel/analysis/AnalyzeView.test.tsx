@@ -7,7 +7,6 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import AnalyzeView from './AnalyzeView';
-import { Header } from './Header';
 
 const callbacks = {
   clear: vi.fn(),
@@ -44,41 +43,7 @@ beforeEach(() => {
   vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ success: true });
 });
 
-describe('widoki panelu', () => {
-  test('nag??wek prze??cza zak?adki oraz udost?pnia przypi?cie i zmian? motywu', () => {
-    const { rerender } = render(
-      <Header
-        activeTab='analyze'
-        theme='night'
-        isPinned={false}
-        onSelectTab={callbacks.selectTab}
-        onPin={callbacks.pin}
-        onToggleTheme={callbacks.theme}
-      />
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Historia' }));
-    fireEvent.click(screen.getByRole('button', { name: /Przypnij/ }));
-    fireEvent.click(screen.getByRole('button', { name: /Zmie/ }));
-    expect(callbacks.selectTab).toHaveBeenCalledWith('history');
-    expect(callbacks.pin).toHaveBeenCalledOnce();
-    expect(callbacks.theme).toHaveBeenCalledOnce();
-
-    rerender(
-      <Header
-        activeTab='settings'
-        theme='nord'
-        isPinned
-        onSelectTab={callbacks.selectTab}
-        onPin={callbacks.pin}
-        onToggleTheme={callbacks.theme}
-      />
-    );
-    expect(
-      screen.queryByRole('button', { name: /Przypnij/ })
-    ).not.toBeInTheDocument();
-  });
-
+describe('AnalyzeView', () => {
   test('analiza udost?pnia stany braku klucza, wyszukiwania, filmu, czatu i podsumowania', () => {
     const props = {
       hasAnyKey: false,

@@ -36,13 +36,13 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 `src/sidepanel/` jest aplikacją React obsługującą analizę, Historię analiz i ustawienia.
 
 - `SidePanelApp.tsx` składa widoki i hooki jako composition root panelu.
-- `analysisSession/` zarządza stanem analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`).
+- `shell/` integruje powłokę i nagłówek panelu (`Header.tsx`).
+- `analysis/` integruje widoki analizy (`AnalyzeView.tsx`, `SummaryView.tsx`), renderer Markdown z timestampami (`MarkdownWithTimestamps.tsx`), parser timestampów (`timestampParser.ts`), stan analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`).
 - `youtube/` integruje dostęp do aktywnego Filmu YouTube, ukrywając odczyt karty, messaging z ponawianiem i wstrzykiwaniem skryptu oraz fallback metadanych za jednym interfejsem publicznym (`youtube.ts`) z adapterem Chrome (`chromeYoutubeAdapter.ts`).
 - `ai/` integruje Dostawców AI: wspólnego klienta (`client.ts`), rejestr modeli i dostawców (`registry.ts`), politykę modeli (`modelPolicy.ts`), prompty (`prompts.ts`), typy (`types.ts`) oraz adaptery Gemini, OpenAI i Anthropic (`providers/`).
 - `history/` integruje Historię analiz i Zapisy analiz: widok (`HistoryView.tsx`), hook (`useHistory.ts`), operacje persistence (`analysisHistory.ts`) oraz adapter platformowy Chrome (`chromeAnalysisHistoryAdapter.ts`).
 - `preferences/` integruje preferencje użytkownika, klucze API, motyw i ustawienia: widok (`SettingsView.tsx`), hook (`useSettings.ts`), operacje persistence (`userPreferences.ts`) oraz adapter platformowy Chrome (`chromePreferencesAdapter.ts`).
 - `chromeBackgroundTransport.ts` realizuje transport wiadomości z panelu do background service workera.
-- `components/` renderuje widoki bez przejmowania integracji z Chrome lub Dostawcami AI.
 
 Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/sidepanel/youtube/`), a z backgroundem przez transport panelu `src/sidepanel/chromeBackgroundTransport.ts`. Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
 
@@ -54,8 +54,8 @@ Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/
 
 - `src/domain/analysis.ts` — kanoniczne typy domeny analizy (Film, segment transkrypcji, wiadomość rozmowy, Zapis analizy).
 - `src/shared/messages.ts` — typy wiadomości, odpowiedzi i ich walidacja.
-- `src/utils/storage.ts` — fasada zgodności wstecznej dla storage.
-- `src/utils/createShadowRoot.tsx` — tworzenie izolowanego korzenia UI.
+- `src/storage/` — operacje persistence i stabilne klucze storage (w trakcie rozszerzania; `src/utils/storage.ts` pozostaje tymczasową fasadą zgodności wstecznej).
+- `src/ui/createShadowRoot.tsx` — tworzenie izolowanego korzenia UI (host, Shadow DOM, pointer events, fonty, arkusz stylów, fallback i React root).
 - `src/assets/` — style i fonty (`geistFonts.ts`).
 
 ## Przepływy danych

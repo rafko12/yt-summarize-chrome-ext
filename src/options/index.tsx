@@ -1,5 +1,6 @@
 import styles from '@assets/styles/index.css?inline';
-import createShadowRoot from '@utils/createShadowRoot';
+
+import createShadowRoot from '@/ui/createShadowRoot';
 
 import Options from './Options';
 

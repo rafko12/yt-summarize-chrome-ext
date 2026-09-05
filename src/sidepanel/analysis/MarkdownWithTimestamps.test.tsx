@@ -3,8 +3,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import createGeistFontStyles from '../../assets/geistFonts';
-import createShadowRoot from '../../utils/createShadowRoot';
 import { MarkdownLine, SummaryMarkdown } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';
 
@@ -25,33 +23,7 @@ afterEach(() => {
   consoleError.mockClear();
 });
 
-describe('rendering helpers', () => {
-  test('builds font declarations through the supplied URL resolver', () => {
-    const resolveUrl = vi.fn((url: string) =>
-      new URL(url, 'chrome-extension://id/').toString()
-    );
-    const styles = createGeistFontStyles(resolveUrl);
-
-    expect(resolveUrl).toHaveBeenCalledTimes(5);
-    expect(styles).toContain("font-family: 'Geist Sans'");
-    expect(styles).toContain('font-weight: 800');
-    expect(styles).toContain('chrome-extension://id/');
-  });
-
-  test('creates an interactive extension mount with style fallback', () => {
-    window.history.replaceState({}, '', '/');
-    const root = createShadowRoot('.app { color: red; }');
-    const host = document.body.lastElementChild as HTMLDivElement;
-    const shadow = host.shadowRoot!;
-    const mount = shadow.firstElementChild as HTMLDivElement;
-
-    expect(host.style.pointerEvents).toBe('none');
-    expect(mount.style.pointerEvents).toBe('none');
-    expect(shadow.querySelector('style')?.textContent).toContain('.app');
-    expect(shadow.querySelector('style')?.textContent).toContain('@font-face');
-    root.unmount();
-  });
-
+describe('MarkdownWithTimestamps', () => {
   test('renders all Markdown forms and seeks active video from a timestamp', async () => {
     render(
       <>

@@ -4,12 +4,11 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { AnalysisRecord } from '../domain/analysis';
 import { isErrorResponse, isPanelNotification } from '../shared/messages';
 import { clearApiKeysAndHistory } from '../utils/storage';
-import useAnalysisSession from './analysisSession/useAnalysisSession';
+import { AnalyzeView, useAnalysisSession } from './analysis';
 import sendMessageToBackground from './chromeBackgroundTransport';
-import AnalyzeView from './components/AnalyzeView';
-import { Header, SidePanelTab } from './components/Header';
 import { HistoryView, useHistory } from './history';
 import { SettingsView, useSettings } from './preferences';
+import { Header, SidePanelTab } from './shell';
 
 export default function SidePanelApp(): JSX.Element {
   const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');

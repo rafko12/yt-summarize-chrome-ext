@@ -1,7 +1,7 @@
 import { JSX } from 'react';
 
-import { parseTimestamp } from '../../utils/time';
 import { createYoutube } from '../youtube';
+import { parseTimestamp } from './timestampParser';
 
 const timestampRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
 

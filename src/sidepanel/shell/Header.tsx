@@ -3,7 +3,7 @@ import { Moon, PushPin, Sparkle, Sun } from '@phosphor-icons/react';
 export type SidePanelTab = 'analyze' | 'history' | 'settings';
 export type PopupTab = SidePanelTab;
 
-interface HeaderProps {
+export interface HeaderProps {
   activeTab: SidePanelTab;
   theme: 'night' | 'nord';
   isPinned: boolean;
@@ -82,3 +82,5 @@ export function Header({
     </header>
   );
 }
+
+export default Header;

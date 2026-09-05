@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { parseTimestamp } from './time';
+import { parseTimestamp } from './timestampParser';
 
 describe('parseTimestamp', () => {
   it('should parse MM:SS correctly', () => {
