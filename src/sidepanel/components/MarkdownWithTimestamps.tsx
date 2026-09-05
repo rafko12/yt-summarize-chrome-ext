@@ -1,12 +1,11 @@
 import { JSX } from 'react';
 
 import { parseTimestamp } from '../../utils/time';
-import createChromeYoutubePagePlatform from '../youtubePage/chromeYoutubePagePlatform';
-import createYoutubePage from '../youtubePage/youtubePage';
+import { createYoutube } from '../youtube';
 
 const timestampRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
 
-const youtubePage = createYoutubePage(createChromeYoutubePagePlatform());
+const youtubePage = createYoutube();
 
 function handleTimestampClick(timeStr: string) {
   const seconds = parseTimestamp(timeStr);

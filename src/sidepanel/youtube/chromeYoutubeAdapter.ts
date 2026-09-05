@@ -1,13 +1,14 @@
 import {
-  BackgroundMessage,
-  BackgroundResponse,
   ContentMessage,
   ContentResponse,
-} from './messages';
-
-export interface SendMessageOptions {
-  onInjecting?: () => void;
-}
+  TranscriptResponse,
+  VideoDataResponse,
+} from '../../shared/messages';
+import {
+  ActiveYoutubeTab,
+  TranscriptRequestOptions,
+  YoutubeAdapter,
+} from './types';
 
 function isMissingContentScriptError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : '';
@@ -27,7 +28,7 @@ async function sendContentMessage<M extends ContentMessage>(
 export async function sendMessageToTabWithRetry<M extends ContentMessage>(
   tabId: number,
   message: M,
-  options?: SendMessageOptions
+  options?: TranscriptRequestOptions
 ): Promise<ContentResponse<M>> {
   try {
     return await sendContentMessage(tabId, message);
@@ -58,8 +59,37 @@ export async function sendMessageToTabWithRetry<M extends ContentMessage>(
   }
 }
 
-export async function sendMessageToBackground<M extends BackgroundMessage>(
-  message: M
-): Promise<BackgroundResponse<M>> {
-  return chrome.runtime.sendMessage(message);
+export default function createChromeYoutubeAdapter(): YoutubeAdapter {
+  return {
+    async getActiveTab(): Promise<ActiveYoutubeTab | undefined> {
+      const [tab] = await chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      return tab;
+    },
+    getVideoData(
+      tabId: number
+    ): Promise<VideoDataResponse | { error: string }> {
+      return sendMessageToTabWithRetry(tabId, { type: 'GET_VIDEO_DATA' });
+    },
+    getTranscript(
+      tabId: number,
+      videoId: string,
+      targetLang: string,
+      options?: TranscriptRequestOptions
+    ): Promise<TranscriptResponse | { error: string }> {
+      return sendMessageToTabWithRetry(
+        tabId,
+        { type: 'GET_TRANSCRIPT', videoId, targetLang },
+        options
+      );
+    },
+    seekTo(
+      tabId: number,
+      seconds: number
+    ): Promise<{ error: string } | { success: true }> {
+      return sendMessageToTabWithRetry(tabId, { type: 'SEEK_TO', seconds });
+    },
+  };
 }

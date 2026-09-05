@@ -2,10 +2,10 @@ import { JSX, MouseEvent, useEffect, useRef, useState } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
 import { AnalysisRecord } from '../analysisHistory/analysisHistory';
-import { sendMessageToBackground } from '../shared/chromeMessageTransport';
 import { isErrorResponse, isPanelNotification } from '../shared/messages';
 import { clearApiKeysAndHistory } from '../utils/storage';
 import useAnalysisSession from './analysisSession/useAnalysisSession';
+import sendMessageToBackground from './chromeBackgroundTransport';
 import AnalyzeView from './components/AnalyzeView';
 import { Header, SidePanelTab } from './components/Header';
 import HistoryView from './components/HistoryView';

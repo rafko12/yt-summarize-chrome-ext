@@ -20,15 +20,14 @@ import {
   generateSummary,
   getProvider,
 } from '../ai';
-import createChromeYoutubePagePlatform from '../youtubePage/chromeYoutubePagePlatform';
-import createYoutubePage, { YoutubePage } from '../youtubePage/youtubePage';
+import { createYoutube, YoutubeIntegration } from '../youtube';
 import {
   analysisSessionReducer,
   initialAnalysisSessionState,
 } from './analysisSessionReducer';
 
 export interface UseAnalysisSessionProps {
-  youtubePageOverride?: YoutubePage;
+  youtubePageOverride?: YoutubeIntegration;
   historyOverride?: AnalysisHistory;
   onHistoryUpdated?: () => void;
   onRequireSettings?: (message: string) => void;
@@ -50,9 +49,7 @@ export default function useAnalysisSession({
   const chatListRef = useRef<HTMLDivElement>(null);
 
   const youtubePage = useMemo(
-    () =>
-      youtubePageOverride ||
-      createYoutubePage(createChromeYoutubePagePlatform()),
+    () => youtubePageOverride || createYoutube(),
     [youtubePageOverride]
   );
 

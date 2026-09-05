@@ -1,44 +1,12 @@
-import {
-  isErrorResponse,
-  TranscriptResponse,
-  VideoDataResponse,
-} from '../../shared/messages';
+import { isErrorResponse } from '../../shared/messages';
 import { VideoSession } from '../../shared/video';
-
-export interface TranscriptRequestOptions {
-  onInjecting?: () => void;
-}
-
-export interface ActiveYoutubeTab {
-  id?: number;
-  title?: string;
-  url?: string;
-}
-
-export interface YoutubePagePlatform {
-  getActiveTab(): Promise<ActiveYoutubeTab | undefined>;
-  getVideoData(tabId: number): Promise<VideoDataResponse | { error: string }>;
-  getTranscript(
-    tabId: number,
-    videoId: string,
-    targetLang: string,
-    options?: TranscriptRequestOptions
-  ): Promise<TranscriptResponse | { error: string }>;
-  seekTo(
-    tabId: number,
-    seconds: number
-  ): Promise<{ error: string } | { success: true }>;
-}
-
-export interface YoutubePage {
-  readActiveVideo(fallbackVideo?: VideoSession): Promise<VideoSession | null>;
-  fetchActiveTranscript(
-    videoId: string,
-    targetLang: string,
-    options?: TranscriptRequestOptions
-  ): Promise<TranscriptResponse | { error: string }>;
-  seekToTimestamp(seconds: number): Promise<void>;
-}
+import createChromeYoutubeAdapter from './chromeYoutubeAdapter';
+import {
+  ActiveYoutubeTab,
+  TranscriptRequestOptions,
+  YoutubeAdapter,
+  YoutubeIntegration,
+} from './types';
 
 function createFallbackVideo(
   videoId: string,
@@ -53,15 +21,15 @@ function createFallbackVideo(
   };
 }
 
-export default function createYoutubePage(
-  platform: YoutubePagePlatform
-): YoutubePage {
+export default function createYoutube(
+  adapter: YoutubeAdapter = createChromeYoutubeAdapter()
+): YoutubeIntegration {
   return {
     async readActiveVideo(
       fallbackVideo?: VideoSession
     ): Promise<VideoSession | null> {
       try {
-        const tab = await platform.getActiveTab();
+        const tab = await adapter.getActiveTab();
         if (
           !tab ||
           !tab.id ||
@@ -75,7 +43,7 @@ export default function createYoutubePage(
         if (!videoId) return null;
 
         try {
-          const response = await platform.getVideoData(tab.id);
+          const response = await adapter.getVideoData(tab.id);
           if (!isErrorResponse(response)) {
             return {
               videoId: response.videoId,
@@ -97,19 +65,19 @@ export default function createYoutubePage(
       videoId: string,
       targetLang: string,
       options?: TranscriptRequestOptions
-    ): Promise<TranscriptResponse | { error: string }> {
-      const tab = await platform.getActiveTab();
+    ) {
+      const tab = await adapter.getActiveTab();
       if (!tab?.id) {
         throw new Error('Nie znaleziono aktywnej karty.');
       }
 
-      return platform.getTranscript(tab.id, videoId, targetLang, options);
+      return adapter.getTranscript(tab.id, videoId, targetLang, options);
     },
     async seekToTimestamp(seconds: number): Promise<void> {
-      const tab = await platform.getActiveTab();
+      const tab = await adapter.getActiveTab();
       if (!tab?.id) return;
 
-      const response = await platform.seekTo(tab.id, seconds);
+      const response = await adapter.seekTo(tab.id, seconds);
       if (isErrorResponse(response)) {
         throw new Error(response.error);
       }

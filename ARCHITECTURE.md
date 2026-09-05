@@ -37,12 +37,13 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 
 - `SidePanelApp.tsx` składa widoki i hooki jako composition root panelu.
 - `analysisSession/` zarządza stanem analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`).
-- `youtubePage/` obsługuje odczyt metadanych bieżącej karty YouTube przez dedykowany moduł i adapter platformy Chrome (`chromeYoutubePagePlatform.ts`).
+- `youtube/` integruje dostęp do aktywnego Filmu YouTube, ukrywając odczyt karty, messaging z ponawianiem i wstrzykiwaniem skryptu oraz fallback metadanych za jednym interfejsem publicznym (`youtube.ts`) z adapterem Chrome (`chromeYoutubeAdapter.ts`).
 - `ai/` integruje Dostawców AI: wspólnego klienta (`client.ts`), rejestr modeli i dostawców (`registry.ts`), politykę modeli (`modelPolicy.ts`), prompty (`prompts.ts`), typy (`types.ts`) oraz adaptery Gemini, OpenAI i Anthropic (`providers/`).
+- `chromeBackgroundTransport.ts` realizuje transport wiadomości z panelu do background service workera.
 - `hooks/` obsługuje ustawienia (`useSettings.ts`) oraz Historię analiz (`useHistory.ts`).
 - `components/` renderuje widoki bez przejmowania integracji z Chrome lub Dostawcami AI.
 
-Panel komunikuje się ze skryptem treści i backgroundem przez transport wiadomości Chrome (`src/shared/chromeMessageTransport.ts`). Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
+Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/sidepanel/youtube/`), a z backgroundem przez transport panelu `src/sidepanel/chromeBackgroundTransport.ts`. Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
 
 ### Strona opcji
 
@@ -51,7 +52,6 @@ Panel komunikuje się ze skryptem treści i backgroundem przez transport wiadomo
 ## Moduły współdzielone
 
 - `src/shared/messages.ts` — typy wiadomości, odpowiedzi i ich walidacja.
-- `src/shared/chromeMessageTransport.ts` — transport wiadomości Chrome z obsługą błędów, ponawiania i ponownego wstrzykiwania content scriptu.
 - `src/shared/video.ts` — współdzielone typy Filmu.
 - `src/preferences/` — operacje na preferencjach użytkownika, kluczach API, motywie i ustawieniach (`userPreferences.ts`) z adapterem Chrome (`chromePreferencesPlatform.ts`).
 - `src/analysisHistory/` — operacje wysokiego poziomu na Historii analiz i Zapisach analiz (`analysisHistory.ts`) z adapterem Chrome (`chromeAnalysisHistoryPlatform.ts`).
