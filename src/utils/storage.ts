@@ -1,25 +1,24 @@
-import { ChatMessage } from '../sidepanel/ai';
 import {
   AnalysisRecord,
   AnalysisRecordInput,
+  ChatMessage,
+} from '../domain/analysis';
+import {
   createAnalysisHistory,
   createChromeAnalysisHistoryPlatform,
 } from '../sidepanel/history';
 import {
+  AiProvider,
   createChromePreferencesPlatform,
   createUserPreferences,
   DEFAULT_SETTINGS,
-  Provider,
   Settings,
   Theme,
 } from '../sidepanel/preferences';
 
-export type { Provider, Settings, Theme };
+export type { AiProvider, Settings, Theme };
 export { DEFAULT_SETTINGS };
 export type { AnalysisRecord, AnalysisRecordInput };
-
-export type HistoryItem = AnalysisRecord;
-export type HistoryItemInput = AnalysisRecordInput;
 
 /**
  * Stable names of values persisted in Chrome storage.
@@ -46,15 +45,15 @@ const defaultAnalysisHistory = createAnalysisHistory(
 );
 
 // API Key Management
-export function getApiKey(provider: Provider = 'gemini'): Promise<string> {
+export function getApiKey(provider: AiProvider = 'gemini'): Promise<string> {
   return defaultPreferences.getApiKey(provider);
 }
 
-export function setApiKey(provider: Provider, apiKey: string): Promise<void> {
+export function setApiKey(provider: AiProvider, apiKey: string): Promise<void> {
   return defaultPreferences.setApiKey(provider, apiKey);
 }
 
-export function getAllApiKeys(): Promise<Record<Provider, string>> {
+export function getAllApiKeys(): Promise<Record<AiProvider, string>> {
   return defaultPreferences.getAllApiKeys();
 }
 

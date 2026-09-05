@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 
 import { resolveCompatibleModel, validateApiKey } from '../ai';
 import createChromePreferencesAdapter from './chromePreferencesAdapter';
-import { Provider, Settings, Theme, UserPreferences } from './types';
+import { AiProvider, Settings, Theme, UserPreferences } from './types';
 import createUserPreferences from './userPreferences';
 
 export default function useSettings(preferencesOverride?: UserPreferences) {
@@ -22,12 +22,13 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
   );
 
   // Key & Settings state
-  const [apiKeys, setApiKeysVal] = useState<Record<Provider, string>>({
+  const [apiKeys, setApiKeysVal] = useState<Record<AiProvider, string>>({
     gemini: '',
     openai: '',
     claude: '',
   });
-  const [selectedProvider, setSelectedProvider] = useState<Provider>('gemini');
+  const [selectedProvider, setSelectedProvider] =
+    useState<AiProvider>('gemini');
   const [apiKeyInput, setApiKeyInput] = useState<string>('');
   const [showKey, setShowKey] = useState<boolean>(false);
   const [isCheckingKey, setIsCheckingKey] = useState<boolean>(false);
@@ -75,7 +76,7 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
     await preferences.setTheme(nextTheme);
   };
 
-  const handleSelectProvider = (p: Provider) => {
+  const handleSelectProvider = (p: AiProvider) => {
     setSelectedProvider(p);
     setApiKeyInput(apiKeys[p] || '');
     setKeyValidationMsg(null);
@@ -96,7 +97,7 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
 
     setIsCheckingKey(false);
     if (valid) {
-      const nextApiKeys: Record<Provider, string> = {
+      const nextApiKeys: Record<AiProvider, string> = {
         ...apiKeys,
         [selectedProvider]: trimmedKey,
       };
@@ -126,8 +127,8 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
     }
   };
 
-  const handleDeleteApiKey = async (provider: Provider) => {
-    const nextApiKeys: Record<Provider, string> = {
+  const handleDeleteApiKey = async (provider: AiProvider) => {
+    const nextApiKeys: Record<AiProvider, string> = {
       ...apiKeys,
       [provider]: '',
     };

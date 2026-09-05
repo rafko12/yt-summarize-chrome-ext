@@ -1,5 +1,5 @@
+import { Film } from '../../domain/analysis';
 import { isErrorResponse } from '../../shared/messages';
-import { VideoSession } from '../../shared/video';
 import createChromeYoutubeAdapter from './chromeYoutubeAdapter';
 import {
   ActiveYoutubeTab,
@@ -11,8 +11,8 @@ import {
 function createFallbackVideo(
   videoId: string,
   tab: ActiveYoutubeTab,
-  fallbackVideo?: VideoSession
-): VideoSession {
+  fallbackVideo?: Film
+): Film {
   return {
     videoId,
     title: tab.title || 'Film YouTube',
@@ -25,9 +25,7 @@ export default function createYoutube(
   adapter: YoutubeAdapter = createChromeYoutubeAdapter()
 ): YoutubeIntegration {
   return {
-    async readActiveVideo(
-      fallbackVideo?: VideoSession
-    ): Promise<VideoSession | null> {
+    async readActiveVideo(fallbackVideo?: Film): Promise<Film | null> {
       try {
         const tab = await adapter.getActiveTab();
         if (

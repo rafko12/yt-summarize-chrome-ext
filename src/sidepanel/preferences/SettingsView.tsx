@@ -2,7 +2,7 @@
 import { CircleNotch, Eye, EyeSlash, Key, Trash } from '@phosphor-icons/react';
 
 import { AI_MODELS, AI_PROVIDERS } from '../ai';
-import { Provider, SettingsViewProps } from './types';
+import { AiProvider, SettingsViewProps } from './types';
 
 export default function SettingsView({
   selectedProvider,
@@ -45,7 +45,7 @@ export default function SettingsView({
         <select
           id='provider-select'
           value={selectedProvider}
-          onChange={(e) => onSelectProvider(e.target.value as Provider)}
+          onChange={(e) => onSelectProvider(e.target.value as AiProvider)}
           className='select-bordered select select-sm bg-base-100 mb-2 w-full rounded-lg text-xs focus:outline-none'
         >
           {AI_PROVIDERS.map((provider) => (
@@ -143,7 +143,7 @@ export default function SettingsView({
                   </div>
                   <button
                     type='button'
-                    onClick={() => onDeleteApiKey(prov as Provider)}
+                    onClick={() => onDeleteApiKey(prov as AiProvider)}
                     className='btn btn-ghost btn-xs text-error hover:bg-error/15 btn-circle'
                     title='Usuń klucz'
                     aria-label={`Usuń klucz ${prov}`}

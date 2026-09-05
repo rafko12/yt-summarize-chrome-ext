@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as aiModule from '../ai';
 import {
+  AiProvider,
   InitialPreferences,
-  Provider,
   Settings,
   Theme,
   UserPreferences,
@@ -23,7 +23,7 @@ vi.mock('../ai', async (importOriginal) => {
 function createMockPreferences(
   initialData?: Partial<InitialPreferences>
 ): UserPreferences {
-  let apiKeys: Record<Provider, string> = {
+  let apiKeys: Record<AiProvider, string> = {
     gemini: initialData?.apiKeys?.gemini ?? '',
     openai: initialData?.apiKeys?.openai ?? '',
     claude: initialData?.apiKeys?.claude ?? '',
@@ -45,9 +45,9 @@ function createMockPreferences(
       settings = { ...s };
     }),
     getApiKey: vi.fn(
-      async (provider: Provider = 'gemini') => apiKeys[provider]
+      async (provider: AiProvider = 'gemini') => apiKeys[provider]
     ),
-    setApiKey: vi.fn(async (provider: Provider, key: string) => {
+    setApiKey: vi.fn(async (provider: AiProvider, key: string) => {
       apiKeys[provider] = key;
     }),
     getAllApiKeys: vi.fn(async () => ({ ...apiKeys })),

@@ -1,22 +1,18 @@
 import { MouseEvent } from 'react';
 
-import { ChatMessage, TranscriptItem } from '../ai';
+import {
+  AnalysisRecord,
+  AnalysisRecordInput,
+  ChatMessage,
+  TranscriptSegment,
+} from '../../domain/analysis';
 
-export interface AnalysisRecord {
-  videoId: string;
-  title: string;
-  author: string;
-  thumbnailUrl: string;
-  summary: string | null;
-  transcript: TranscriptItem[];
-  chat: ChatMessage[];
-  createdAt: number;
-}
-
-export type AnalysisRecordInput = Omit<AnalysisRecord, 'createdAt'>;
-
-export type HistoryItem = AnalysisRecord;
-export type HistoryItemInput = AnalysisRecordInput;
+export type {
+  AnalysisRecord,
+  AnalysisRecordInput,
+  ChatMessage,
+  TranscriptSegment,
+};
 
 export interface AnalysisHistoryPlatform {
   read(keys: readonly string[]): Promise<Record<string, unknown>>;

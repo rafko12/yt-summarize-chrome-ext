@@ -1,50 +1,13 @@
-import { ChatMessage, TranscriptItem } from '../ai';
 import {
-  AnalysisHistory,
-  AnalysisHistoryPlatform,
   AnalysisRecord,
   AnalysisRecordInput,
-} from './types';
+  ChatMessage,
+  isAnalysisRecord,
+} from '../../domain/analysis';
+import { AnalysisHistory, AnalysisHistoryPlatform } from './types';
 
 const ANALYSIS_HISTORY_STORAGE_KEY = 'summarizer_history';
 const MAX_HISTORY_ITEMS = 50;
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function isTranscriptItem(value: unknown): value is TranscriptItem {
-  return (
-    isRecord(value) &&
-    typeof value.text === 'string' &&
-    typeof value.start === 'number' &&
-    typeof value.duration === 'number'
-  );
-}
-
-function isChatMessage(value: unknown): value is ChatMessage {
-  return (
-    isRecord(value) &&
-    (value.role === 'user' || value.role === 'model') &&
-    typeof value.message === 'string'
-  );
-}
-
-function isAnalysisRecord(value: unknown): value is AnalysisRecord {
-  return (
-    isRecord(value) &&
-    typeof value.videoId === 'string' &&
-    typeof value.title === 'string' &&
-    typeof value.author === 'string' &&
-    typeof value.thumbnailUrl === 'string' &&
-    (typeof value.summary === 'string' || value.summary === null) &&
-    Array.isArray(value.transcript) &&
-    value.transcript.every(isTranscriptItem) &&
-    Array.isArray(value.chat) &&
-    value.chat.every(isChatMessage) &&
-    typeof value.createdAt === 'number'
-  );
-}
 
 export default function createAnalysisHistory(
   platform: AnalysisHistoryPlatform

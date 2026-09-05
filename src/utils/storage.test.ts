@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  AnalysisRecordInput,
   clearApiKeysAndHistory,
   clearHistory,
   deleteHistoryItem,
@@ -9,7 +10,6 @@ import {
   getHistory,
   getSettings,
   getTheme,
-  HistoryItem,
   saveHistoryItem,
   setApiKey,
   setSettings,
@@ -18,7 +18,7 @@ import {
 } from './storage';
 
 describe('storage history operations', () => {
-  const dummyItem: Omit<HistoryItem, 'createdAt'> = {
+  const dummyItem: AnalysisRecordInput = {
     videoId: '123',
     title: 'Test Video',
     author: 'Test Author',

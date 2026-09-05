@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChatMessage, TranscriptItem } from '../ai';
+import { ChatMessage, TranscriptSegment } from '../../domain/analysis';
 import {
   AnalysisHistoryPlatform,
   AnalysisRecord,
@@ -23,7 +23,7 @@ function createMemoryPlatform(
   };
 }
 
-const sampleTranscript: TranscriptItem[] = [
+const sampleTranscript: TranscriptSegment[] = [
   { text: 'Wstęp do filmu', start: 0, duration: 15 },
   { text: 'Główna część', start: 15, duration: 45 },
 ];

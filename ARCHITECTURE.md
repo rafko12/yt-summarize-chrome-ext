@@ -52,8 +52,8 @@ Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/
 
 ## Moduły współdzielone
 
+- `src/domain/analysis.ts` — kanoniczne typy domeny analizy (Film, segment transkrypcji, wiadomość rozmowy, Zapis analizy).
 - `src/shared/messages.ts` — typy wiadomości, odpowiedzi i ich walidacja.
-- `src/shared/video.ts` — współdzielone typy Filmu.
 - `src/utils/storage.ts` — fasada zgodności wstecznej dla storage.
 - `src/utils/createShadowRoot.tsx` — tworzenie izolowanego korzenia UI.
 - `src/assets/` — style i fonty (`geistFonts.ts`).

@@ -1,5 +1,5 @@
+import { Film } from '../../domain/analysis';
 import { TranscriptResponse, VideoDataResponse } from '../../shared/messages';
-import { VideoSession } from '../../shared/video';
 
 export interface TranscriptRequestOptions {
   onInjecting?: () => void;
@@ -27,7 +27,7 @@ export interface YoutubeAdapter {
 }
 
 export interface YoutubeIntegration {
-  readActiveVideo(fallbackVideo?: VideoSession): Promise<VideoSession | null>;
+  readActiveVideo(fallbackVideo?: Film): Promise<Film | null>;
   fetchActiveTranscript(
     videoId: string,
     targetLang: string,

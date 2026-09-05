@@ -1,6 +1,6 @@
 import type { AiProvider } from '../ai';
 
-export type Provider = AiProvider;
+export type { AiProvider };
 
 export interface Settings {
   language: string;
@@ -10,7 +10,7 @@ export interface Settings {
 export type Theme = 'night' | 'nord';
 
 export interface InitialPreferences {
-  apiKeys: Record<Provider, string>;
+  apiKeys: Record<AiProvider, string>;
   settings: Settings;
   theme: Theme | null;
 }
@@ -24,17 +24,17 @@ export interface UserPreferences {
   readInitialPreferences(): Promise<InitialPreferences>;
   getSettings(): Promise<Settings>;
   setSettings(settings: Settings): Promise<void>;
-  getApiKey(provider?: Provider): Promise<string>;
-  setApiKey(provider: Provider, apiKey: string): Promise<void>;
-  getAllApiKeys(): Promise<Record<Provider, string>>;
+  getApiKey(provider?: AiProvider): Promise<string>;
+  setApiKey(provider: AiProvider, apiKey: string): Promise<void>;
+  getAllApiKeys(): Promise<Record<AiProvider, string>>;
   getTheme(): Promise<Theme | null>;
   setTheme(theme: Theme): Promise<void>;
   clearApiKeys(): Promise<void>;
 }
 
 export interface SettingsViewProps {
-  selectedProvider: Provider;
-  apiKeys: Record<Provider, string>;
+  selectedProvider: AiProvider;
+  apiKeys: Record<AiProvider, string>;
   apiKeyInput: string;
   showKey: boolean;
   isCheckingKey: boolean;
@@ -42,11 +42,11 @@ export interface SettingsViewProps {
   settings: Settings;
   hasAnyKey: boolean;
   historyListLength: number;
-  onSelectProvider: (p: Provider) => void;
+  onSelectProvider: (p: AiProvider) => void;
   onApiKeyInputChange: (val: string) => void;
   onToggleShowKey: () => void;
   onSaveApiKey: () => void;
-  onDeleteApiKey: (p: Provider) => void;
+  onDeleteApiKey: (p: AiProvider) => void;
   onModelChange: (val: string) => void;
   onLanguageChange: (val: string) => void;
   onClearHistory: () => void;

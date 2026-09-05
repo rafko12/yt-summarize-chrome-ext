@@ -1,9 +1,8 @@
-import { VideoSession } from '../../shared/video';
-import { ChatMessage, TranscriptItem } from '../ai';
+import { ChatMessage, Film, TranscriptSegment } from '../../domain/analysis';
 
 export interface AnalysisSessionState {
-  currentVideo: VideoSession | null;
-  transcript: TranscriptItem[] | null;
+  currentVideo: Film | null;
+  transcript: TranscriptSegment[] | null;
   summary: string | null;
   chatMessages: ChatMessage[];
   chatInput: string;
@@ -20,12 +19,12 @@ export type AnalysisSessionAction =
   | { type: 'STOP_SEARCHING' }
   | {
       type: 'SET_ACTIVE_VIDEO';
-      video: VideoSession | null;
+      video: Film | null;
     }
   | {
       type: 'RESTORE_SAVED_SESSION';
-      video: VideoSession;
-      transcript: TranscriptItem[];
+      video: Film;
+      transcript: TranscriptSegment[];
       summary: string | null;
       chat: ChatMessage[];
     }
@@ -39,7 +38,7 @@ export type AnalysisSessionAction =
     }
   | {
       type: 'SET_TRANSCRIPT';
-      transcript: TranscriptItem[];
+      transcript: TranscriptSegment[];
     }
   | {
       type: 'SUMMARIZATION_SUCCESS';

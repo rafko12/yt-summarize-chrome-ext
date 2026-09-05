@@ -1,8 +1,8 @@
 import { ClockCounterClockwise, Trash } from '@phosphor-icons/react';
 
-import { AnalysisRecord, HistoryItem, HistoryViewProps } from './types';
+import { AnalysisRecord, HistoryViewProps } from './types';
 
-export type { AnalysisRecord, HistoryItem, HistoryViewProps };
+export type { AnalysisRecord, HistoryViewProps };
 
 export default function HistoryView({
   historyList,

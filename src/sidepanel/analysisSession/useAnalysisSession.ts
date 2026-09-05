@@ -7,20 +7,15 @@ import {
   useRef,
 } from 'react';
 
+import { AnalysisRecord, ChatMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../shared/messages';
-import {
-  ChatMessage,
-  generateChatResponse,
-  generateSummary,
-  getProvider,
-} from '../ai';
+import { generateChatResponse, generateSummary, getProvider } from '../ai';
 import {
   AnalysisHistory,
-  AnalysisRecord,
   createAnalysisHistory,
   createChromeAnalysisHistoryPlatform,
 } from '../history';
-import { Provider, Settings } from '../preferences';
+import { AiProvider, Settings } from '../preferences';
 import { createYoutube, YoutubeIntegration } from '../youtube';
 import {
   analysisSessionReducer,
@@ -157,11 +152,11 @@ export default function useAnalysisSession({
   );
 
   const handleSummarizeVideo = useCallback(
-    async (settings: Settings, apiKeys: Record<Provider, string>) => {
+    async (settings: Settings, apiKeys: Record<AiProvider, string>) => {
       const { currentVideo } = stateRef.current;
       if (!currentVideo) return;
 
-      const provider = getProvider(settings.model) as Provider;
+      const provider = getProvider(settings.model);
       const keyToUse = apiKeys[provider];
 
       if (!keyToUse) {
@@ -255,7 +250,7 @@ export default function useAnalysisSession({
     async (
       e: FormEvent,
       settings: Settings,
-      apiKeys: Record<Provider, string>
+      apiKeys: Record<AiProvider, string>
     ) => {
       e.preventDefault();
       const {
@@ -266,7 +261,7 @@ export default function useAnalysisSession({
         chatMessages,
       } = stateRef.current;
 
-      const provider = getProvider(settings.model) as Provider;
+      const provider = getProvider(settings.model);
       const keyToUse = apiKeys[provider];
 
       if (!chatInput.trim() || !currentVideo || isSendingChat || !keyToUse) {

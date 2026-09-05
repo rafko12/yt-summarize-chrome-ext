@@ -1,3 +1,4 @@
+import { ChatMessage, TranscriptSegment } from '../../domain/analysis';
 import {
   getChatSystemInstruction,
   getSummarySystemInstruction,
@@ -8,15 +9,12 @@ import {
 import { createAnthropicProvider } from './providers/anthropic';
 import { createGeminiProvider } from './providers/gemini';
 import { createOpenaiProvider } from './providers/openai';
-import { getAiModel, getAiProvider } from './registry';
+import { AiProvider, getAiModel, getAiProvider } from './registry';
 import {
-  ChatMessage,
   getSafeErrorMessage,
   LlmProvider,
-  LlmProviderName,
   LlmRequest,
   LlmRequestError,
-  TranscriptItem,
 } from './types';
 
 export interface ValidationResult {
@@ -28,27 +26,27 @@ export interface AiClient {
   validateApiKey(
     apiKey: string,
     modelOrProvider?: string,
-    explicitProvider?: LlmProviderName
+    explicitProvider?: AiProvider
   ): Promise<ValidationResult>;
   generateSummary(
     apiKey: string,
-    transcript: TranscriptItem[],
+    transcript: TranscriptSegment[],
     language: string,
     model?: string
   ): Promise<string>;
   generateChatResponse(
     apiKey: string,
-    transcript: TranscriptItem[],
+    transcript: TranscriptSegment[],
     chatHistory: ChatMessage[],
     userMessage: string,
     language: string,
     model?: string
   ): Promise<string>;
-  getProvider(model: string): LlmProviderName;
-  formatTranscript(transcript: TranscriptItem[]): string;
+  getProvider(model: string): AiProvider;
+  formatTranscript(transcript: TranscriptSegment[]): string;
 }
 
-export const formatTranscript = (transcript: TranscriptItem[]) =>
+export const formatTranscript = (transcript: TranscriptSegment[]) =>
   transcript
     .map((item) => {
       const min = Math.floor(item.start / 60);
@@ -57,7 +55,7 @@ export const formatTranscript = (transcript: TranscriptItem[]) =>
     })
     .join('\n');
 
-export function getProvider(model: string): LlmProviderName {
+export function getProvider(model: string): AiProvider {
   const configuredModel = getAiModel(model);
   if (configuredModel) return configuredModel.provider;
   throw new LlmRequestError(
@@ -69,14 +67,14 @@ export function getProvider(model: string): LlmProviderName {
 export function createAiClient(customFetch?: typeof fetch): AiClient {
   const fetchImpl: typeof fetch =
     customFetch ?? ((...args) => globalThis.fetch(...args));
-  const providers: Record<LlmProviderName, LlmProvider> = {
+  const providers: Record<AiProvider, LlmProvider> = {
     gemini: createGeminiProvider(fetchImpl),
     openai: createOpenaiProvider(fetchImpl),
     claude: createAnthropicProvider(fetchImpl),
   };
 
   async function requestProvider(
-    provider: LlmProviderName,
+    provider: AiProvider,
     request: LlmRequest
   ): Promise<string> {
     try {
@@ -101,7 +99,7 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
     async validateApiKey(
       apiKey: string,
       modelOrProvider?: string,
-      explicitProvider?: LlmProviderName
+      explicitProvider?: AiProvider
     ): Promise<ValidationResult> {
       const trimmedKey = apiKey.trim();
       if (!trimmedKey) {
@@ -110,7 +108,7 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
 
       const effectiveModelOrProvider = modelOrProvider || 'gemini-3.5-flash';
 
-      let provider: LlmProviderName;
+      let provider: AiProvider;
       if (explicitProvider) {
         provider = explicitProvider;
       } else if (
@@ -155,7 +153,7 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
 
     async generateSummary(
       apiKey: string,
-      transcript: TranscriptItem[],
+      transcript: TranscriptSegment[],
       language: string,
       model = 'gemini-3.5-flash'
     ): Promise<string> {
@@ -168,7 +166,7 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
 
     async generateChatResponse(
       apiKey: string,
-      transcript: TranscriptItem[],
+      transcript: TranscriptSegment[],
       chatHistory: ChatMessage[],
       userMessage: string,
       language: string,

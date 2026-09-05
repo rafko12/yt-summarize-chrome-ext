@@ -1,18 +1,10 @@
+import { ChatMessage, TranscriptSegment } from '../../domain/analysis';
 import { AiProvider } from './registry';
+
+export type { ChatMessage, TranscriptSegment };
 
 export type LlmProviderName = AiProvider;
 export type LlmErrorProviderName = LlmProviderName | 'unknown';
-
-export interface TranscriptItem {
-  start: number;
-  duration: number;
-  text: string;
-}
-
-export interface ChatMessage {
-  role: 'user' | 'model';
-  message: string;
-}
 
 export interface LlmRequest {
   apiKey: string;

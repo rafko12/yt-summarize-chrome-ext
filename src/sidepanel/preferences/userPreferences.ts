@@ -1,8 +1,8 @@
 import { isModelAvailable, resolveCompatibleModel } from '../ai';
 import {
+  AiProvider,
   InitialPreferences,
   PreferencesPlatform,
-  Provider,
   Settings,
   Theme,
   UserPreferences,
@@ -23,7 +23,7 @@ const PREFERENCE_STORAGE_KEYS = {
   UI_THEME: 'ui_theme',
 } as const;
 
-const API_KEY_STORAGE_KEYS: Record<Provider, string> = {
+const API_KEY_STORAGE_KEYS: Record<AiProvider, string> = {
   gemini: PREFERENCE_STORAGE_KEYS.GEMINI_API_KEY,
   openai: PREFERENCE_STORAGE_KEYS.OPENAI_API_KEY,
   claude: PREFERENCE_STORAGE_KEYS.CLAUDE_API_KEY,
@@ -69,7 +69,7 @@ function normalizeTheme(value: unknown): Theme | null {
 
 function normalizeApiKeys(
   raw: Record<string, unknown>
-): Record<Provider, string> {
+): Record<AiProvider, string> {
   return {
     gemini: normalizeString(raw[PREFERENCE_STORAGE_KEYS.GEMINI_API_KEY]),
     openai: normalizeString(raw[PREFERENCE_STORAGE_KEYS.OPENAI_API_KEY]),
@@ -123,18 +123,18 @@ export default function createUserPreferences(
       });
     },
 
-    async getApiKey(provider: Provider = 'gemini'): Promise<string> {
+    async getApiKey(provider: AiProvider = 'gemini'): Promise<string> {
       const key = API_KEY_STORAGE_KEYS[provider];
       const raw = await platform.read([key]);
       return normalizeString(raw[key]);
     },
 
-    async setApiKey(provider: Provider, apiKey: string): Promise<void> {
+    async setApiKey(provider: AiProvider, apiKey: string): Promise<void> {
       const key = API_KEY_STORAGE_KEYS[provider];
       await platform.write({ [key]: apiKey });
     },
 
-    async getAllApiKeys(): Promise<Record<Provider, string>> {
+    async getAllApiKeys(): Promise<Record<AiProvider, string>> {
       const raw = await platform.read(ALL_API_KEY_KEYS);
       return normalizeApiKeys(raw);
     },

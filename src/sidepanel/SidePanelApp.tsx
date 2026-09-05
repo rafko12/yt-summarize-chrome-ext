@@ -1,13 +1,14 @@
 import { JSX, MouseEvent, useEffect, useRef, useState } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
+import { AnalysisRecord } from '../domain/analysis';
 import { isErrorResponse, isPanelNotification } from '../shared/messages';
 import { clearApiKeysAndHistory } from '../utils/storage';
 import useAnalysisSession from './analysisSession/useAnalysisSession';
 import sendMessageToBackground from './chromeBackgroundTransport';
 import AnalyzeView from './components/AnalyzeView';
 import { Header, SidePanelTab } from './components/Header';
-import { AnalysisRecord, HistoryView, useHistory } from './history';
+import { HistoryView, useHistory } from './history';
 import { SettingsView, useSettings } from './preferences';
 
 export default function SidePanelApp(): JSX.Element {

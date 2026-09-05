@@ -8,20 +8,15 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 
+import { ChatMessage, Film } from '../../domain/analysis';
 import { Settings } from '../../utils/storage';
-import { ChatMessage } from '../ai';
 import { MarkdownLine } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';
 
 interface AnalyzeViewProps {
   hasAnyKey: boolean;
   isSearchingVideo: boolean;
-  currentVideo: {
-    videoId: string;
-    title: string;
-    author: string;
-    thumbnailUrl: string;
-  } | null;
+  currentVideo: Film | null;
   isLoading: boolean;
   loadingMessage: string;
   summary: string | null;
