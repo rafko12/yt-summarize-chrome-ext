@@ -1,3 +1,4 @@
+import { STORAGE_KEYS } from '../../storage';
 import { isModelAvailable, resolveCompatibleModel } from '../ai';
 import {
   AiProvider,
@@ -15,30 +16,22 @@ export const DEFAULT_SETTINGS: Settings = {
   model: 'gemini-3.5-flash',
 };
 
-const PREFERENCE_STORAGE_KEYS = {
-  GEMINI_API_KEY: 'gemini_api_key',
-  OPENAI_API_KEY: 'openai_api_key',
-  CLAUDE_API_KEY: 'claude_api_key',
-  SETTINGS: 'summarizer_settings',
-  UI_THEME: 'ui_theme',
-} as const;
-
 const API_KEY_STORAGE_KEYS: Record<AiProvider, string> = {
-  gemini: PREFERENCE_STORAGE_KEYS.GEMINI_API_KEY,
-  openai: PREFERENCE_STORAGE_KEYS.OPENAI_API_KEY,
-  claude: PREFERENCE_STORAGE_KEYS.CLAUDE_API_KEY,
+  gemini: STORAGE_KEYS.GEMINI_API_KEY,
+  openai: STORAGE_KEYS.OPENAI_API_KEY,
+  claude: STORAGE_KEYS.CLAUDE_API_KEY,
 };
 
 const ALL_API_KEY_KEYS = [
-  PREFERENCE_STORAGE_KEYS.GEMINI_API_KEY,
-  PREFERENCE_STORAGE_KEYS.OPENAI_API_KEY,
-  PREFERENCE_STORAGE_KEYS.CLAUDE_API_KEY,
+  STORAGE_KEYS.GEMINI_API_KEY,
+  STORAGE_KEYS.OPENAI_API_KEY,
+  STORAGE_KEYS.CLAUDE_API_KEY,
 ] as const;
 
 const ALL_PREFERENCE_KEYS = [
   ...ALL_API_KEY_KEYS,
-  PREFERENCE_STORAGE_KEYS.SETTINGS,
-  PREFERENCE_STORAGE_KEYS.UI_THEME,
+  STORAGE_KEYS.SETTINGS,
+  STORAGE_KEYS.UI_THEME,
 ] as const;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -71,9 +64,9 @@ function normalizeApiKeys(
   raw: Record<string, unknown>
 ): Record<AiProvider, string> {
   return {
-    gemini: normalizeString(raw[PREFERENCE_STORAGE_KEYS.GEMINI_API_KEY]),
-    openai: normalizeString(raw[PREFERENCE_STORAGE_KEYS.OPENAI_API_KEY]),
-    claude: normalizeString(raw[PREFERENCE_STORAGE_KEYS.CLAUDE_API_KEY]),
+    gemini: normalizeString(raw[STORAGE_KEYS.GEMINI_API_KEY]),
+    openai: normalizeString(raw[STORAGE_KEYS.OPENAI_API_KEY]),
+    claude: normalizeString(raw[STORAGE_KEYS.CLAUDE_API_KEY]),
   };
 }
 
@@ -84,8 +77,8 @@ export default function createUserPreferences(
     async readInitialPreferences(): Promise<InitialPreferences> {
       const raw = await platform.read(ALL_PREFERENCE_KEYS);
       const apiKeys = normalizeApiKeys(raw);
-      let settings = normalizeSettings(raw[PREFERENCE_STORAGE_KEYS.SETTINGS]);
-      const theme = normalizeTheme(raw[PREFERENCE_STORAGE_KEYS.UI_THEME]);
+      let settings = normalizeSettings(raw[STORAGE_KEYS.SETTINGS]);
+      const theme = normalizeTheme(raw[STORAGE_KEYS.UI_THEME]);
 
       const hasAnyAvailableKey = Object.values(apiKeys).some(
         (key) => key.trim().length > 0
@@ -100,7 +93,7 @@ export default function createUserPreferences(
         if (compatibleModel !== settings.model) {
           settings = { ...settings, model: compatibleModel };
           await platform.write({
-            [PREFERENCE_STORAGE_KEYS.SETTINGS]: settings,
+            [STORAGE_KEYS.SETTINGS]: settings,
           });
         }
       }
@@ -113,13 +106,13 @@ export default function createUserPreferences(
     },
 
     async getSettings(): Promise<Settings> {
-      const raw = await platform.read([PREFERENCE_STORAGE_KEYS.SETTINGS]);
-      return normalizeSettings(raw[PREFERENCE_STORAGE_KEYS.SETTINGS]);
+      const raw = await platform.read([STORAGE_KEYS.SETTINGS]);
+      return normalizeSettings(raw[STORAGE_KEYS.SETTINGS]);
     },
 
     async setSettings(settings: Settings): Promise<void> {
       await platform.write({
-        [PREFERENCE_STORAGE_KEYS.SETTINGS]: settings,
+        [STORAGE_KEYS.SETTINGS]: settings,
       });
     },
 
@@ -140,21 +133,21 @@ export default function createUserPreferences(
     },
 
     async getTheme(): Promise<Theme | null> {
-      const raw = await platform.read([PREFERENCE_STORAGE_KEYS.UI_THEME]);
-      return normalizeTheme(raw[PREFERENCE_STORAGE_KEYS.UI_THEME]);
+      const raw = await platform.read([STORAGE_KEYS.UI_THEME]);
+      return normalizeTheme(raw[STORAGE_KEYS.UI_THEME]);
     },
 
     async setTheme(theme: Theme): Promise<void> {
       await platform.write({
-        [PREFERENCE_STORAGE_KEYS.UI_THEME]: theme,
+        [STORAGE_KEYS.UI_THEME]: theme,
       });
     },
 
     async clearApiKeys(): Promise<void> {
       await platform.write({
-        [PREFERENCE_STORAGE_KEYS.GEMINI_API_KEY]: '',
-        [PREFERENCE_STORAGE_KEYS.OPENAI_API_KEY]: '',
-        [PREFERENCE_STORAGE_KEYS.CLAUDE_API_KEY]: '',
+        [STORAGE_KEYS.GEMINI_API_KEY]: '',
+        [STORAGE_KEYS.OPENAI_API_KEY]: '',
+        [STORAGE_KEYS.CLAUDE_API_KEY]: '',
       });
     },
   };

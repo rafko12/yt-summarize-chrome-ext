@@ -9,13 +9,12 @@ import {
 } from '../sidepanel/history';
 import {
   AiProvider,
-  createChromePreferencesPlatform,
   createUserPreferences,
   DEFAULT_SETTINGS,
   Settings,
   Theme,
 } from '../sidepanel/preferences';
-import { STORAGE_KEYS } from '../storage/keys';
+import { createChromeStorageLocalAdapter, STORAGE_KEYS } from '../storage';
 
 export type { AiProvider, Settings, Theme };
 export { DEFAULT_SETTINGS };
@@ -24,7 +23,7 @@ export type { AnalysisRecord, AnalysisRecordInput };
 export { STORAGE_KEYS };
 
 const defaultPreferences = createUserPreferences(
-  createChromePreferencesPlatform()
+  createChromeStorageLocalAdapter()
 );
 
 const defaultAnalysisHistory = createAnalysisHistory(

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import defaultCreateUserPreferences, {
   createChromePreferencesAdapter,
@@ -40,5 +40,59 @@ describe('Preferences Module public seam (src/sidepanel/preferences)', () => {
       language: 'Polski',
       model: 'gemini-3.5-flash',
     });
+  });
+
+  it('instantiates preferences directly with shared ChromeStorageLocalAdapter and canonical keys', async () => {
+    const memoryStore: Record<string, unknown> = {};
+    const mockStorageLocal = {
+      get: vi.fn(
+        (
+          keys: string | string[],
+          cb: (res: Record<string, unknown>) => void
+        ) => {
+          const keyList = Array.isArray(keys) ? keys : [keys];
+          cb(Object.fromEntries(keyList.map((k) => [k, memoryStore[k]])));
+        }
+      ),
+      set: vi.fn((items: Record<string, unknown>, cb?: () => void) => {
+        Object.assign(memoryStore, items);
+        cb?.();
+      }),
+    } as unknown as typeof chrome.storage.local;
+
+    const { createChromeStorageLocalAdapter, STORAGE_KEYS } = await import(
+      '../../storage'
+    );
+    const adapter = createChromeStorageLocalAdapter(mockStorageLocal);
+    const preferences = createUserPreferences(adapter);
+
+    await preferences.setApiKey('openai', 'sk-test');
+    expect(await preferences.getApiKey('openai')).toBe('sk-test');
+    expect(memoryStore[STORAGE_KEYS.OPENAI_API_KEY]).toBe('sk-test');
+  });
+
+  it('delegates createChromePreferencesAdapter to shared ChromeStorageLocalAdapter', async () => {
+    const memoryStore: Record<string, unknown> = {};
+    const mockStorageLocal = {
+      get: vi.fn(
+        (
+          keys: string | string[],
+          cb: (res: Record<string, unknown>) => void
+        ) => {
+          const keyList = Array.isArray(keys) ? keys : [keys];
+          cb(Object.fromEntries(keyList.map((k) => [k, memoryStore[k]])));
+        }
+      ),
+      set: vi.fn((items: Record<string, unknown>, cb?: () => void) => {
+        Object.assign(memoryStore, items);
+        cb?.();
+      }),
+    } as unknown as typeof chrome.storage.local;
+
+    const { STORAGE_KEYS } = await import('../../storage');
+    const oldAdapter = createChromePreferencesAdapter(mockStorageLocal);
+    await oldAdapter.write({ [STORAGE_KEYS.UI_THEME]: 'nord' });
+    const readResult = await oldAdapter.read([STORAGE_KEYS.UI_THEME]);
+    expect(readResult[STORAGE_KEYS.UI_THEME]).toBe('nord');
   });
 });

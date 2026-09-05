@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
+import { createChromeStorageLocalAdapter } from '../../storage';
 import { resolveCompatibleModel, validateApiKey } from '../ai';
-import createChromePreferencesAdapter from './chromePreferencesAdapter';
 import { AiProvider, Settings, Theme, UserPreferences } from './types';
 import createUserPreferences from './userPreferences';
 
@@ -9,7 +9,7 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
   const preferences = useMemo(
     () =>
       preferencesOverride ||
-      createUserPreferences(createChromePreferencesAdapter()),
+      createUserPreferences(createChromeStorageLocalAdapter()),
     [preferencesOverride]
   );
 

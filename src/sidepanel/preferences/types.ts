@@ -1,3 +1,4 @@
+import type { StorageAdapter } from '../../storage';
 import type { AiProvider } from '../ai';
 
 export type { AiProvider };
@@ -15,10 +16,7 @@ export interface InitialPreferences {
   theme: Theme | null;
 }
 
-export interface PreferencesPlatform {
-  read(keys: readonly string[]): Promise<Record<string, unknown>>;
-  write(values: Record<string, unknown>): Promise<void>;
-}
+export type PreferencesPlatform = StorageAdapter;
 
 export interface UserPreferences {
   readInitialPreferences(): Promise<InitialPreferences>;
