@@ -246,4 +246,104 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
     await expect(history.getRecords()).resolves.toEqual([]);
     expect(platform.data.summarizer_history).toEqual([]);
   });
+
+  describe('saveSession (high-level upsert operation)', () => {
+    it('creates a new record when videoId does not exist in history', async () => {
+      const platform = createMemoryPlatform({});
+      const history = createAnalysisHistory(platform);
+
+      const before = Date.now();
+      const updated = await history.saveSession({
+        ...sampleRecordInput,
+        videoId: 'new-session-vid',
+        title: 'Nowa sesja',
+        summary: null,
+      });
+      const after = Date.now();
+
+      expect(updated).toHaveLength(1);
+      expect(updated[0].videoId).toBe('new-session-vid');
+      expect(updated[0].title).toBe('Nowa sesja');
+      expect(updated[0].summary).toBeNull();
+      expect(updated[0].createdAt).toBeGreaterThanOrEqual(before);
+      expect(updated[0].createdAt).toBeLessThanOrEqual(after);
+
+      const records = await history.getRecords();
+      expect(records).toEqual(updated);
+    });
+
+    it('updates existing record in-place preserving its position and original createdAt', async () => {
+      const platform = createMemoryPlatform({});
+      const history = createAnalysisHistory(platform);
+
+      await history.saveRecord({
+        ...sampleRecordInput,
+        videoId: 'vid-1',
+        title: 'Film 1',
+      });
+      await history.saveRecord({
+        ...sampleRecordInput,
+        videoId: 'vid-2',
+        title: 'Film 2',
+      });
+      await history.saveRecord({
+        ...sampleRecordInput,
+        videoId: 'vid-3',
+        title: 'Film 3',
+      });
+
+      // Current order: vid-3, vid-2, vid-1
+      const initialRecords = await history.getRecords();
+      const originalVid2 = initialRecords.find((r) => r.videoId === 'vid-2')!;
+      expect(initialRecords[1].videoId).toBe('vid-2');
+
+      const updatedChat: ChatMessage[] = [
+        { role: 'user', message: 'Nowe pytanie w sesji' },
+        { role: 'model', message: 'Nowa odpowiedź w sesji' },
+      ];
+
+      const result = await history.saveSession({
+        ...sampleRecordInput,
+        videoId: 'vid-2',
+        title: 'Film 2 Zaktualizowany',
+        summary: 'Zaktualizowane podsumowanie',
+        chat: updatedChat,
+      });
+
+      expect(result).toHaveLength(3);
+      // Position MUST be preserved (vid-3 at 0, vid-2 at 1, vid-1 at 2)
+      expect(result.map((r) => r.videoId)).toEqual(['vid-3', 'vid-2', 'vid-1']);
+
+      const updatedVid2 = result[1];
+      expect(updatedVid2.videoId).toBe('vid-2');
+      expect(updatedVid2.chat).toEqual(updatedChat);
+      expect(updatedVid2.title).toBe('Film 2 Zaktualizowany');
+      expect(updatedVid2.summary).toBe('Zaktualizowane podsumowanie');
+      expect(updatedVid2.createdAt).toBe(originalVid2.createdAt);
+
+      const readBack = await history.getRecords();
+      expect(readBack).toEqual(result);
+    });
+
+    it('preserves existing summary when saving a session with null summary for an already summarized video', async () => {
+      const platform = createMemoryPlatform({});
+      const history = createAnalysisHistory(platform);
+
+      await history.saveRecord({
+        ...sampleRecordInput,
+        videoId: 'vid-summarized',
+        summary: 'Istniejące podsumowanie',
+      });
+
+      const updated = await history.saveSession({
+        ...sampleRecordInput,
+        videoId: 'vid-summarized',
+        summary: null,
+        chat: [{ role: 'user', message: 'Pytanie' }],
+      });
+
+      expect(updated[0].summary).toBe('Istniejące podsumowanie');
+      expect(updated[0].chat).toHaveLength(1);
+    });
+  });
 });

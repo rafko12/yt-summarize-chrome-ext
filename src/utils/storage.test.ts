@@ -10,6 +10,7 @@ import {
   getHistory,
   getSettings,
   getTheme,
+  saveAnalysisSession,
   saveHistoryItem,
   setApiKey,
   setSettings,
@@ -114,6 +115,21 @@ describe('storage history operations', () => {
     ]);
     expect(await getHistory()).toHaveLength(1);
     expect((await getHistory())[0].chat).toEqual(chat);
+  });
+
+  it('should save analysis session creating or updating records transparently', async () => {
+    await saveAnalysisSession(dummyItem);
+    expect(await getHistory()).toHaveLength(1);
+
+    const updatedChat = [{ role: 'user' as const, message: 'Follow-up' }];
+    await saveAnalysisSession({
+      ...dummyItem,
+      chat: updatedChat,
+    });
+
+    const history = await getHistory();
+    expect(history).toHaveLength(1);
+    expect(history[0].chat).toEqual(updatedChat);
   });
 
   it('filters malformed history data read from storage', async () => {

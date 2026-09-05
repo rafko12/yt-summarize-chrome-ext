@@ -4,9 +4,9 @@ import {
   ChatMessage,
   isAnalysisRecord,
 } from '../../domain/analysis';
+import { STORAGE_KEYS } from '../../storage';
 import { AnalysisHistory, AnalysisHistoryPlatform } from './types';
 
-const ANALYSIS_HISTORY_STORAGE_KEY = 'summarizer_history';
 const MAX_HISTORY_ITEMS = 50;
 
 export default function createAnalysisHistory(
@@ -14,8 +14,8 @@ export default function createAnalysisHistory(
 ): AnalysisHistory {
   return {
     async getRecords(): Promise<AnalysisRecord[]> {
-      const raw = await platform.read([ANALYSIS_HISTORY_STORAGE_KEY]);
-      const stored = raw[ANALYSIS_HISTORY_STORAGE_KEY];
+      const raw = await platform.read([STORAGE_KEYS.HISTORY]);
+      const stored = raw[STORAGE_KEYS.HISTORY];
       return Array.isArray(stored) ? stored.filter(isAnalysisRecord) : [];
     },
 
@@ -27,7 +27,7 @@ export default function createAnalysisHistory(
         createdAt: Date.now(),
       };
       const updated = [newRecord, ...filtered].slice(0, MAX_HISTORY_ITEMS);
-      await platform.write({ [ANALYSIS_HISTORY_STORAGE_KEY]: updated });
+      await platform.write({ [STORAGE_KEYS.HISTORY]: updated });
       return updated;
     },
 
@@ -43,18 +43,56 @@ export default function createAnalysisHistory(
       const updated = current.map((record, index) =>
         index === targetIndex ? { ...record, chat } : record
       );
-      await platform.write({ [ANALYSIS_HISTORY_STORAGE_KEY]: updated });
+      await platform.write({ [STORAGE_KEYS.HISTORY]: updated });
+    },
+
+    async saveSession(session: AnalysisRecordInput): Promise<AnalysisRecord[]> {
+      const current = await this.getRecords();
+      const targetIndex = current.findIndex(
+        (r) => r.videoId === session.videoId
+      );
+      if (targetIndex === -1) {
+        return this.saveRecord(session);
+      }
+
+      const existing = current[targetIndex];
+      const updatedRecord: AnalysisRecord = {
+        ...existing,
+        ...session,
+        title: session.title || existing.title,
+        author: session.author || existing.author,
+        thumbnailUrl: session.thumbnailUrl || existing.thumbnailUrl,
+        summary: session.summary ?? existing.summary,
+        transcript:
+          session.transcript.length > 0
+            ? session.transcript
+            : existing.transcript,
+        chat: session.chat,
+        createdAt: existing.createdAt,
+      };
+
+      const updated = current.map((record, index) =>
+        index === targetIndex ? updatedRecord : record
+      );
+      await platform.write({ [STORAGE_KEYS.HISTORY]: updated });
+      return updated;
+    },
+
+    async saveAnalysisSession(
+      session: AnalysisRecordInput
+    ): Promise<AnalysisRecord[]> {
+      return this.saveSession(session);
     },
 
     async deleteRecord(videoId: string): Promise<AnalysisRecord[]> {
       const current = await this.getRecords();
       const updated = current.filter((r) => r.videoId !== videoId);
-      await platform.write({ [ANALYSIS_HISTORY_STORAGE_KEY]: updated });
+      await platform.write({ [STORAGE_KEYS.HISTORY]: updated });
       return updated;
     },
 
     async clearRecords(): Promise<void> {
-      await platform.write({ [ANALYSIS_HISTORY_STORAGE_KEY]: [] });
+      await platform.write({ [STORAGE_KEYS.HISTORY]: [] });
     },
   };
 }

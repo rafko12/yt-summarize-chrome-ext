@@ -22,6 +22,20 @@ function createMockHistory(
         r.videoId === videoId ? { ...r, chat } : r
       );
     }),
+    saveSession: vi.fn(async (item) => {
+      const existing = records.find((r) => r.videoId === item.videoId);
+      if (existing) {
+        records = records.map((r) =>
+          r.videoId === item.videoId
+            ? { ...r, ...item, createdAt: r.createdAt }
+            : r
+        );
+      } else {
+        const newRec: AnalysisRecord = { ...item, createdAt: Date.now() };
+        records = [newRec, ...records];
+      }
+      return records;
+    }),
     deleteRecord: vi.fn(async (videoId) => {
       records = records.filter((r) => r.videoId !== videoId);
       return records;

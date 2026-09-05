@@ -1,4 +1,5 @@
 import { MouseEvent } from 'react';
+import type { StorageAdapter } from '../../storage';
 
 import {
   AnalysisRecord,
@@ -14,15 +15,14 @@ export type {
   TranscriptSegment,
 };
 
-export interface AnalysisHistoryPlatform {
-  read(keys: readonly string[]): Promise<Record<string, unknown>>;
-  write(values: Record<string, unknown>): Promise<void>;
-}
+export type AnalysisHistoryPlatform = StorageAdapter;
 
 export interface AnalysisHistory {
   getRecords(): Promise<AnalysisRecord[]>;
   saveRecord(item: AnalysisRecordInput): Promise<AnalysisRecord[]>;
   updateRecordChat(videoId: string, chat: ChatMessage[]): Promise<void>;
+  saveSession(session: AnalysisRecordInput): Promise<AnalysisRecord[]>;
+  saveAnalysisSession?(session: AnalysisRecordInput): Promise<AnalysisRecord[]>;
   deleteRecord(videoId: string): Promise<AnalysisRecord[]>;
   clearRecords(): Promise<void>;
 }

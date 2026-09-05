@@ -341,6 +341,41 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
       expect(records[1].chat).toEqual(newChat);
     });
 
+    it('performs high-level saveSession upsert preserving ordering when updating and adding to index 0 when creating', async () => {
+      const history = createAnalysisHistory(adapter);
+
+      rawStorage[STORAGE_KEYS.HISTORY] = [
+        createSampleRecord('vid-1', { chat: [], createdAt: 100 }),
+        createSampleRecord('vid-2', { chat: [], createdAt: 200 }),
+      ];
+
+      // Update existing vid-2: position and createdAt preserved
+      const updatedChat = [{ role: 'user' as const, message: 'Wiadomość' }];
+      await history.saveSession({
+        ...createSampleRecord('vid-2'),
+        chat: updatedChat,
+      });
+
+      let records = await history.getRecords();
+      expect(records).toHaveLength(2);
+      expect(records[0].videoId).toBe('vid-1');
+      expect(records[1].videoId).toBe('vid-2');
+      expect(records[1].chat).toEqual(updatedChat);
+      expect(records[1].createdAt).toBe(200);
+
+      // Create new vid-3: added at index 0
+      await history.saveSession({
+        ...createSampleRecord('vid-3'),
+        chat: [{ role: 'user' as const, message: 'Nowy' }],
+      });
+
+      records = await history.getRecords();
+      expect(records).toHaveLength(3);
+      expect(records[0].videoId).toBe('vid-3');
+      expect(records[1].videoId).toBe('vid-1');
+      expect(records[2].videoId).toBe('vid-2');
+    });
+
     it('deletes specific record by videoId and keeps remaining records in order', async () => {
       const history = createAnalysisHistory(adapter);
 

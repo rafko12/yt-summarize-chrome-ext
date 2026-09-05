@@ -318,24 +318,16 @@ export default function useAnalysisSession({
           userMessage,
           modelMessage,
         ];
-        const currentHistory = await history.getRecords();
-        const existingItem = currentHistory.find(
-          (i) => i.videoId === targetVideo.videoId
-        );
 
-        if (existingItem) {
-          await history.updateRecordChat(targetVideo.videoId, finalChat);
-        } else {
-          await history.saveRecord({
-            videoId: targetVideo.videoId,
-            title: targetVideo.title,
-            author: targetVideo.author,
-            thumbnailUrl: targetVideo.thumbnailUrl,
-            summary: stateRef.current.summary || null,
-            transcript: activeTranscript,
-            chat: finalChat,
-          });
-        }
+        await history.saveSession({
+          videoId: targetVideo.videoId,
+          title: targetVideo.title,
+          author: targetVideo.author,
+          thumbnailUrl: targetVideo.thumbnailUrl,
+          summary: stateRef.current.summary || null,
+          transcript: activeTranscript,
+          chat: finalChat,
+        });
 
         onHistoryUpdated?.();
       } catch (err: unknown) {

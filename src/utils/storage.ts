@@ -70,6 +70,12 @@ export function updateHistoryItemChat(
   return defaultAnalysisHistory.updateRecordChat(videoId, chat);
 }
 
+export function saveAnalysisSession(
+  session: AnalysisRecordInput
+): Promise<AnalysisRecord[]> {
+  return defaultAnalysisHistory.saveSession(session);
+}
+
 export function deleteHistoryItem(videoId: string): Promise<AnalysisRecord[]> {
   return defaultAnalysisHistory.deleteRecord(videoId);
 }
