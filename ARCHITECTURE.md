@@ -40,8 +40,9 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 - `analysis/` integruje widoki analizy (`AnalyzeView.tsx`, `SummaryView.tsx`), prezentacyjny renderer Markdown z timestampami (`MarkdownWithTimestamps.tsx`), parser timestampów (`timestampParser.ts`), stan analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`). Renderer timestampów nie tworzy adaptera Chrome — otrzymuje jawny callback `onSeek` z orkiestracji sesji. Przewijanie rozmowy jest efektem widoku `AnalyzeView`, nie orkiestracji sesji.
 - `youtube/` integruje dostęp do aktywnego Filmu YouTube, ukrywając odczyt karty, messaging z ponawianiem i wstrzykiwaniem skryptu oraz fallback metadanych za jednym interfejsem publicznym (`youtube.ts`) z adapterem Chrome (`chromeYoutubeAdapter.ts`).
 - `ai/` integruje Dostawców AI: wspólnego klienta (`client.ts`), rejestr modeli i dostawców (`registry.ts`), politykę modeli (`modelPolicy.ts`), prompty (`prompts.ts`), typy (`types.ts`) oraz adaptery Gemini, OpenAI i Anthropic (`providers/`).
-- `history/` integruje Historię analiz i Zapisy analiz: widok (`HistoryView.tsx`), hook (`useHistory.ts`), operacje persistence (`analysisHistory.ts`) oraz adapter platformowy Chrome (`chromeAnalysisHistoryAdapter.ts`).
-- `preferences/` integruje preferencje użytkownika, klucze API, motyw i ustawienia: widok (`SettingsView.tsx`), hook (`useSettings.ts`), operacje persistence (`userPreferences.ts`) oraz adapter platformowy Chrome (`chromePreferencesAdapter.ts`). Synchronizacja motywu dokumentu HTML należy do shella (`useDocumentTheme`), nie do feature preferencji.
+- `history/` integruje Historię analiz i Zapisy analiz: widok (`HistoryView.tsx`), hook (`useHistory.ts`), typy (`types.ts`) oraz operacje persistence (`analysisHistory.ts`) bezpośrednio przez wspólny adapter storage.
+- `preferences/` integruje preferencje użytkownika, klucze API, motyw i ustawienia: widok (`SettingsView.tsx`), hook (`useSettings.ts`), typy (`types.ts`) oraz operacje persistence (`userPreferences.ts`) bezpośrednio przez wspólny adapter storage. Synchronizacja motywu dokumentu HTML należy do shella (`useDocumentTheme`), nie do feature preferencji.
+- `dangerZone.ts` koordynuje bezpieczne czyszczenie wrażliwych danych użytkownika (kluczy API i Historii analiz) przez ich właścicieli domenowych z zachowaniem pozostałych preferencji i stanu panelu.
 - `chromeBackgroundTransport.ts` realizuje transport wiadomości z panelu do background service workera.
 
 Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/sidepanel/youtube/`), a z backgroundem przez transport panelu `src/sidepanel/chromeBackgroundTransport.ts`. Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
@@ -53,7 +54,7 @@ Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/
 ## Moduły współdzielone
 
 - `src/domain/analysis.ts` — kanoniczne typy domeny analizy (Film, segment transkrypcji, wiadomość rozmowy, Zapis analizy).
-- `src/shared/messages.ts` — typy wiadomości, odpowiedzi i ich walidacja.
+- `src/messaging/` — czyste kontrakty wiadomości, odpowiedzi i ich walidatory (`messages.ts`, `index.ts`).
 - `src/storage/` — kanoniczne źródło stabilnych kluczy storage (`keys.ts`) oraz jedyny wspólny adapter `chrome.storage.local` (`chromeStorageLocalAdapter.ts`).
 - `src/ui/createShadowRoot.tsx` — tworzenie izolowanego korzenia UI (host, Shadow DOM, pointer events, fonty, arkusz stylów, fallback i React root).
 - `src/assets/` — style i fonty (`geistFonts.ts`).

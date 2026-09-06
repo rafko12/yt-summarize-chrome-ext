@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { PinStateResponse, SuccessResponse } from '../shared/messages';
+import { PinStateResponse, SuccessResponse } from '../messaging';
 import sendMessageToBackground from './chromeBackgroundTransport';
 
 beforeEach(() => {

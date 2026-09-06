@@ -1,4 +1,4 @@
-import { isBackgroundMessage } from '../shared/messages';
+import { isBackgroundMessage } from '../messaging';
 import { SidePanelAdapter, SidePanelRestoreData } from './sidePanelController';
 
 type SidePanelWithClose = typeof chrome.sidePanel & {

@@ -1,4 +1,4 @@
-import { BackgroundMessage, BackgroundResponse } from '../shared/messages';
+import { BackgroundMessage, BackgroundResponse } from '../messaging';
 
 export default async function sendMessageToBackground<
   M extends BackgroundMessage,

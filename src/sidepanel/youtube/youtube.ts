@@ -1,5 +1,5 @@
 import { Film } from '../../domain/analysis';
-import { isErrorResponse } from '../../shared/messages';
+import { isErrorResponse } from '../../messaging';
 import createChromeYoutubeAdapter from './chromeYoutubeAdapter';
 import {
   ActiveYoutubeTab,

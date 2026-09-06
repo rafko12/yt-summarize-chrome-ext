@@ -2,7 +2,7 @@ import { JSX, MouseEvent, useEffect, useRef, useState } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
 import { AnalysisRecord } from '../domain/analysis';
-import { isErrorResponse, isPanelNotification } from '../shared/messages';
+import { isErrorResponse, isPanelNotification } from '../messaging';
 import { AnalyzeView, useAnalysisSession } from './analysis';
 import sendMessageToBackground from './chromeBackgroundTransport';
 import { clearApiKeysAndHistory } from './dangerZone';

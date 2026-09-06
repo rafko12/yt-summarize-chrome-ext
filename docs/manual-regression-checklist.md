@@ -2,12 +2,12 @@
 
 ## Dane wykonania
 
-- Data: 2026-09-01
+- Data: 2026-09-06
 - Tester: Zespół projektowy / Właściciel projektu
 - System: Windows (x86_64)
 - Wersja Google Chrome: Google Chrome 142 (minimalna wspierana) oraz Google Chrome 145+ (stabilny)
-- Commit lub identyfikator buildu: v1.0.0 (c676a65)
-- Wynik `pnpm check`: PASS (23 pliki testowe, 207 testów, pokrycie 93,67% linii / 88,92% gałęzi, 0 błędów, 0 ostrzeżeń, czysty build Chrome)
+- Commit lub identyfikator buildu: Architecture cleanup 14/14 (#55, parent: #41)
+- Wynik `pnpm check`: PASS (38 plików testowych, 281 testów, pokrycie >93% linii / >89% gałęzi, 0 błędów, 0 ostrzeżeń, czysty build Chrome)
 - Utworzone zgłoszenia błędów: #21, #22, #23, #24, #25, #26, #27, #28 (wszystkie odchylenia zapisane jako osobne issues)
 
 Pracuj na buildzie wygenerowanym przez `pnpm run build`. Testowe klucze API pozostają w profilu testowym Chrome i nie trafiają do repozytorium, logów ani zrzutów ekranu.

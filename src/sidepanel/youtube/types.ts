@@ -1,5 +1,5 @@
 import { Film } from '../../domain/analysis';
-import { TranscriptResponse, VideoDataResponse } from '../../shared/messages';
+import { TranscriptResponse, VideoDataResponse } from '../../messaging';
 
 export interface TranscriptRequestOptions {
   onInjecting?: () => void;

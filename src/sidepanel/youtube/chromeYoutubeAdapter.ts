@@ -3,7 +3,7 @@ import {
   ContentResponse,
   TranscriptResponse,
   VideoDataResponse,
-} from '../../shared/messages';
+} from '../../messaging';
 import {
   ActiveYoutubeTab,
   TranscriptRequestOptions,

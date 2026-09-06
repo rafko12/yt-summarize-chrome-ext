@@ -14,7 +14,7 @@ odpowiedzialności modułów opisuje
 
 - Zarządzaj manifestem wyłącznie przez `src/manifest.ts`.
 - Umieszczaj decyzje o stanie panelu w sterowniku, a szczegóły `chrome.*` w adapterze Chrome.
-- Utrzymuj `src/shared/messages.ts` jako kontrakt niezależny od transportu.
+- Utrzymuj `src/messaging/` jako kontrakt niezależny od transportu.
 - Zachowuj klucze i akceptowane formaty danych z `STORAGE_KEYS`; zmiana wymaga migracji.
 - Wykonuj żądania LLM oraz operacje Historii analiz w panelu, dopóki osobna decyzja architektoniczna nie zmieni kontekstu wykonania.
 - Konfiguruj tematy DaisyUI w głównym CSS przez `@plugin "daisyui"`.

@@ -4,7 +4,7 @@ import {
   ContentMessage,
   ExtensionResponse,
   isContentMessage,
-} from '../shared/messages';
+} from '../messaging';
 import {
   extractPlayerResponseFromText,
   PlayerResponse,

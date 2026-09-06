@@ -1,4 +1,4 @@
-import { YoutubeUrlUpdatedNotification } from '../shared/messages';
+import { YoutubeUrlUpdatedNotification } from '../messaging';
 
 export default function registerYoutubeNavigationEvents(
   chromeApi: typeof chrome

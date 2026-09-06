@@ -1,4 +1,4 @@
-import { PinStateResponse } from '../shared/messages';
+import { PinStateResponse } from '../messaging';
 
 export interface SidePanelRestoreData {
   storedLocalTabIds: unknown;

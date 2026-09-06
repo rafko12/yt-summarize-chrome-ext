@@ -1,7 +1,7 @@
 import { FormEvent, useCallback, useMemo, useReducer, useRef } from 'react';
 
 import { AnalysisRecord, ChatMessage } from '../../domain/analysis';
-import { isErrorResponse } from '../../shared/messages';
+import { isErrorResponse } from '../../messaging';
 import { createChromeStorageLocalAdapter } from '../../storage';
 import { generateChatResponse, generateSummary, getProvider } from '../ai';
 import { AnalysisHistory, createAnalysisHistory } from '../history';
