@@ -272,6 +272,81 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
       expect(records).toEqual(updated);
     });
 
+    it('updates only chat for existing record even if caller provides different metadata, transcript, or summary', async () => {
+      const platform = createMemoryPlatform({});
+      const history = createAnalysisHistory(platform);
+
+      await history.saveRecord({
+        ...sampleRecordInput,
+        videoId: 'vid-before',
+        title: 'Film Poprzedzający',
+      });
+      await history.saveRecord({
+        videoId: 'vid-target',
+        title: 'Oryginalny Tytuł',
+        author: 'Oryginalny Autor',
+        thumbnailUrl: 'https://example.com/original.jpg',
+        summary: 'Oryginalne Podsumowanie',
+        transcript: [
+          { text: 'Oryginalna transkrypcja', start: 0, duration: 10 },
+        ],
+        chat: [{ role: 'user', message: 'Stare pytanie' }],
+      });
+      await history.saveRecord({
+        ...sampleRecordInput,
+        videoId: 'vid-after',
+        title: 'Film Następujący',
+      });
+
+      const initialRecords = await history.getRecords();
+      expect(initialRecords.map((r) => r.videoId)).toEqual([
+        'vid-after',
+        'vid-target',
+        'vid-before',
+      ]);
+      const originalTarget = initialRecords[1];
+      const originalAfter = initialRecords[0];
+      const originalBefore = initialRecords[2];
+
+      const newChat: ChatMessage[] = [
+        { role: 'user', message: 'Stare pytanie' },
+        { role: 'model', message: 'Odpowiedź' },
+        { role: 'user', message: 'Nowe pytanie w sesji' },
+      ];
+
+      const result = await history.saveSession({
+        videoId: 'vid-target',
+        title: 'Zupełnie Inny Tytuł ze starego stanu',
+        author: 'Zupełnie Inny Autor',
+        thumbnailUrl: 'https://example.com/outdated.jpg',
+        summary: 'Zupełnie inne podsumowanie',
+        transcript: [{ text: 'Inna transkrypcja', start: 99, duration: 5 }],
+        chat: newChat,
+      });
+
+      expect(result).toHaveLength(3);
+      expect(result.map((r) => r.videoId)).toEqual([
+        'vid-after',
+        'vid-target',
+        'vid-before',
+      ]);
+      expect(result[0]).toEqual(originalAfter);
+      expect(result[2]).toEqual(originalBefore);
+
+      const updatedTarget = result[1];
+      expect(updatedTarget.videoId).toBe('vid-target');
+      expect(updatedTarget.title).toBe(originalTarget.title);
+      expect(updatedTarget.author).toBe(originalTarget.author);
+      expect(updatedTarget.thumbnailUrl).toBe(originalTarget.thumbnailUrl);
+      expect(updatedTarget.summary).toBe(originalTarget.summary);
+      expect(updatedTarget.transcript).toEqual(originalTarget.transcript);
+      expect(updatedTarget.createdAt).toBe(originalTarget.createdAt);
+      expect(updatedTarget.chat).toEqual(newChat);
+
+      const persisted = await history.getRecords();
+      expect(persisted).toEqual(result);
+    });
+
     it('updates existing record in-place preserving its position and original createdAt', async () => {
       const platform = createMemoryPlatform({});
       const history = createAnalysisHistory(platform);
@@ -317,8 +392,8 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
       const updatedVid2 = result[1];
       expect(updatedVid2.videoId).toBe('vid-2');
       expect(updatedVid2.chat).toEqual(updatedChat);
-      expect(updatedVid2.title).toBe('Film 2 Zaktualizowany');
-      expect(updatedVid2.summary).toBe('Zaktualizowane podsumowanie');
+      expect(updatedVid2.title).toBe('Film 2');
+      expect(updatedVid2.summary).toBe(originalVid2.summary);
       expect(updatedVid2.createdAt).toBe(originalVid2.createdAt);
 
       const readBack = await history.getRecords();
@@ -344,6 +419,37 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
 
       expect(updated[0].summary).toBe('Istniejące podsumowanie');
       expect(updated[0].chat).toHaveLength(1);
+    });
+
+    it('adds new session at index 0 and maintains limit of 50 items when videoId is not yet in history', async () => {
+      const initialRecords: AnalysisRecord[] = Array.from(
+        { length: 50 },
+        (_, i) => ({
+          ...sampleRecordInput,
+          videoId: `existing-vid-${i + 1}`,
+          title: `Film ${i + 1}`,
+          createdAt: 1000 + i,
+        })
+      );
+      const platform = createMemoryPlatform({
+        summarizer_history: initialRecords,
+      });
+      const history = createAnalysisHistory(platform);
+
+      const result = await history.saveSession({
+        ...sampleRecordInput,
+        videoId: 'new-session-51',
+        title: 'Nowy Film 51',
+        chat: [{ role: 'user', message: 'Cześć' }],
+      });
+
+      expect(result).toHaveLength(50);
+      expect(result[0].videoId).toBe('new-session-51');
+      expect(result[0].title).toBe('Nowy Film 51');
+      expect(result[0].chat).toEqual([{ role: 'user', message: 'Cześć' }]);
+      // The last item (existing-vid-50) should be dropped by slice
+      expect(result.some((r) => r.videoId === 'existing-vid-50')).toBe(false);
+      expect(result[49].videoId).toBe('existing-vid-49');
     });
   });
 });

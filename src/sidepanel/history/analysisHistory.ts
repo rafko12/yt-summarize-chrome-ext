@@ -58,17 +58,7 @@ export default function createAnalysisHistory(
       const existing = current[targetIndex];
       const updatedRecord: AnalysisRecord = {
         ...existing,
-        ...session,
-        title: session.title || existing.title,
-        author: session.author || existing.author,
-        thumbnailUrl: session.thumbnailUrl || existing.thumbnailUrl,
-        summary: session.summary ?? existing.summary,
-        transcript:
-          session.transcript.length > 0
-            ? session.transcript
-            : existing.transcript,
         chat: session.chat,
-        createdAt: existing.createdAt,
       };
 
       const updated = current.map((record, index) =>
