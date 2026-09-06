@@ -1,11 +1,4 @@
-import {
-  FormEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-} from 'react';
+import { FormEvent, useCallback, useMemo, useReducer, useRef } from 'react';
 
 import { AnalysisRecord, ChatMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../shared/messages';
@@ -39,8 +32,6 @@ export default function useAnalysisSession({
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const chatListRef = useRef<HTMLDivElement>(null);
-
   const youtubePage = useMemo(
     () => youtubePageOverride || createYoutube(),
     [youtubePageOverride]
@@ -52,12 +43,6 @@ export default function useAnalysisSession({
       createAnalysisHistory(createChromeStorageLocalAdapter()),
     [historyOverride]
   );
-
-  useEffect(() => {
-    if (chatListRef.current) {
-      chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
-    }
-  }, [state.chatMessages, state.isLoading]);
 
   const loadActiveVideo =
     useCallback(async (): Promise<AnalysisRecord | null> => {
@@ -372,6 +357,18 @@ export default function useAnalysisSession({
     }
   }, []);
 
+  const handleSeekToTimestamp = useCallback(
+    async (seconds: number) => {
+      try {
+        await youtubePage.seekToTimestamp(seconds);
+      } catch (error: unknown) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to seek player:', error);
+      }
+    },
+    [youtubePage]
+  );
+
   const handleClearSession = useCallback(() => {
     dispatch({ type: 'CLEAR_SESSION' });
   }, []);
@@ -386,10 +383,10 @@ export default function useAnalysisSession({
 
   return {
     ...state,
-    chatListRef,
     loadActiveVideo,
     handleSummarizeVideo,
     handleSendChatMessage,
+    handleSeekToTimestamp,
     handleClearChat,
     handleResumeSession,
     handleDeleteHistoryCleanup,

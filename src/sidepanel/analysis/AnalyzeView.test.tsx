@@ -2,7 +2,6 @@
 /* eslint-disable react/jsx-props-no-spreading */
 // cspell:disable
 
-import { createRef } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
@@ -19,6 +18,7 @@ const callbacks = {
   provider: vi.fn(),
   resume: vi.fn(),
   save: vi.fn(),
+  seek: vi.fn(),
   selectTab: vi.fn(),
   send: vi.fn((event) => event.preventDefault()),
   setTab: vi.fn(),
@@ -30,21 +30,17 @@ const callbacks = {
 const settings = { language: 'Polski', model: 'gemini-3.6-flash' };
 const video = {
   videoId: 'abc123',
-  title: 'Tytu? filmu',
+  title: 'Tytuł filmu',
   author: 'Autor',
   thumbnailUrl: 'https://example.test/thumb.jpg',
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(chrome.tabs.query).mockResolvedValue([
-    { id: 12 } as chrome.tabs.Tab,
-  ]);
-  vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({ success: true });
 });
 
 describe('AnalyzeView', () => {
-  test('analiza udost?pnia stany braku klucza, wyszukiwania, filmu, czatu i podsumowania', () => {
+  test('analiza udostępnia stany braku klucza, wyszukiwania, filmu, czatu i podsumowania', () => {
     const props = {
       hasAnyKey: false,
       isSearchingVideo: false,
@@ -56,13 +52,13 @@ describe('AnalyzeView', () => {
       isSendingChat: false,
       chatInput: '',
       settings,
-      chatListRef: createRef<HTMLDivElement>(),
       onLoadActiveVideo: callbacks.load,
       onClearChat: callbacks.clear,
       onSendChatMessage: callbacks.send,
       onChatInputChange: callbacks.input,
       onSummarizeVideo: callbacks.summarize,
       onSetActiveTab: callbacks.setTab,
+      onSeekTimestamp: callbacks.seek,
     };
     const { rerender } = render(<AnalyzeView {...props} />);
     fireEvent.click(screen.getByRole('button', { name: /Skonfiguruj teraz/ }));
@@ -81,12 +77,12 @@ describe('AnalyzeView', () => {
         hasAnyKey
         currentVideo={video}
         chatMessages={[{ role: 'user', message: 'Pytanie [01:30]' }]}
-        chatInput='Wiadomo??'
+        chatInput='Wiadomość'
         summary='To jest długie podsumowanie [00:45]'
       />
     );
     fireEvent.error(screen.getByAltText('Thumbnail'));
-    fireEvent.click(screen.getByRole('button', { name: /Wyczy??/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Wyczyść/ }));
     fireEvent.change(screen.getByPlaceholderText(/Zadaj pytanie/), {
       target: { value: 'Inne pytanie' },
     });
@@ -94,6 +90,10 @@ describe('AnalyzeView', () => {
       screen.getByPlaceholderText(/Zadaj pytanie/).closest('form')!
     );
     fireEvent.click(screen.getByRole('button', { name: '00:45' }));
+    expect(callbacks.seek).toHaveBeenCalledWith(45);
+
+    fireEvent.click(screen.getByRole('button', { name: '01:30' }));
+    expect(callbacks.seek).toHaveBeenCalledWith(90);
 
     expect(callbacks.clear).toHaveBeenCalled();
     expect(callbacks.input).toHaveBeenCalledWith('Inne pytanie');

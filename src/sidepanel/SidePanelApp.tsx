@@ -8,7 +8,7 @@ import sendMessageToBackground from './chromeBackgroundTransport';
 import { clearApiKeysAndHistory } from './dangerZone';
 import { HistoryView, useHistory } from './history';
 import { SettingsView, useSettings } from './preferences';
-import { Header, SidePanelTab } from './shell';
+import { Header, SidePanelTab, useDocumentTheme } from './shell';
 
 export default function SidePanelApp(): JSX.Element {
   const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');
@@ -19,6 +19,7 @@ export default function SidePanelApp(): JSX.Element {
 
   // Ustawienia (theme, api keys)
   const settingsHook = useSettings();
+  useDocumentTheme(settingsHook.theme);
 
   // Historia (historia zapisanych wpisów)
   const historyHook = useHistory();
@@ -159,7 +160,6 @@ export default function SidePanelApp(): JSX.Element {
               isSendingChat={analysisSession.isSendingChat}
               chatInput={analysisSession.chatInput}
               settings={settingsHook.settings}
-              chatListRef={analysisSession.chatListRef}
               onLoadActiveVideo={analysisSession.loadActiveVideo}
               onClearChat={analysisSession.handleClearChat}
               onSendChatMessage={(e) =>
@@ -177,6 +177,7 @@ export default function SidePanelApp(): JSX.Element {
                 )
               }
               onSetActiveTab={setActiveTab}
+              onSeekTimestamp={analysisSession.handleSeekToTimestamp}
             />
           )}
 

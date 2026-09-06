@@ -4,9 +4,10 @@ import { SummaryMarkdown } from './MarkdownWithTimestamps';
 
 interface SummaryViewProps {
   summary: string;
+  onSeek: (seconds: number) => void;
 }
 
-export default function SummaryView({ summary }: SummaryViewProps) {
+export default function SummaryView({ summary, onSeek }: SummaryViewProps) {
   return (
     <div className='bg-base-100 border-base-200/80 rounded-xl border p-3.5 shadow-sm'>
       <h4 className='text-base-content/75 mb-2 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider'>
@@ -14,7 +15,7 @@ export default function SummaryView({ summary }: SummaryViewProps) {
         Podsumowanie filmu
       </h4>
       <div className='prose-sm prose break-words text-xs leading-relaxed'>
-        <SummaryMarkdown markdown={summary} />
+        <SummaryMarkdown markdown={summary} onSeek={onSeek} />
       </div>
     </div>
   );

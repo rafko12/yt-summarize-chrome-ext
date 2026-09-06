@@ -1,4 +1,4 @@
-import { FormEvent, RefObject } from 'react';
+import { FormEvent, useEffect, useRef } from 'react';
 import {
   ArrowUpRight,
   CircleNotch,
@@ -24,7 +24,6 @@ interface AnalyzeViewProps {
   isSendingChat: boolean;
   chatInput: string;
   settings: Settings;
-  chatListRef: RefObject<HTMLDivElement | null>;
 
   onLoadActiveVideo: () => void;
   onClearChat: () => void;
@@ -32,6 +31,7 @@ interface AnalyzeViewProps {
   onChatInputChange: (val: string) => void;
   onSummarizeVideo: () => void;
   onSetActiveTab: (tab: 'analyze' | 'history' | 'settings') => void;
+  onSeekTimestamp: (seconds: number) => void;
 }
 
 export default function AnalyzeView({
@@ -45,7 +45,6 @@ export default function AnalyzeView({
   isSendingChat,
   chatInput,
   settings,
-  chatListRef,
 
   onLoadActiveVideo,
   onClearChat,
@@ -53,7 +52,16 @@ export default function AnalyzeView({
   onChatInputChange,
   onSummarizeVideo,
   onSetActiveTab,
+  onSeekTimestamp,
 }: AnalyzeViewProps) {
+  const chatListRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (chatListRef.current) {
+      chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
+    }
+  }, [chatMessages, isSendingChat, isLoading]);
+
   return (
     <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
       {!hasAnyKey && (
@@ -175,7 +183,10 @@ export default function AnalyzeView({
                               : 'chat-bubble-base-300 bg-base-300/80 text-base-content shadow-sm'
                           }`}
                         >
-                          <MarkdownLine text={msg.message} />
+                          <MarkdownLine
+                            text={msg.message}
+                            onSeek={onSeekTimestamp}
+                          />
                         </div>
                       </div>
                     ))}
@@ -262,7 +273,9 @@ export default function AnalyzeView({
             </div>
           )}
 
-          {summary && !isLoading && <SummaryView summary={summary} />}
+          {summary && !isLoading && (
+            <SummaryView summary={summary} onSeek={onSeekTimestamp} />
+          )}
         </div>
       )}
     </div>

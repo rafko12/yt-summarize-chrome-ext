@@ -1,21 +1,15 @@
 import { JSX } from 'react';
 
-import { createYoutube } from '../youtube';
 import { parseTimestamp } from './timestampParser';
 
 const timestampRegex = /\[(\d{1,2}:\d{2}(?::\d{2})?)\]/g;
 
-const youtubePage = createYoutube();
-
-function handleTimestampClick(timeStr: string) {
-  const seconds = parseTimestamp(timeStr);
-
-  youtubePage.seekToTimestamp(seconds).catch((error: unknown) => {
-    // eslint-disable-next-line no-console
-    console.error('Failed to seek player:', error);
-  });
+export interface MarkdownLineProps {
+  text: string;
+  onSeek?: (seconds: number) => void;
 }
-export function MarkdownLine({ text }: { text: string }) {
+
+export function MarkdownLine({ text, onSeek }: MarkdownLineProps) {
   const boldParts = text.split('**');
 
   return boldParts.map((part, boldIdx) => {
@@ -29,12 +23,16 @@ export function MarkdownLine({ text }: { text: string }) {
     while (match !== null) {
       const matchIndex = match.index;
       const timeVal = match[1];
-      if (matchIndex > lastIndex)
+      const seconds = parseTimestamp(timeVal);
+
+      if (matchIndex > lastIndex) {
         subParts.push(part.substring(lastIndex, matchIndex));
+      }
+
       subParts.push(
         <button
           key={`ts-${timeVal}-${matchIndex}`}
-          onClick={() => handleTimestampClick(timeVal)}
+          onClick={() => onSeek?.(seconds)}
           className='badge badge-outline badge-primary badge-sm hover:badge-secondary mx-1 cursor-pointer border px-1 py-0 font-mono text-[11px] font-bold transition-all active:scale-95'
           type='button'
         >
@@ -56,7 +54,12 @@ export function MarkdownLine({ text }: { text: string }) {
   });
 }
 
-export function SummaryMarkdown({ markdown }: { markdown: string }) {
+export interface SummaryMarkdownProps {
+  markdown: string;
+  onSeek?: (seconds: number) => void;
+}
+
+export function SummaryMarkdown({ markdown, onSeek }: SummaryMarkdownProps) {
   return markdown.split('\n').map((line, lineIdx) => {
     let cleanLine = line.trim();
     const lineKey = `line-${cleanLine.slice(0, 20).replace(/\s/g, '_')}-${lineIdx}`;
@@ -67,7 +70,7 @@ export function SummaryMarkdown({ markdown }: { markdown: string }) {
           key={lineKey}
           className='text-md border-base-200 text-primary mb-2 mt-4 border-b pb-1 font-bold'
         >
-          <MarkdownLine text={cleanLine.substring(3)} />
+          <MarkdownLine text={cleanLine.substring(3)} onSeek={onSeek} />
         </h2>
       );
     }
@@ -77,7 +80,7 @@ export function SummaryMarkdown({ markdown }: { markdown: string }) {
           key={lineKey}
           className='text-secondary mb-1 mt-3 text-sm font-semibold'
         >
-          <MarkdownLine text={cleanLine.substring(4)} />
+          <MarkdownLine text={cleanLine.substring(4)} onSeek={onSeek} />
         </h3>
       );
     }
@@ -87,7 +90,7 @@ export function SummaryMarkdown({ markdown }: { markdown: string }) {
       cleanLine.startsWith('* ') ||
       /^\d+\.\s/.test(cleanLine);
     if (isBullet) cleanLine = cleanLine.replace(/^(?:[-*]|\d+\.)\s/, '');
-    const content = <MarkdownLine text={cleanLine} />;
+    const content = <MarkdownLine text={cleanLine} onSeek={onSeek} />;
     return isBullet ? (
       <li
         key={lineKey}

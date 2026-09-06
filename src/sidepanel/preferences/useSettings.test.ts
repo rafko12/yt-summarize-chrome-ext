@@ -66,7 +66,7 @@ describe('useSettings (src/sidepanel/preferences)', () => {
     vi.restoreAllMocks();
   });
 
-  it('loads initial preferences on mount and sets data-theme attribute', async () => {
+  it('loads initial preferences on mount', async () => {
     const mockPreferences = createMockPreferences({
       apiKeys: { gemini: 'gem-123', openai: '', claude: '' },
       settings: { language: 'English', model: 'gemini-3.6-flash' },
@@ -87,7 +87,6 @@ describe('useSettings (src/sidepanel/preferences)', () => {
     expect(result.current.apiKeys.gemini).toBe('gem-123');
     expect(result.current.apiKeyInput).toBe('gem-123');
     expect(result.current.hasAnyKey).toBe(true);
-    expect(document.documentElement.getAttribute('data-theme')).toBe('night');
   });
 
   it('toggles theme between night and nord and persists via preferences', async () => {
@@ -106,7 +105,6 @@ describe('useSettings (src/sidepanel/preferences)', () => {
 
     expect(result.current.theme).toBe('nord');
     expect(mockPreferences.setTheme).toHaveBeenCalledWith('nord');
-    expect(document.documentElement.getAttribute('data-theme')).toBe('nord');
 
     await act(async () => {
       await result.current.toggleTheme();
