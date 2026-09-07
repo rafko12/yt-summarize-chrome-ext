@@ -51,8 +51,6 @@ export interface SidePanelAdapter {
   closeEveryPanelInWindow(windowId: number): Promise<void>;
 }
 
-export type SidePanelPlatform = SidePanelAdapter;
-
 export interface SidePanelFailure {
   message: string;
   cause: unknown;

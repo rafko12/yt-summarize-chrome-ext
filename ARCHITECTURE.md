@@ -43,7 +43,8 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 - `history/` integruje Historię analiz i Zapisy analiz: widok (`HistoryView.tsx`), hook (`useHistory.ts`), typy (`types.ts`) oraz operacje persistence (`analysisHistory.ts`) bezpośrednio przez wspólny adapter storage.
 - `preferences/` integruje preferencje użytkownika, klucze API, motyw i ustawienia: widok (`SettingsView.tsx`), hook (`useSettings.ts`), typy (`types.ts`) oraz operacje persistence (`userPreferences.ts`) bezpośrednio przez wspólny adapter storage. Synchronizacja motywu dokumentu HTML należy do shella (`useDocumentTheme`), nie do feature preferencji.
 - `dangerZone.ts` koordynuje bezpieczne czyszczenie wrażliwych danych użytkownika (kluczy API i Historii analiz) przez ich właścicieli domenowych z zachowaniem pozostałych preferencji i stanu panelu.
-- `chromeBackgroundTransport.ts` realizuje transport wiadomości z panelu do background service workera.
+- `panelContext.ts` jest właścicielem infrastrukturalnym odczytu kontekstu karty i okna panelu bocznego (`getCurrentPanelContext`).
+- `chromeBackgroundTransport.ts` realizuje transport wiadomości z panelu do background service workera oraz nasłuchiwanie notyfikacji panelu (`listenToPanelNotifications`).
 
 Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/sidepanel/youtube/`), a z backgroundem przez transport panelu `src/sidepanel/chromeBackgroundTransport.ts`. Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
 

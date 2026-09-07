@@ -35,7 +35,3 @@ export interface YoutubeIntegration {
   ): Promise<TranscriptResponse | { error: string }>;
   seekToTimestamp(seconds: number): Promise<void>;
 }
-
-// Backward-compatibility aliases for other modules before subsequent cleanups
-export type YoutubePage = YoutubeIntegration;
-export type YoutubePagePlatform = YoutubeAdapter;

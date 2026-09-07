@@ -2,20 +2,21 @@ import { JSX, MouseEvent, useEffect, useRef, useState } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
 import { AnalysisRecord } from '../domain/analysis';
-import { isErrorResponse, isPanelNotification } from '../messaging';
+import { isErrorResponse } from '../messaging';
 import { AnalyzeView, useAnalysisSession } from './analysis';
-import sendMessageToBackground from './chromeBackgroundTransport';
+import sendMessageToBackground, {
+  listenToPanelNotifications,
+} from './chromeBackgroundTransport';
 import { clearApiKeysAndHistory } from './dangerZone';
 import { HistoryView, useHistory } from './history';
+import { getCurrentPanelContext, SidePanelContext } from './panelContext';
 import { SettingsView, useSettings } from './preferences';
 import { Header, SidePanelTab, useDocumentTheme } from './shell';
 
 export default function SidePanelApp(): JSX.Element {
   const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');
   const [isPinnedGlobal, setIsPinnedGlobal] = useState<boolean>(false);
-  const panelContextRef = useRef<{ tabId: number; windowId: number } | null>(
-    null
-  );
+  const panelContextRef = useRef<SidePanelContext | null>(null);
 
   // Ustawienia (theme, api keys)
   const settingsHook = useSettings();
@@ -38,18 +39,12 @@ export default function SidePanelApp(): JSX.Element {
   // Inicjalizacja side panelu, nasłuchiwanie i sprawdzanie przypięcia
   useEffect(() => {
     const initPanel = async () => {
-      const [currentTab] = await chrome.tabs.query({
-        active: true,
-        currentWindow: true,
-      });
-      if (currentTab?.id) {
-        panelContextRef.current = {
-          tabId: currentTab.id,
-          windowId: currentTab.windowId,
-        };
+      const panelContext = await getCurrentPanelContext();
+      if (panelContext) {
+        panelContextRef.current = panelContext;
         const response = await sendMessageToBackground({
           type: 'PANEL_INIT',
-          tabId: currentTab.id,
+          tabId: panelContext.tabId,
         });
         if (response && typeof response.isPinnedGlobal === 'boolean') {
           setIsPinnedGlobal(response.isPinnedGlobal);
@@ -62,21 +57,15 @@ export default function SidePanelApp(): JSX.Element {
   }, [loadActiveVideo]);
 
   // Nasłuch na aktualizacje w locie - jak zmienił się URL YouTube
-  useEffect(() => {
-    const handleRuntimeMessage = (message: unknown): false => {
-      if (
-        isPanelNotification(message) &&
-        message.type === 'YOUTUBE_URL_UPDATED'
-      ) {
-        loadActiveVideo();
-      }
-      return false;
-    };
-    chrome.runtime.onMessage.addListener(handleRuntimeMessage);
-    return () => {
-      chrome.runtime.onMessage.removeListener(handleRuntimeMessage);
-    };
-  }, [loadActiveVideo]);
+  useEffect(
+    () =>
+      listenToPanelNotifications((notification) => {
+        if (notification.type === 'YOUTUBE_URL_UPDATED') {
+          loadActiveVideo();
+        }
+      }),
+    [loadActiveVideo]
+  );
 
   const handlePinGlobal = () => {
     const panelContext = panelContextRef.current;
@@ -216,5 +205,3 @@ export default function SidePanelApp(): JSX.Element {
     </div>
   );
 }
-
-export { SidePanelApp as PopupContainer };

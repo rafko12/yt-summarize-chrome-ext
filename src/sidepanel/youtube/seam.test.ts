@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import defaultCreateYoutube, {
   createChromeYoutubeAdapter,
   createYoutube,
-  createYoutubePage,
 } from './index';
 
 describe('YouTube Module public seam (src/sidepanel/youtube)', () => {
@@ -16,11 +15,6 @@ describe('YouTube Module public seam (src/sidepanel/youtube)', () => {
   it('exposes Chrome YouTube adapter factory', () => {
     expect(createChromeYoutubeAdapter).toBeDefined();
     expect(typeof createChromeYoutubeAdapter).toBe('function');
-  });
-
-  it('exposes backward compatibility aliases', () => {
-    expect(createYoutubePage).toBeDefined();
-    expect(createYoutubePage).toBe(createYoutube);
   });
 
   it('hides active tab, messaging and fallback metadata behind the public interface', () => {

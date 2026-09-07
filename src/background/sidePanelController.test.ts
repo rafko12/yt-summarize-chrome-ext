@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import {
   installSidePanelController,
+  SidePanelAdapter,
   SidePanelEvent,
   SidePanelFailure,
-  SidePanelPlatform,
   SidePanelRestoreData,
 } from './sidePanelController';
 
@@ -41,7 +41,7 @@ function createPlatform(restoreData = DEFAULT_RESTORE) {
     }),
     configureExistingTabs: vi.fn(async () => undefined),
     configureTab: vi.fn(async () => undefined),
-    persistLocalTabs: vi.fn<SidePanelPlatform['persistLocalTabs']>(
+    persistLocalTabs: vi.fn<SidePanelAdapter['persistLocalTabs']>(
       async () => undefined
     ),
     persistPinned: vi.fn(async () => undefined),
@@ -51,7 +51,7 @@ function createPlatform(restoreData = DEFAULT_RESTORE) {
     openGlobal: vi.fn(async () => undefined),
     closeGlobal: vi.fn(async () => undefined),
     closeEveryPanelInWindow: vi.fn(async () => undefined),
-  } satisfies SidePanelPlatform;
+  } satisfies SidePanelAdapter;
 
   return {
     platform,

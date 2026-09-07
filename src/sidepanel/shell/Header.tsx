@@ -1,7 +1,6 @@
 import { Moon, PushPin, Sparkle, Sun } from '@phosphor-icons/react';
 
 export type SidePanelTab = 'analyze' | 'history' | 'settings';
-export type PopupTab = SidePanelTab;
 
 export interface HeaderProps {
   activeTab: SidePanelTab;

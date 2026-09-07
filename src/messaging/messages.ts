@@ -70,8 +70,6 @@ export interface YoutubeUrlUpdatedNotification {
   tabId: number;
 }
 
-export type YoutubeUrlUpdatedMessage = YoutubeUrlUpdatedNotification;
-
 export type ContentMessage =
   | GetVideoDataMessage
   | GetTranscriptMessage
