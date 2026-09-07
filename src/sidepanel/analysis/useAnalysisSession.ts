@@ -301,7 +301,7 @@ export default function useAnalysisSession({
           modelMessage,
         ];
 
-        await history.saveSession({
+        await history.saveChat({
           videoId: targetVideo.videoId,
           title: targetVideo.title,
           author: targetVideo.author,

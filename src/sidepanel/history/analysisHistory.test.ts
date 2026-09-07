@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
 import { ChatMessage, TranscriptSegment } from '../../domain/analysis';
+import { StorageAdapter } from '../../storage';
 import {
-  AnalysisHistoryPlatform,
   AnalysisRecord,
   AnalysisRecordInput,
   createAnalysisHistory,
@@ -10,7 +10,7 @@ import {
 
 function createMemoryPlatform(
   initialData: Record<string, unknown> = {}
-): AnalysisHistoryPlatform & { data: Record<string, unknown> } {
+): StorageAdapter & { data: Record<string, unknown> } {
   const data: Record<string, unknown> = { ...initialData };
   return {
     data,
@@ -247,13 +247,23 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
     expect(platform.data.summarizer_history).toEqual([]);
   });
 
-  describe('saveSession (high-level upsert operation)', () => {
+  describe('saveChat (canonical chat persistence operation)', () => {
+    it('exposes canonical saveChat operation and does not retain saveSession or saveAnalysisSession', () => {
+      const platform = createMemoryPlatform({});
+      const history = createAnalysisHistory(platform);
+      const rawHistory = history as unknown as Record<string, unknown>;
+
+      expect(typeof history.saveChat).toBe('function');
+      expect(rawHistory.saveSession).toBeUndefined();
+      expect(rawHistory.saveAnalysisSession).toBeUndefined();
+    });
+
     it('creates a new record when videoId does not exist in history', async () => {
       const platform = createMemoryPlatform({});
       const history = createAnalysisHistory(platform);
 
       const before = Date.now();
-      const updated = await history.saveSession({
+      const updated = await history.saveChat({
         ...sampleRecordInput,
         videoId: 'new-session-vid',
         title: 'Nowa sesja',
@@ -314,7 +324,7 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
         { role: 'user', message: 'Nowe pytanie w sesji' },
       ];
 
-      const result = await history.saveSession({
+      const result = await history.saveChat({
         videoId: 'vid-target',
         title: 'Zupełnie Inny Tytuł ze starego stanu',
         author: 'Zupełnie Inny Autor',
@@ -377,7 +387,7 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
         { role: 'model', message: 'Nowa odpowiedź w sesji' },
       ];
 
-      const result = await history.saveSession({
+      const result = await history.saveChat({
         ...sampleRecordInput,
         videoId: 'vid-2',
         title: 'Film 2 Zaktualizowany',
@@ -410,7 +420,7 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
         summary: 'Istniejące podsumowanie',
       });
 
-      const updated = await history.saveSession({
+      const updated = await history.saveChat({
         ...sampleRecordInput,
         videoId: 'vid-summarized',
         summary: null,
@@ -436,7 +446,7 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
       });
       const history = createAnalysisHistory(platform);
 
-      const result = await history.saveSession({
+      const result = await history.saveChat({
         ...sampleRecordInput,
         videoId: 'new-session-51',
         title: 'Nowy Film 51',

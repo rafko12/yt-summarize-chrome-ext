@@ -22,5 +22,3 @@ export default function createChromeStorageLocalAdapter(
     },
   };
 }
-
-export { createChromeStorageLocalAdapter as createChromeStorageLocalPlatform };

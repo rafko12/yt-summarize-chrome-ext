@@ -1,4 +1,3 @@
-import type { StorageAdapter } from '../../storage';
 import type { AiProvider } from '../ai';
 
 export type { AiProvider };
@@ -15,8 +14,6 @@ export interface InitialPreferences {
   settings: Settings;
   theme: Theme | null;
 }
-
-export type PreferencesPlatform = StorageAdapter;
 
 export interface UserPreferences {
   readInitialPreferences(): Promise<InitialPreferences>;

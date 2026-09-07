@@ -1,15 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { STORAGE_KEYS } from '../../storage';
+import { STORAGE_KEYS, StorageAdapter } from '../../storage';
 import createUserPreferences, {
   DEFAULT_SETTINGS,
-  PreferencesPlatform,
   UserPreferences,
 } from './userPreferences';
 
 describe('UserPreferences', () => {
   let storageData: Record<string, unknown>;
-  let platform: PreferencesPlatform;
+  let platform: StorageAdapter;
   let preferences: UserPreferences;
 
   beforeEach(() => {

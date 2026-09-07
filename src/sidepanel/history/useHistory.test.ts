@@ -22,7 +22,7 @@ function createMockHistory(
         r.videoId === videoId ? { ...r, chat } : r
       );
     }),
-    saveSession: vi.fn(async (item) => {
+    saveChat: vi.fn(async (item) => {
       const existing = records.find((r) => r.videoId === item.videoId);
       if (existing) {
         records = records.map((r) =>

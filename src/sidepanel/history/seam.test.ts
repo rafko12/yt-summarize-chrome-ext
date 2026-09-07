@@ -45,9 +45,15 @@ describe('History Module public seam (src/sidepanel/history)', () => {
     const adapter = createChromeStorageLocalAdapter(mockStorageLocal);
     const history = createAnalysisHistory(adapter);
 
-    expect(typeof history.saveSession).toBe('function');
+    expect(typeof history.saveChat).toBe('function');
+    expect(
+      (history as unknown as Record<string, unknown>).saveSession
+    ).toBeUndefined();
+    expect(
+      (history as unknown as Record<string, unknown>).saveAnalysisSession
+    ).toBeUndefined();
 
-    await history.saveSession({
+    await history.saveChat({
       videoId: 'seam-vid',
       title: 'Seam Title',
       author: 'Author',

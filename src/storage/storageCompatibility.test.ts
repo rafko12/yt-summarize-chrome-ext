@@ -337,7 +337,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
       expect(records[1].chat).toEqual(newChat);
     });
 
-    it('performs high-level saveSession upsert preserving ordering when updating and adding to index 0 when creating', async () => {
+    it('performs high-level saveChat upsert preserving ordering when updating and adding to index 0 when creating', async () => {
       const history = createAnalysisHistory(adapter);
 
       rawStorage[STORAGE_KEYS.HISTORY] = [
@@ -347,7 +347,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
 
       // Update existing vid-2: position and createdAt preserved
       const updatedChat = [{ role: 'user' as const, message: 'Wiadomość' }];
-      await history.saveSession({
+      await history.saveChat({
         ...createSampleRecord('vid-2'),
         chat: updatedChat,
       });
@@ -360,7 +360,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
       expect(records[1].createdAt).toBe(200);
 
       // Create new vid-3: added at index 0
-      await history.saveSession({
+      await history.saveChat({
         ...createSampleRecord('vid-3'),
         chat: [{ role: 'user' as const, message: 'Nowy' }],
       });

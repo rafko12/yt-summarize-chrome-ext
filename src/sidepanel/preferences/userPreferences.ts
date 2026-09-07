@@ -1,9 +1,8 @@
-import { STORAGE_KEYS } from '../../storage';
+import { STORAGE_KEYS, StorageAdapter } from '../../storage';
 import { isModelAvailable, resolveCompatibleModel } from '../ai';
 import {
   AiProvider,
   InitialPreferences,
-  PreferencesPlatform,
   Settings,
   Theme,
   UserPreferences,
@@ -71,7 +70,7 @@ function normalizeApiKeys(
 }
 
 export default function createUserPreferences(
-  platform: PreferencesPlatform
+  platform: StorageAdapter
 ): UserPreferences {
   return {
     async readInitialPreferences(): Promise<InitialPreferences> {

@@ -1,8 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import createChromeStorageLocalAdapter, {
-  createChromeStorageLocalPlatform,
-} from './chromeStorageLocalAdapter';
+import createChromeStorageLocalAdapter from './chromeStorageLocalAdapter';
 
 describe('createChromeStorageLocalAdapter (src/storage)', () => {
   let mockStorageData: Record<string, unknown>;
@@ -104,7 +102,7 @@ describe('createChromeStorageLocalAdapter (src/storage)', () => {
       },
     } as unknown as typeof chrome;
 
-    const adapter = createChromeStorageLocalPlatform();
+    const adapter = createChromeStorageLocalAdapter();
 
     const result = await adapter.read(['fallback_key']);
     expect(result).toEqual({ fallback_key: 'global-value' });
@@ -117,12 +115,6 @@ describe('createChromeStorageLocalAdapter (src/storage)', () => {
     expect(globalSet).toHaveBeenCalledWith(
       { fallback_key: 'new-global-value' },
       expect.any(Function)
-    );
-  });
-
-  it('provides createChromeStorageLocalPlatform alias identical to createChromeStorageLocalAdapter', () => {
-    expect(createChromeStorageLocalPlatform).toBe(
-      createChromeStorageLocalAdapter
     );
   });
 });

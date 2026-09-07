@@ -4,13 +4,13 @@ import {
   ChatMessage,
   isAnalysisRecord,
 } from '../../domain/analysis';
-import { STORAGE_KEYS } from '../../storage';
-import { AnalysisHistory, AnalysisHistoryPlatform } from './types';
+import { STORAGE_KEYS, StorageAdapter } from '../../storage';
+import { AnalysisHistory } from './types';
 
 const MAX_HISTORY_ITEMS = 50;
 
 export default function createAnalysisHistory(
-  platform: AnalysisHistoryPlatform
+  platform: StorageAdapter
 ): AnalysisHistory {
   return {
     async getRecords(): Promise<AnalysisRecord[]> {
@@ -46,7 +46,7 @@ export default function createAnalysisHistory(
       await platform.write({ [STORAGE_KEYS.HISTORY]: updated });
     },
 
-    async saveSession(session: AnalysisRecordInput): Promise<AnalysisRecord[]> {
+    async saveChat(session: AnalysisRecordInput): Promise<AnalysisRecord[]> {
       const current = await this.getRecords();
       const targetIndex = current.findIndex(
         (r) => r.videoId === session.videoId
@@ -66,12 +66,6 @@ export default function createAnalysisHistory(
       );
       await platform.write({ [STORAGE_KEYS.HISTORY]: updated });
       return updated;
-    },
-
-    async saveAnalysisSession(
-      session: AnalysisRecordInput
-    ): Promise<AnalysisRecord[]> {
-      return this.saveSession(session);
     },
 
     async deleteRecord(videoId: string): Promise<AnalysisRecord[]> {
