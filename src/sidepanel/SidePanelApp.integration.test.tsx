@@ -23,6 +23,9 @@ let tabUpdatedListener: TabUpdatedListener | undefined;
 let activeTab: Partial<chrome.tabs.Tab>;
 
 beforeEach(() => {
+  document.documentElement.removeAttribute('data-theme');
+  document.documentElement.className = '';
+  document.body.className = '';
   stored = {
     gemini_api_key: 'key',
     summarizer_settings: { language: 'Polski', model: 'gemini-3.6-flash' },
@@ -882,13 +885,22 @@ describe('side panel user flow', () => {
     );
   });
 
-  test('toggles theme between night and nord maintaining data-theme attribute on extension root', async () => {
+  test('toggles theme between night and nord maintaining data-theme attribute and utility classes on document and extension root', async () => {
     render(<SidePanelApp />);
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
     const rootElement = document.getElementById('my-ext');
     expect(rootElement).toHaveAttribute('data-theme', 'night');
+    expect(document.documentElement.getAttribute('data-theme')).toBe('night');
+    expect(document.documentElement.classList.contains('bg-base-100')).toBe(
+      true
+    );
+    expect(
+      document.documentElement.classList.contains('text-base-content')
+    ).toBe(true);
+    expect(document.body.classList.contains('bg-base-100')).toBe(true);
+    expect(document.body.classList.contains('text-base-content')).toBe(true);
 
     // Toggle theme button
     const themeBtn = screen.getByRole('button', { name: 'Zmień motyw' });
@@ -896,6 +908,7 @@ describe('side panel user flow', () => {
 
     await waitFor(() => {
       expect(rootElement).toHaveAttribute('data-theme', 'nord');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('nord');
       expect(stored.ui_theme).toBe('nord');
     });
 
@@ -903,6 +916,7 @@ describe('side panel user flow', () => {
 
     await waitFor(() => {
       expect(rootElement).toHaveAttribute('data-theme', 'night');
+      expect(document.documentElement.getAttribute('data-theme')).toBe('night');
       expect(stored.ui_theme).toBe('night');
     });
   });
@@ -1511,6 +1525,139 @@ describe('side panel user flow', () => {
           body: expect.stringContaining('"model":"claude-sonnet-5"'),
         })
       );
+    });
+
+    test('switches active AI provider in settings and updates API key input accordingly', async () => {
+      stored.gemini_api_key = 'gemini-saved-key';
+      stored.openai_api_key = 'openai-saved-key';
+      stored.claude_api_key = '';
+
+      render(<SidePanelApp />);
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      const providerSelect = screen.getByLabelText(
+        /Wybierz Dostawcę AI/
+      ) as HTMLSelectElement;
+      const keyInput = screen.getByPlaceholderText(
+        /Wklej swój klucz API/
+      ) as HTMLInputElement;
+
+      expect(providerSelect.value).toBe('gemini');
+      expect(keyInput.value).toBe('gemini-saved-key');
+
+      fireEvent.change(providerSelect, { target: { value: 'openai' } });
+      expect(providerSelect.value).toBe('openai');
+      expect(keyInput.value).toBe('openai-saved-key');
+
+      fireEvent.change(providerSelect, { target: { value: 'claude' } });
+      expect(providerSelect.value).toBe('claude');
+      expect(keyInput.value).toBe('');
+    });
+
+    test('toggles API key input visibility between password and text', async () => {
+      render(<SidePanelApp />);
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      const keyInput = screen.getByPlaceholderText(
+        /Wklej swój klucz API/
+      ) as HTMLInputElement;
+      expect(keyInput.type).toBe('password');
+
+      const toggleBtn = screen.getByRole('button', { name: 'Pokaż klucz API' });
+      fireEvent.click(toggleBtn);
+
+      expect(keyInput.type).toBe('text');
+      expect(
+        screen.getByRole('button', { name: 'Ukryj klucz API' })
+      ).toBeVisible();
+
+      fireEvent.click(screen.getByRole('button', { name: 'Ukryj klucz API' }));
+      expect(keyInput.type).toBe('password');
+      expect(
+        screen.getByRole('button', { name: 'Pokaż klucz API' })
+      ).toBeVisible();
+    });
+
+    test('displays error message when saving invalid API key and does not persist key or change model', async () => {
+      stored.gemini_api_key = '';
+      stored.summarizer_settings = {
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      };
+
+      global.fetch = vi.fn(async () => ({
+        ok: false,
+        status: 401,
+        json: async () => ({
+          error: { message: 'Invalid token' },
+        }),
+      })) as unknown as typeof fetch;
+
+      render(<SidePanelApp />);
+      await waitFor(() =>
+        expect(screen.getByText('Wymagany klucz API')).toBeVisible()
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'invalid-key' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Zapisz' }));
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(
+            'Klucz API został odrzucony. Sprawdź jego poprawność.'
+          )
+        ).toBeVisible();
+      });
+
+      expect(stored.gemini_api_key).toBe('');
+      expect(stored.summarizer_settings).toEqual({
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      });
+    });
+
+    test('disables save button when API key input is empty or whitespace', async () => {
+      stored.gemini_api_key = '';
+
+      render(<SidePanelApp />);
+      await waitFor(() =>
+        expect(screen.getByText('Wymagany klucz API')).toBeVisible()
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() =>
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible()
+      );
+
+      const saveBtn = screen.getByRole('button', { name: 'Zapisz' });
+      expect(saveBtn).toBeDisabled();
+
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: '   ' },
+      });
+      expect(saveBtn).toBeDisabled();
+
+      fireEvent.change(screen.getByPlaceholderText(/Wklej swój klucz API/), {
+        target: { value: 'some-key' },
+      });
+      expect(saveBtn).not.toBeDisabled();
     });
   });
 });
