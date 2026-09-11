@@ -29,7 +29,7 @@ Testuj zachowanie przez interfejs używany przez kod produkcyjny:
 3. komunikacja — wysłana wiadomość i otrzymana odpowiedź;
 4. Dostawcy AI — wspólny klient LLM z kontrolowanym adapterem `fetch`;
 5. YouTube — wiadomości content scriptu i zapisane przykłady HTML;
-6. popup — działanie użytkownika i widoczny rezultat.
+6. panel boczny — działanie użytkownika i widoczny rezultat.
 
 Mockuj wyłącznie granice zewnętrzne: Chrome, sieć i DOM YouTube. Nie mockuj prywatnych modułów ani nie testuj wnętrza hooków. Oczekiwane wartości mają pochodzić ze specyfikacji albo znanego przykładu, nie z powtórzenia algorytmu implementacji.
 
@@ -61,7 +61,7 @@ Dla deterministycznego audytu UI:
 1. uruchom `pnpm run build`;
 2. wstrzyknij niezbędny mock `chrome` do zbudowanych stron w `dist_chrome`;
 3. serwuj `dist_chrome` lokalnie;
-4. sprawdź popup w `400×600` i `800×600`, a opcje w `800×600` i `1200×800`;
+4. sprawdź panel boczny w `400×600` i `800×600`, a opcje w `800×600` i `1200×800`;
 5. zmierz `document.documentElement.scrollWidth - document.documentElement.clientWidth`; wynik musi wynosić `0`;
 6. po audycie uruchom `pnpm run build`, aby odtworzyć czyste artefakty.
 

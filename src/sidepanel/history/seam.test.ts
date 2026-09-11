@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import defaultCreateAnalysisHistory, {
   createAnalysisHistory,
   HistoryView,
-  useHistory,
+  useAnalysisHistory,
 } from './index';
 
 describe('History Module public seam (src/sidepanel/history)', () => {
@@ -13,9 +13,9 @@ describe('History Module public seam (src/sidepanel/history)', () => {
     expect(defaultCreateAnalysisHistory).toBe(createAnalysisHistory);
   });
 
-  it('exposes useHistory hook', () => {
-    expect(useHistory).toBeDefined();
-    expect(typeof useHistory).toBe('function');
+  it('exposes useAnalysisHistory hook', () => {
+    expect(useAnalysisHistory).toBeDefined();
+    expect(typeof useAnalysisHistory).toBe('function');
   });
 
   it('exposes HistoryView component', () => {

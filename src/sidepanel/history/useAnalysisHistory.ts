@@ -4,7 +4,7 @@ import { createChromeStorageLocalAdapter } from '../../storage';
 import createAnalysisHistory from './analysisHistory';
 import { AnalysisHistory, AnalysisRecord } from './types';
 
-export default function useHistory(historyOverride?: AnalysisHistory) {
+export default function useAnalysisHistory(historyOverride?: AnalysisHistory) {
   const history = useMemo(
     () =>
       historyOverride ||

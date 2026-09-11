@@ -82,7 +82,7 @@ Dodatkowo:
 
 Sprawdź:
 
-- popup: `400×600` i `800×600`;
+- panel boczny: `400×600` i `800×600`;
 - opcje: `800×600` i `1200×800`.
 
 Dla każdego widoku:

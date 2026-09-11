@@ -26,14 +26,14 @@ Artefakt nie zawiera konfiguracji deweloperskich, testów, mocków ani plików t
 
 ## Język i interfejs użytkownika
 
-| Obszar              | Technologia                 | Zastosowanie                                   | Źródło prawdy                                                                                          |
-| ------------------- | --------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| Język               | TypeScript w trybie ścisłym | Kod produkcyjny, konfiguracja buildu i testy   | [`tsconfig.json`](tsconfig.json), [`package.json`](package.json)                                       |
-| UI                  | React i React DOM           | Panel boczny oraz strona opcji                 | [`package.json`](package.json), [`src/sidepanel/`](src/sidepanel/), [`src/options/`](src/options/)     |
-| Style               | Tailwind CSS 4              | Klasy narzędziowe i konfiguracja CSS-first     | [`src/assets/styles/index.css`](src/assets/styles/index.css), [`postcss.config.js`](postcss.config.js) |
-| Komponenty i motywy | DaisyUI 5                   | Komponenty oraz motywy `night` i `nord`        | [`src/assets/styles/index.css`](src/assets/styles/index.css)                                           |
-| Izolacja stylów     | Shadow DOM i PostCSS        | Izolacja UI rozszerzenia od CSS strony YouTube | [`src/ui/createShadowRoot.tsx`](src/ui/createShadowRoot.tsx), [`postcss.config.js`](postcss.config.js) |
-| Typografia i ikony  | Geist Sans, Phosphor Icons  | Font i ikony interfejsu                        | [`package.json`](package.json), [`src/assets/`](src/assets/)                                           |
+| Obszar              | Technologia                 | Zastosowanie                                   | Źródło prawdy                                                                                            |
+| ------------------- | --------------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Język               | TypeScript w trybie ścisłym | Kod produkcyjny, konfiguracja buildu i testy   | [`tsconfig.json`](tsconfig.json), [`package.json`](package.json)                                         |
+| UI                  | React i React DOM           | Panel boczny oraz strona opcji                 | [`package.json`](package.json), [`src/sidepanel/`](src/sidepanel/), [`src/options/`](src/options/)       |
+| Style               | Tailwind CSS 4              | Klasy narzędziowe i konfiguracja CSS-first     | [`src/assets/styles/index.css`](src/assets/styles/index.css), [`postcss.config.js`](postcss.config.js)   |
+| Komponenty i motywy | DaisyUI 5                   | Komponenty oraz motywy `night` i `nord`        | [`src/assets/styles/index.css`](src/assets/styles/index.css)                                             |
+| Izolacja stylów     | Shadow DOM i PostCSS        | Izolacja UI rozszerzenia od CSS strony YouTube | [`src/ui/createIsolatedRoot.ts`](src/ui/createIsolatedRoot.ts), [`postcss.config.js`](postcss.config.js) |
+| Typografia i ikony  | Geist Sans, Phosphor Icons  | Font i ikony interfejsu                        | [`package.json`](package.json), [`src/assets/`](src/assets/)                                             |
 
 Bootstrap content scriptu jest zwykłym modułem TypeScript bez zależności od
 Reacta.

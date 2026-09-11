@@ -2,12 +2,12 @@
 
 import { describe, expect, test } from 'vitest';
 
-import createShadowRoot from './createShadowRoot';
+import createIsolatedRoot from './createIsolatedRoot';
 
-describe('createShadowRoot', () => {
+describe('createIsolatedRoot', () => {
   test('creates an interactive extension mount with style fallback', () => {
     window.history.replaceState({}, '', '/');
-    const root = createShadowRoot('.app { color: red; }');
+    const root = createIsolatedRoot('.app { color: red; }');
     const host = document.body.lastElementChild as HTMLDivElement;
     const shadow = host.shadowRoot!;
     const mount = shadow.firstElementChild as HTMLDivElement;

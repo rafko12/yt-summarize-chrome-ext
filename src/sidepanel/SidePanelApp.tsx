@@ -8,7 +8,7 @@ import sendMessageToBackground, {
   listenToPanelNotifications,
 } from './chromeBackgroundTransport';
 import { clearApiKeysAndHistory } from './dangerZone';
-import { HistoryView, useHistory } from './history';
+import { HistoryView, useAnalysisHistory } from './history';
 import { getCurrentPanelContext, SidePanelContext } from './panelContext';
 import { SettingsView, useSettings } from './preferences';
 import { Header, SidePanelTab, useDocumentTheme } from './shell';
@@ -22,8 +22,8 @@ export default function SidePanelApp(): JSX.Element {
   const settingsHook = useSettings();
   useDocumentTheme(settingsHook.theme);
 
-  // Historia (historia zapisanych wpisów)
-  const historyHook = useHistory();
+  // Historia analiz (zapisane analizy użytkownika)
+  const historyHook = useAnalysisHistory();
 
   // Sesja analizy (Film, transkrypcja, podsumowanie, rozmowa, błędy i rewizje operacji)
   const analysisSession = useAnalysisSession({

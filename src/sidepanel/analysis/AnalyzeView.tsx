@@ -10,6 +10,7 @@ import {
 
 import { ConversationMessage, Film } from '../../domain/analysis';
 import { Settings } from '../preferences';
+import { SidePanelTab } from '../shell';
 import { MarkdownLine } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';
 
@@ -30,7 +31,7 @@ interface AnalyzeViewProps {
   onSendChatMessage: (e: FormEvent) => void;
   onChatInputChange: (val: string) => void;
   onSummarizeFilm: () => void;
-  onSetActiveTab: (tab: 'analyze' | 'history' | 'settings') => void;
+  onSetActiveTab: (tab: SidePanelTab) => void;
   onSeekTimestamp: (seconds: number) => void;
 }
 

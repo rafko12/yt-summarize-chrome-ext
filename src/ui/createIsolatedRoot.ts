@@ -2,17 +2,17 @@ import createGeistFontStyles from '@assets/geistFonts';
 import { createRoot } from 'react-dom/client';
 
 /**
- * Creates a shadow root with the specified styles and returns a React root in it.
- * @param {string} styles - CSS styles to be applied to the shadow root.
- * @returns {ReactRoot} - React root rendered inside the shadow root.
+ * Creates an isolated UI root (host, Shadow DOM, styles, fonts, and React root).
+ * @param {string} styles - CSS styles to be applied to the isolated root.
+ * @returns {import('react-dom/client').Root} - React root rendered inside the shadow root.
  */
-export default function createShadowRoot(styles: string) {
+export default function createIsolatedRoot(styles: string) {
   const stylesWithFonts = `${createGeistFontStyles((url) =>
     url.startsWith('/') ? chrome.runtime.getURL(url.slice(1)) : url
   )}\n${styles}`;
   const host = document.createElement('div');
 
-  // Full-screen layout is required for the popup/side-panel UI.
+  // Full-screen layout is required for the side-panel UI.
   // pointer-events: none on the host ensures it doesn't block clicks
   // on the underlying page when used as a content script overlay.
   host.style.display = 'block';
@@ -24,7 +24,7 @@ export default function createShadowRoot(styles: string) {
 
   const shadow = host.attachShadow({ mode: 'open' });
 
-  // pointer-events: auto re-enables interaction for visible UI (popup).
+  // pointer-events: auto re-enables interaction for visible UI (side panel).
   const mount = document.createElement('div');
   if (window.location.protocol.startsWith('chrome-extension')) {
     mount.style.pointerEvents = 'auto';

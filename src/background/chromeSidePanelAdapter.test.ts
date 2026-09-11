@@ -90,7 +90,7 @@ describe('Chrome side panel adapter', () => {
   test('restores persistent state and configures existing tabs', async () => {
     const fake = adapterFixture();
     const adapter = createChromeSidePanelAdapter(fake.chromeApi, {
-      panelPath: 'popup.html',
+      panelPath: 'sidepanel.html',
       localOpenTabsKey: 'localTabs',
       pinStateKey: 'pinned',
       pinnedWindowKey: 'pinnedWindow',
@@ -107,12 +107,12 @@ describe('Chrome side panel adapter', () => {
     await adapter.configureTab(9);
     expect(fake.chromeApi.sidePanel.setOptions).toHaveBeenNthCalledWith(1, {
       tabId: 1,
-      path: 'popup.html',
+      path: 'sidepanel.html',
       enabled: true,
     });
     expect(fake.chromeApi.sidePanel.setOptions).toHaveBeenNthCalledWith(3, {
       tabId: 9,
-      path: 'popup.html',
+      path: 'sidepanel.html',
       enabled: true,
     });
   });
@@ -120,7 +120,7 @@ describe('Chrome side panel adapter', () => {
   test('translates Chrome events, messages, persistence and close operations', async () => {
     const fake = adapterFixture();
     const adapter = createChromeSidePanelAdapter(fake.chromeApi, {
-      panelPath: 'popup.html',
+      panelPath: 'sidepanel.html',
       localOpenTabsKey: 'localTabs',
       pinStateKey: 'pinned',
       pinnedWindowKey: 'pinnedWindow',

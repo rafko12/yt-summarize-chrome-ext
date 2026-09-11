@@ -1,9 +1,9 @@
 import styles from '@assets/styles/index.css?inline';
 
-import createShadowRoot from '@/ui/createShadowRoot';
+import createIsolatedRoot from '@/ui/createIsolatedRoot';
 
 import Options from './Options';
 
-const root = createShadowRoot(styles);
+const root = createIsolatedRoot(styles);
 
 root.render(<Options />);

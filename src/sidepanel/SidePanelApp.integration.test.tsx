@@ -276,7 +276,7 @@ describe('side panel user flow', () => {
     unregister();
   });
 
-  test('opens popup on a video with saved history and restores summary and chat atomically', async () => {
+  test('opens side panel on a video with saved history and restores summary and chat atomically', async () => {
     stored.summarizer_history = [
       {
         videoId: 'movie',
@@ -1326,7 +1326,7 @@ describe('side panel user flow', () => {
         };
       }) as unknown as typeof fetch;
 
-      // 2. Render initial popup
+      // 2. Render initial side panel
       const { unmount } = render(<SidePanelApp />);
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()

@@ -1,4 +1,4 @@
-import createShadowRoot from './createShadowRoot';
+import createIsolatedRoot from './createIsolatedRoot';
 
-export { createShadowRoot };
-export default createShadowRoot;
+export { createIsolatedRoot };
+export default createIsolatedRoot;
