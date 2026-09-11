@@ -4,12 +4,12 @@ import {
 } from './analysisSessionTypes';
 
 export const initialAnalysisSessionState: AnalysisSessionState = {
-  currentVideo: null,
+  currentFilm: null,
   transcript: null,
   summary: null,
   chatMessages: [],
   chatInput: '',
-  isSearchingVideo: false,
+  isSearchingFilm: false,
   isLoading: false,
   loadingMessage: '',
   isSendingChat: false,
@@ -25,20 +25,20 @@ export function analysisSessionReducer(
     case 'START_SEARCHING':
       return {
         ...state,
-        isSearchingVideo: true,
+        isSearchingFilm: true,
         errorMessage: null,
       };
 
     case 'STOP_SEARCHING':
       return {
         ...state,
-        isSearchingVideo: false,
+        isSearchingFilm: false,
       };
 
-    case 'SET_ACTIVE_VIDEO':
+    case 'SET_ACTIVE_FILM':
       return {
         ...state,
-        currentVideo: action.video,
+        currentFilm: action.film,
         transcript: null,
         summary: null,
         chatMessages: [],
@@ -47,14 +47,14 @@ export function analysisSessionReducer(
         loadingMessage: '',
         isSendingChat: false,
         errorMessage: null,
-        isSearchingVideo: false,
+        isSearchingFilm: false,
         revision: state.revision + 1,
       };
 
     case 'RESTORE_SAVED_SESSION':
       return {
         ...state,
-        currentVideo: action.video,
+        currentFilm: action.film,
         transcript: action.transcript,
         summary: action.summary,
         chatMessages: action.chat,
@@ -63,7 +63,7 @@ export function analysisSessionReducer(
         loadingMessage: '',
         isSendingChat: false,
         errorMessage: null,
-        isSearchingVideo: false,
+        isSearchingFilm: false,
         revision: state.revision + 1,
       };
 
@@ -184,7 +184,7 @@ export function analysisSessionReducer(
     case 'CLEAR_SESSION':
       return {
         ...state,
-        currentVideo: null,
+        currentFilm: null,
         transcript: null,
         summary: null,
         chatMessages: [],
@@ -193,7 +193,7 @@ export function analysisSessionReducer(
         loadingMessage: '',
         isSendingChat: false,
         errorMessage: null,
-        isSearchingVideo: false,
+        isSearchingFilm: false,
         revision: state.revision + 1,
       };
 

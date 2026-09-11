@@ -1,7 +1,7 @@
-import { ChatMessage, TranscriptSegment } from '../../domain/analysis';
+import { ConversationMessage, TranscriptSegment } from '../../domain/analysis';
 import { AiProvider } from './registry';
 
-export type { ChatMessage, TranscriptSegment };
+export type { ConversationMessage, TranscriptSegment };
 
 export type LlmProviderName = AiProvider;
 export type LlmErrorProviderName = LlmProviderName | 'unknown';
@@ -11,7 +11,7 @@ export interface LlmRequest {
   model: string;
   systemInstruction: string;
   userMessage: string;
-  chatHistory?: ChatMessage[];
+  chatHistory?: ConversationMessage[];
   maxTokens?: number;
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ChatMessage, TranscriptSegment } from '../../domain/analysis';
+import { ConversationMessage, TranscriptSegment } from '../../domain/analysis';
 import { StorageAdapter } from '../../storage';
 import {
   AnalysisRecord,
@@ -28,7 +28,7 @@ const sampleTranscript: TranscriptSegment[] = [
   { text: 'Główna część', start: 15, duration: 45 },
 ];
 
-const sampleChat: ChatMessage[] = [
+const sampleChat: ConversationMessage[] = [
   { role: 'user', message: 'O czym jest ten film?' },
   { role: 'model', message: 'Film przedstawia architekturę rozszerzenia.' },
 ];
@@ -196,7 +196,7 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
       chat: [],
     });
 
-    const newChat: ChatMessage[] = [
+    const newChat: ConversationMessage[] = [
       { role: 'user', message: 'Pytanie uzupełniające' },
       { role: 'model', message: 'Odpowiedź uzupełniająca' },
     ];
@@ -318,7 +318,7 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
       const originalAfter = initialRecords[0];
       const originalBefore = initialRecords[2];
 
-      const newChat: ChatMessage[] = [
+      const newChat: ConversationMessage[] = [
         { role: 'user', message: 'Stare pytanie' },
         { role: 'model', message: 'Odpowiedź' },
         { role: 'user', message: 'Nowe pytanie w sesji' },
@@ -382,7 +382,7 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
       const originalVid2 = initialRecords.find((r) => r.videoId === 'vid-2')!;
       expect(initialRecords[1].videoId).toBe('vid-2');
 
-      const updatedChat: ChatMessage[] = [
+      const updatedChat: ConversationMessage[] = [
         { role: 'user', message: 'Nowe pytanie w sesji' },
         { role: 'model', message: 'Nowa odpowiedź w sesji' },
       ];

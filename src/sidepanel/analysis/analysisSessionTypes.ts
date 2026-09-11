@@ -1,12 +1,16 @@
-import { ChatMessage, Film, TranscriptSegment } from '../../domain/analysis';
+import {
+  ConversationMessage,
+  Film,
+  TranscriptSegment,
+} from '../../domain/analysis';
 
 export interface AnalysisSessionState {
-  currentVideo: Film | null;
+  currentFilm: Film | null;
   transcript: TranscriptSegment[] | null;
   summary: string | null;
-  chatMessages: ChatMessage[];
+  chatMessages: ConversationMessage[];
   chatInput: string;
-  isSearchingVideo: boolean;
+  isSearchingFilm: boolean;
   isLoading: boolean;
   loadingMessage: string;
   isSendingChat: boolean;
@@ -18,15 +22,15 @@ export type AnalysisSessionAction =
   | { type: 'START_SEARCHING' }
   | { type: 'STOP_SEARCHING' }
   | {
-      type: 'SET_ACTIVE_VIDEO';
-      video: Film | null;
+      type: 'SET_ACTIVE_FILM';
+      film: Film | null;
     }
   | {
       type: 'RESTORE_SAVED_SESSION';
-      video: Film;
+      film: Film;
       transcript: TranscriptSegment[];
       summary: string | null;
-      chat: ChatMessage[];
+      chat: ConversationMessage[];
     }
   | {
       type: 'START_SUMMARIZATION';
@@ -52,7 +56,7 @@ export type AnalysisSessionAction =
     }
   | {
       type: 'START_CHAT_SEND';
-      userMessage: ChatMessage;
+      userMessage: ConversationMessage;
       showLoading: boolean;
       loadingMessage: string;
     }
@@ -62,7 +66,7 @@ export type AnalysisSessionAction =
   | {
       type: 'CHAT_SUCCESS';
       revision: number;
-      modelMessage: ChatMessage;
+      modelMessage: ConversationMessage;
     }
   | {
       type: 'CHAT_FAILURE';

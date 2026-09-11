@@ -19,8 +19,8 @@ describe('YouTube Module public seam (src/sidepanel/youtube)', () => {
 
   it('hides active tab, messaging and fallback metadata behind the public interface', () => {
     const youtube = createYoutube();
-    expect(youtube.readActiveVideo).toBeDefined();
-    expect(typeof youtube.readActiveVideo).toBe('function');
+    expect(youtube.readActiveFilm).toBeDefined();
+    expect(typeof youtube.readActiveFilm).toBe('function');
     expect(youtube.fetchActiveTranscript).toBeDefined();
     expect(typeof youtube.fetchActiveTranscript).toBe('function');
     expect(youtube.seekToTimestamp).toBeDefined();

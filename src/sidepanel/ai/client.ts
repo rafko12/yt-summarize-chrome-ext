@@ -1,4 +1,4 @@
-import { ChatMessage, TranscriptSegment } from '../../domain/analysis';
+import { ConversationMessage, TranscriptSegment } from '../../domain/analysis';
 import {
   getChatSystemInstruction,
   getSummarySystemInstruction,
@@ -37,7 +37,7 @@ export interface AiClient {
   generateChatResponse(
     apiKey: string,
     transcript: TranscriptSegment[],
-    chatHistory: ChatMessage[],
+    chatHistory: ConversationMessage[],
     userMessage: string,
     language: string,
     model?: string
@@ -167,7 +167,7 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
     async generateChatResponse(
       apiKey: string,
       transcript: TranscriptSegment[],
-      chatHistory: ChatMessage[],
+      chatHistory: ConversationMessage[],
       userMessage: string,
       language: string,
       model = 'gemini-3.5-flash'

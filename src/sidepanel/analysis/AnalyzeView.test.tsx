@@ -28,7 +28,7 @@ const callbacks = {
 };
 
 const settings = { language: 'Polski', model: 'gemini-3.6-flash' };
-const video = {
+const film = {
   videoId: 'abc123',
   title: 'Tytuł filmu',
   author: 'Autor',
@@ -43,8 +43,8 @@ describe('AnalyzeView', () => {
   test('analiza udostępnia stany braku klucza, wyszukiwania, filmu, czatu i podsumowania', () => {
     const props = {
       hasAnyKey: false,
-      isSearchingVideo: false,
-      currentVideo: null,
+      isSearchingFilm: false,
+      currentFilm: null,
       isLoading: false,
       loadingMessage: '',
       summary: null,
@@ -52,11 +52,11 @@ describe('AnalyzeView', () => {
       isSendingChat: false,
       chatInput: '',
       settings,
-      onLoadActiveVideo: callbacks.load,
+      onLoadActiveFilm: callbacks.load,
       onClearChat: callbacks.clear,
       onSendChatMessage: callbacks.send,
       onChatInputChange: callbacks.input,
-      onSummarizeVideo: callbacks.summarize,
+      onSummarizeFilm: callbacks.summarize,
       onSetActiveTab: callbacks.setTab,
       onSeekTimestamp: callbacks.seek,
     };
@@ -64,7 +64,7 @@ describe('AnalyzeView', () => {
     fireEvent.click(screen.getByRole('button', { name: /Skonfiguruj teraz/ }));
     expect(callbacks.setTab).toHaveBeenCalledWith('settings');
 
-    rerender(<AnalyzeView {...props} hasAnyKey isSearchingVideo />);
+    rerender(<AnalyzeView {...props} hasAnyKey isSearchingFilm />);
     expect(screen.getByText(/Szukanie aktywnego/)).toBeVisible();
 
     rerender(<AnalyzeView {...props} hasAnyKey />);
@@ -75,7 +75,7 @@ describe('AnalyzeView', () => {
       <AnalyzeView
         {...props}
         hasAnyKey
-        currentVideo={video}
+        currentFilm={film}
         chatMessages={[{ role: 'user', message: 'Pytanie [01:30]' }]}
         chatInput='Wiadomość'
         summary='To jest długie podsumowanie [00:45]'
@@ -100,7 +100,7 @@ describe('AnalyzeView', () => {
     expect(callbacks.send).toHaveBeenCalled();
 
     const scrollContainer = screen
-      .getByText(video.title)
+      .getByText(film.title)
       .closest('.overflow-y-auto');
     expect(scrollContainer).toBeInTheDocument();
     expect(scrollContainer).toHaveClass('flex', 'flex-col', 'gap-3');
@@ -109,7 +109,7 @@ describe('AnalyzeView', () => {
       <AnalyzeView
         {...props}
         hasAnyKey
-        currentVideo={video}
+        currentFilm={film}
         isLoading
         loadingMessage='Generowanie'
       />

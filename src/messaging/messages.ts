@@ -13,14 +13,14 @@ export interface VideoDataResponse extends SuccessResponse {
   thumbnailUrl: string;
 }
 
-export interface TranscriptItemResponse {
+export interface TranscriptSegmentResponse {
   start: number;
   duration: number;
   text: string;
 }
 
 export interface TranscriptResponse extends SuccessResponse {
-  transcript: TranscriptItemResponse[];
+  transcript: TranscriptSegmentResponse[];
 }
 
 export interface PinStateResponse {

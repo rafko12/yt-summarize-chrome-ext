@@ -7,7 +7,7 @@ import {
 import { AnalysisSessionState } from './analysisSessionTypes';
 
 describe('analysisSessionReducer', () => {
-  const sampleVideo = {
+  const sampleFilm = {
     videoId: 'vid1',
     title: 'Test Video',
     author: 'Author',
@@ -20,16 +20,16 @@ describe('analysisSessionReducer', () => {
     const searching = analysisSessionReducer(initialAnalysisSessionState, {
       type: 'START_SEARCHING',
     });
-    expect(searching.isSearchingVideo).toBe(true);
+    expect(searching.isSearchingFilm).toBe(true);
     expect(searching.errorMessage).toBeNull();
 
     const stopped = analysisSessionReducer(searching, {
       type: 'STOP_SEARCHING',
     });
-    expect(stopped.isSearchingVideo).toBe(false);
+    expect(stopped.isSearchingFilm).toBe(false);
   });
 
-  it('handles SET_ACTIVE_VIDEO with atomic reset and revision increment', () => {
+  it('handles SET_ACTIVE_FILM with atomic reset and revision increment', () => {
     const dirtyState: AnalysisSessionState = {
       ...initialAnalysisSessionState,
       summary: 'Old summary',
@@ -42,11 +42,11 @@ describe('analysisSessionReducer', () => {
     };
 
     const next = analysisSessionReducer(dirtyState, {
-      type: 'SET_ACTIVE_VIDEO',
-      video: sampleVideo,
+      type: 'SET_ACTIVE_FILM',
+      film: sampleFilm,
     });
 
-    expect(next.currentVideo).toEqual(sampleVideo);
+    expect(next.currentFilm).toEqual(sampleFilm);
     expect(next.transcript).toBeNull();
     expect(next.summary).toBeNull();
     expect(next.chatMessages).toEqual([]);
@@ -67,13 +67,13 @@ describe('analysisSessionReducer', () => {
 
     const next = analysisSessionReducer(dirtyState, {
       type: 'RESTORE_SAVED_SESSION',
-      video: sampleVideo,
+      film: sampleFilm,
       transcript: sampleTranscript,
       summary: 'Restored summary',
       chat: [{ role: 'user', message: 'Saved question' }],
     });
 
-    expect(next.currentVideo).toEqual(sampleVideo);
+    expect(next.currentFilm).toEqual(sampleFilm);
     expect(next.transcript).toEqual(sampleTranscript);
     expect(next.summary).toBe('Restored summary');
     expect(next.chatMessages).toEqual([
@@ -233,14 +233,14 @@ describe('analysisSessionReducer', () => {
     const transcriptCleared = analysisSessionReducer(
       {
         ...chatCleared,
-        currentVideo: sampleVideo,
+        currentFilm: sampleFilm,
         transcript: sampleTranscript,
         summary: 'Some summary',
         revision: 2,
       },
       { type: 'CLEAR_TRANSCRIPT_AND_ANALYSIS' }
     );
-    expect(transcriptCleared.currentVideo).toEqual(sampleVideo);
+    expect(transcriptCleared.currentFilm).toEqual(sampleFilm);
     expect(transcriptCleared.transcript).toBeNull();
     expect(transcriptCleared.summary).toBeNull();
     expect(transcriptCleared.revision).toBe(3);
@@ -248,7 +248,7 @@ describe('analysisSessionReducer', () => {
     const sessionCleared = analysisSessionReducer(transcriptCleared, {
       type: 'CLEAR_SESSION',
     });
-    expect(sessionCleared.currentVideo).toBeNull();
+    expect(sessionCleared.currentFilm).toBeNull();
     expect(sessionCleared.revision).toBe(4);
 
     const errorSet = analysisSessionReducer(sessionCleared, {

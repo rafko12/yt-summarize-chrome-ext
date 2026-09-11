@@ -34,7 +34,7 @@ export default function SidePanelApp(): JSX.Element {
     },
   });
 
-  const { loadActiveVideo } = analysisSession;
+  const { loadActiveFilm } = analysisSession;
 
   // Inicjalizacja side panelu, nasłuchiwanie i sprawdzanie przypięcia
   useEffect(() => {
@@ -51,20 +51,20 @@ export default function SidePanelApp(): JSX.Element {
         }
       }
 
-      await loadActiveVideo();
+      await loadActiveFilm();
     };
     initPanel();
-  }, [loadActiveVideo]);
+  }, [loadActiveFilm]);
 
   // Nasłuch na aktualizacje w locie - jak zmienił się URL YouTube
   useEffect(
     () =>
       listenToPanelNotifications((notification) => {
         if (notification.type === 'YOUTUBE_URL_UPDATED') {
-          loadActiveVideo();
+          loadActiveFilm();
         }
       }),
-    [loadActiveVideo]
+    [loadActiveFilm]
   );
 
   const handlePinGlobal = () => {
@@ -140,8 +140,8 @@ export default function SidePanelApp(): JSX.Element {
           {activeTab === 'analyze' && (
             <AnalyzeView
               hasAnyKey={settingsHook.hasAnyKey}
-              isSearchingVideo={analysisSession.isSearchingVideo}
-              currentVideo={analysisSession.currentVideo}
+              isSearchingFilm={analysisSession.isSearchingFilm}
+              currentFilm={analysisSession.currentFilm}
               isLoading={analysisSession.isLoading}
               loadingMessage={analysisSession.loadingMessage}
               summary={analysisSession.summary}
@@ -149,7 +149,7 @@ export default function SidePanelApp(): JSX.Element {
               isSendingChat={analysisSession.isSendingChat}
               chatInput={analysisSession.chatInput}
               settings={settingsHook.settings}
-              onLoadActiveVideo={analysisSession.loadActiveVideo}
+              onLoadActiveFilm={analysisSession.loadActiveFilm}
               onClearChat={analysisSession.handleClearChat}
               onSendChatMessage={(e) =>
                 analysisSession.handleSendChatMessage(
@@ -159,8 +159,8 @@ export default function SidePanelApp(): JSX.Element {
                 )
               }
               onChatInputChange={analysisSession.setChatInput}
-              onSummarizeVideo={() =>
-                analysisSession.handleSummarizeVideo(
+              onSummarizeFilm={() =>
+                analysisSession.handleSummarizeFilm(
                   settingsHook.settings,
                   settingsHook.apiKeys
                 )

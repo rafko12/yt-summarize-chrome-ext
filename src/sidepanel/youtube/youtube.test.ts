@@ -36,7 +36,7 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
   test('odczytuje aktywny Film bez ujawniania panelowi karty ani wiadomości Chrome', async () => {
     const youtube = createYoutube(createAdapter());
 
-    await expect(youtube.readActiveVideo()).resolves.toEqual({
+    await expect(youtube.readActiveFilm()).resolves.toEqual({
       videoId: 'film',
       title: 'Tytuł Filmu',
       author: 'Autor',
@@ -49,7 +49,7 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
       createAdapter({ getVideoData: async () => ({ error: 'Brak danych' }) })
     );
 
-    await expect(youtube.readActiveVideo()).resolves.toEqual({
+    await expect(youtube.readActiveFilm()).resolves.toEqual({
       videoId: 'film',
       title: 'Tytuł karty',
       author: 'YouTube Creator',
@@ -63,7 +63,7 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
     );
 
     await expect(
-      youtube.readActiveVideo({
+      youtube.readActiveFilm({
         videoId: 'previous-video',
         title: 'Previous title',
         author: 'Previous author',
@@ -148,7 +148,7 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
       })
     );
 
-    await expect(youtube.readActiveVideo()).resolves.toBeNull();
+    await expect(youtube.readActiveFilm()).resolves.toBeNull();
   });
 
   test('zwraca null jeśli tab nie zawiera parametru v', async () => {
@@ -161,7 +161,7 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
       })
     );
 
-    await expect(youtube.readActiveVideo()).resolves.toBeNull();
+    await expect(youtube.readActiveFilm()).resolves.toBeNull();
   });
 
   test('zwraca null jeśli getActiveTab rzuci błąd', async () => {
@@ -173,7 +173,7 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
       })
     );
 
-    await expect(youtube.readActiveVideo()).resolves.toBeNull();
+    await expect(youtube.readActiveFilm()).resolves.toBeNull();
   });
 
   test('używa domyślnego adaptera Chrome gdy wywołano createYoutube bez argumentów', async () => {
@@ -195,7 +195,7 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
     } as unknown as typeof chrome;
 
     const youtube = createYoutube();
-    const video = await youtube.readActiveVideo();
+    const video = await youtube.readActiveFilm();
     expect(video).toEqual({
       videoId: 'def',
       title: 'Def Title',

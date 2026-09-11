@@ -27,7 +27,7 @@ export interface YoutubeAdapter {
 }
 
 export interface YoutubeIntegration {
-  readActiveVideo(fallbackVideo?: Film): Promise<Film | null>;
+  readActiveFilm(fallbackFilm?: Film): Promise<Film | null>;
   fetchActiveTranscript(
     videoId: string,
     targetLang: string,

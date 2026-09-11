@@ -1,7 +1,7 @@
 import {
   AnalysisRecord,
   AnalysisRecordInput,
-  ChatMessage,
+  ConversationMessage,
   isAnalysisRecord,
 } from '../../domain/analysis';
 import { STORAGE_KEYS, StorageAdapter } from '../../storage';
@@ -33,7 +33,7 @@ export default function createAnalysisHistory(
 
     async updateRecordChat(
       videoId: string,
-      chat: ChatMessage[]
+      chat: ConversationMessage[]
     ): Promise<void> {
       const current = await this.getRecords();
       const targetIndex = current.findIndex((r) => r.videoId === videoId);

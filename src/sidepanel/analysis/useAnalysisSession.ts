@@ -1,6 +1,6 @@
 import { FormEvent, useCallback, useMemo, useReducer, useRef } from 'react';
 
-import { AnalysisRecord, ChatMessage } from '../../domain/analysis';
+import { AnalysisRecord, ConversationMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../messaging';
 import { createChromeStorageLocalAdapter } from '../../storage';
 import { generateChatResponse, generateSummary, getProvider } from '../ai';
@@ -44,25 +44,25 @@ export default function useAnalysisSession({
     [historyOverride]
   );
 
-  const loadActiveVideo =
+  const loadActiveFilm =
     useCallback(async (): Promise<AnalysisRecord | null> => {
       dispatch({ type: 'START_SEARCHING' });
       try {
-        const activeVideo = await youtubePage.readActiveVideo();
-        if (!activeVideo) {
-          dispatch({ type: 'SET_ACTIVE_VIDEO', video: null });
+        const activeFilm = await youtubePage.readActiveFilm();
+        if (!activeFilm) {
+          dispatch({ type: 'SET_ACTIVE_FILM', film: null });
           return null;
         }
 
         const savedHistory = await history.getRecords();
         const existingSession = savedHistory.find(
-          (item) => item.videoId === activeVideo.videoId
+          (item) => item.videoId === activeFilm.videoId
         );
 
         if (existingSession) {
           dispatch({
             type: 'RESTORE_SAVED_SESSION',
-            video: {
+            film: {
               videoId: existingSession.videoId,
               title: existingSession.title,
               author: existingSession.author,
@@ -75,7 +75,7 @@ export default function useAnalysisSession({
           return existingSession;
         }
 
-        dispatch({ type: 'SET_ACTIVE_VIDEO', video: activeVideo });
+        dispatch({ type: 'SET_ACTIVE_FILM', film: activeFilm });
         return null;
       } catch (err) {
         // eslint-disable-next-line no-console
@@ -87,27 +87,27 @@ export default function useAnalysisSession({
 
   const ensureVideoAndTranscript = useCallback(
     async (language: string, onInjecting?: () => void) => {
-      let targetVideo = stateRef.current.currentVideo!;
+      let targetFilm = stateRef.current.currentFilm!;
 
       if (
         stateRef.current.transcript &&
-        targetVideo.videoId === stateRef.current.currentVideo?.videoId
+        targetFilm.videoId === stateRef.current.currentFilm?.videoId
       ) {
         return {
           activeTranscript: stateRef.current.transcript,
-          targetVideo,
+          targetFilm,
         };
       }
 
-      const activeVideo = await youtubePage.readActiveVideo(targetVideo);
+      const activeFilm = await youtubePage.readActiveFilm(targetFilm);
 
-      if (activeVideo && activeVideo.videoId !== targetVideo.videoId) {
-        targetVideo = activeVideo;
-        dispatch({ type: 'SET_ACTIVE_VIDEO', video: targetVideo });
+      if (activeFilm && activeFilm.videoId !== targetFilm.videoId) {
+        targetFilm = activeFilm;
+        dispatch({ type: 'SET_ACTIVE_FILM', film: targetFilm });
       }
 
       const response = await youtubePage.fetchActiveTranscript(
-        targetVideo.videoId,
+        targetFilm.videoId,
         language === 'Polski' ? 'pl' : 'en',
         { onInjecting }
       );
@@ -127,16 +127,16 @@ export default function useAnalysisSession({
 
       return {
         activeTranscript: response.transcript,
-        targetVideo,
+        targetFilm,
       };
     },
     [youtubePage]
   );
 
-  const handleSummarizeVideo = useCallback(
+  const handleSummarizeFilm = useCallback(
     async (settings: Settings, apiKeys: Record<AiProvider, string>) => {
-      const { currentVideo } = stateRef.current;
-      if (!currentVideo) return;
+      const { currentFilm } = stateRef.current;
+      if (!currentFilm) return;
 
       const provider = getProvider(settings.model);
       const keyToUse = apiKeys[provider];
@@ -155,14 +155,15 @@ export default function useAnalysisSession({
       });
 
       try {
-        const { activeTranscript, targetVideo } =
-          await ensureVideoAndTranscript(settings.language, () =>
+        const { activeTranscript, targetFilm } = await ensureVideoAndTranscript(
+          settings.language,
+          () =>
             dispatch({
               type: 'SET_LOADING_MESSAGE',
               message:
                 'Wstrzykiwanie skryptu na stronę YouTube (jednorazowo)...',
             })
-          );
+        );
 
         dispatch({
           type: 'SET_LOADING_MESSAGE',
@@ -176,10 +177,10 @@ export default function useAnalysisSession({
           settings.model || 'gemini-3.6-flash'
         );
 
-        const activeVideoAfter = await youtubePage.readActiveVideo(targetVideo);
+        const activeFilmAfter = await youtubePage.readActiveFilm(targetFilm);
         if (
-          !activeVideoAfter ||
-          activeVideoAfter.videoId !== targetVideo.videoId
+          !activeFilmAfter ||
+          activeFilmAfter.videoId !== targetFilm.videoId
         ) {
           throw new Error(
             'Film został zmieniony podczas generowania. Spróbuj ponownie.'
@@ -195,10 +196,10 @@ export default function useAnalysisSession({
         });
 
         await history.saveRecord({
-          videoId: targetVideo.videoId,
-          title: targetVideo.title,
-          author: targetVideo.author,
-          thumbnailUrl: targetVideo.thumbnailUrl,
+          videoId: targetFilm.videoId,
+          title: targetFilm.title,
+          author: targetFilm.author,
+          thumbnailUrl: targetFilm.thumbnailUrl,
           summary: generatedSummary,
           transcript: activeTranscript,
           chat: [],
@@ -236,7 +237,7 @@ export default function useAnalysisSession({
     ) => {
       e.preventDefault();
       const {
-        currentVideo,
+        currentFilm,
         chatInput,
         isSendingChat,
         transcript,
@@ -246,13 +247,16 @@ export default function useAnalysisSession({
       const provider = getProvider(settings.model);
       const keyToUse = apiKeys[provider];
 
-      if (!chatInput.trim() || !currentVideo || isSendingChat || !keyToUse) {
+      if (!chatInput.trim() || !currentFilm || isSendingChat || !keyToUse) {
         return;
       }
 
       const userMsgText = chatInput.trim();
       const requestRevision = stateRef.current.revision;
-      const userMessage: ChatMessage = { role: 'user', message: userMsgText };
+      const userMessage: ConversationMessage = {
+        role: 'user',
+        message: userMsgText,
+      };
 
       dispatch({
         type: 'START_CHAT_SEND',
@@ -263,14 +267,15 @@ export default function useAnalysisSession({
       });
 
       try {
-        const { activeTranscript, targetVideo } =
-          await ensureVideoAndTranscript(settings.language, () =>
+        const { activeTranscript, targetFilm } = await ensureVideoAndTranscript(
+          settings.language,
+          () =>
             dispatch({
               type: 'SET_LOADING_MESSAGE',
               message:
                 'Wstrzykiwanie skryptu na stronę YouTube (jednorazowo)...',
             })
-          );
+        );
 
         dispatch({ type: 'STOP_CHAT_LOADING' });
 
@@ -285,7 +290,7 @@ export default function useAnalysisSession({
 
         if (requestRevision !== stateRef.current.revision) return;
 
-        const modelMessage: ChatMessage = {
+        const modelMessage: ConversationMessage = {
           role: 'model',
           message: responseText,
         };
@@ -295,17 +300,17 @@ export default function useAnalysisSession({
           modelMessage,
         });
 
-        const finalChat: ChatMessage[] = [
+        const finalChat: ConversationMessage[] = [
           ...chatMessages,
           userMessage,
           modelMessage,
         ];
 
         await history.saveChat({
-          videoId: targetVideo.videoId,
-          title: targetVideo.title,
-          author: targetVideo.author,
-          thumbnailUrl: targetVideo.thumbnailUrl,
+          videoId: targetFilm.videoId,
+          title: targetFilm.title,
+          author: targetFilm.author,
+          thumbnailUrl: targetFilm.thumbnailUrl,
           summary: stateRef.current.summary || null,
           transcript: activeTranscript,
           chat: finalChat,
@@ -330,8 +335,8 @@ export default function useAnalysisSession({
     // eslint-disable-next-line no-alert
     if (window.confirm('Wyczyścić rozmowę dla tego filmu?')) {
       dispatch({ type: 'CLEAR_CHAT' });
-      if (stateRef.current.currentVideo) {
-        history.updateRecordChat(stateRef.current.currentVideo.videoId, []);
+      if (stateRef.current.currentFilm) {
+        history.updateRecordChat(stateRef.current.currentFilm.videoId, []);
       }
     }
   }, [history]);
@@ -339,7 +344,7 @@ export default function useAnalysisSession({
   const handleResumeSession = useCallback((record: AnalysisRecord) => {
     dispatch({
       type: 'RESTORE_SAVED_SESSION',
-      video: {
+      film: {
         videoId: record.videoId,
         title: record.title,
         author: record.author,
@@ -352,7 +357,7 @@ export default function useAnalysisSession({
   }, []);
 
   const handleDeleteHistoryCleanup = useCallback((videoId: string) => {
-    if (stateRef.current.currentVideo?.videoId === videoId) {
+    if (stateRef.current.currentFilm?.videoId === videoId) {
       dispatch({ type: 'CLEAR_TRANSCRIPT_AND_ANALYSIS' });
     }
   }, []);
@@ -383,8 +388,8 @@ export default function useAnalysisSession({
 
   return {
     ...state,
-    loadActiveVideo,
-    handleSummarizeVideo,
+    loadActiveFilm,
+    handleSummarizeFilm,
     handleSendChatMessage,
     handleSeekToTimestamp,
     handleClearChat,

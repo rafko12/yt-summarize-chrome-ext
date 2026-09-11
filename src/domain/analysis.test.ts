@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   AnalysisRecord,
-  ChatMessage,
+  ConversationMessage,
   Film,
   isAnalysisRecord,
-  isChatMessage,
+  isConversationMessage,
   isFilm,
   isTranscriptSegment,
   TranscriptSegment,
@@ -64,20 +64,25 @@ describe('Domain analysis module (src/domain/analysis)', () => {
     });
   });
 
-  describe('isChatMessage', () => {
+  describe('isConversationMessage', () => {
     it('returns true for valid user and model messages', () => {
-      const userMsg: ChatMessage = { role: 'user', message: 'Cześć' };
-      const modelMsg: ChatMessage = { role: 'model', message: 'Odpowiedź' };
+      const userMsg: ConversationMessage = { role: 'user', message: 'Cześć' };
+      const modelMsg: ConversationMessage = {
+        role: 'model',
+        message: 'Odpowiedź',
+      };
 
-      expect(isChatMessage(userMsg)).toBe(true);
-      expect(isChatMessage(modelMsg)).toBe(true);
+      expect(isConversationMessage(userMsg)).toBe(true);
+      expect(isConversationMessage(modelMsg)).toBe(true);
     });
 
     it('returns false for invalid roles or missing fields', () => {
-      expect(isChatMessage(null)).toBe(false);
-      expect(isChatMessage({ role: 'admin', message: 'Hi' })).toBe(false);
-      expect(isChatMessage({ role: 'user', message: 123 })).toBe(false);
-      expect(isChatMessage({ message: 'Missing role' })).toBe(false);
+      expect(isConversationMessage(null)).toBe(false);
+      expect(isConversationMessage({ role: 'admin', message: 'Hi' })).toBe(
+        false
+      );
+      expect(isConversationMessage({ role: 'user', message: 123 })).toBe(false);
+      expect(isConversationMessage({ message: 'Missing role' })).toBe(false);
     });
   });
 

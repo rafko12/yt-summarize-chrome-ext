@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   AnalysisRecord,
   AnalysisRecordInput,
-  ChatMessage,
+  ConversationMessage,
   TranscriptSegment,
 } from '../domain/analysis';
 import { clearApiKeysAndHistory } from '../sidepanel/dangerZone';
@@ -28,7 +28,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
     { start: 10, duration: 20, text: 'Rozwinięcie' },
   ];
 
-  const validChat: ChatMessage[] = [
+  const validChat: ConversationMessage[] = [
     { role: 'user', message: 'Jakie są wnioski?' },
     { role: 'model', message: 'Wnioski są obiecujące.' },
   ];
@@ -327,7 +327,9 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
         createSampleRecord('vid-2', { chat: [] }),
       ];
 
-      const newChat: ChatMessage[] = [{ role: 'user', message: 'Pytanie' }];
+      const newChat: ConversationMessage[] = [
+        { role: 'user', message: 'Pytanie' },
+      ];
       await history.updateRecordChat('vid-2', newChat);
 
       const records = await history.getRecords();

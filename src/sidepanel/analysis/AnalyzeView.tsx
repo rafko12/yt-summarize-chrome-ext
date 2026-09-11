@@ -8,36 +8,36 @@ import {
   Sparkle,
 } from '@phosphor-icons/react';
 
-import { ChatMessage, Film } from '../../domain/analysis';
+import { ConversationMessage, Film } from '../../domain/analysis';
 import { Settings } from '../preferences';
 import { MarkdownLine } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';
 
 interface AnalyzeViewProps {
   hasAnyKey: boolean;
-  isSearchingVideo: boolean;
-  currentVideo: Film | null;
+  isSearchingFilm: boolean;
+  currentFilm: Film | null;
   isLoading: boolean;
   loadingMessage: string;
   summary: string | null;
-  chatMessages: ChatMessage[];
+  chatMessages: ConversationMessage[];
   isSendingChat: boolean;
   chatInput: string;
   settings: Settings;
 
-  onLoadActiveVideo: () => void;
+  onLoadActiveFilm: () => void;
   onClearChat: () => void;
   onSendChatMessage: (e: FormEvent) => void;
   onChatInputChange: (val: string) => void;
-  onSummarizeVideo: () => void;
+  onSummarizeFilm: () => void;
   onSetActiveTab: (tab: 'analyze' | 'history' | 'settings') => void;
   onSeekTimestamp: (seconds: number) => void;
 }
 
 export default function AnalyzeView({
   hasAnyKey,
-  isSearchingVideo,
-  currentVideo,
+  isSearchingFilm,
+  currentFilm,
   isLoading,
   loadingMessage,
   summary,
@@ -46,11 +46,11 @@ export default function AnalyzeView({
   chatInput,
   settings,
 
-  onLoadActiveVideo,
+  onLoadActiveFilm,
   onClearChat,
   onSendChatMessage,
   onChatInputChange,
-  onSummarizeVideo,
+  onSummarizeFilm,
   onSetActiveTab,
   onSeekTimestamp,
 }: AnalyzeViewProps) {
@@ -84,7 +84,7 @@ export default function AnalyzeView({
         </div>
       )}
 
-      {hasAnyKey && isSearchingVideo && (
+      {hasAnyKey && isSearchingFilm && (
         <div className='flex flex-grow flex-col items-center justify-center'>
           <CircleNotch
             weight='bold'
@@ -96,7 +96,7 @@ export default function AnalyzeView({
         </div>
       )}
 
-      {hasAnyKey && !isSearchingVideo && !currentVideo && (
+      {hasAnyKey && !isSearchingFilm && !currentFilm && (
         <div className='bg-base-100 hero border-base-300 my-auto rounded-2xl border border-dashed p-6 text-center shadow-sm'>
           <div className='hero-content flex-col gap-4'>
             <FilmStrip
@@ -110,7 +110,7 @@ export default function AnalyzeView({
             </p>
             <button
               type='button'
-              onClick={onLoadActiveVideo}
+              onClick={onLoadActiveFilm}
               className='btn btn-outline btn-sm mt-2 rounded-lg'
             >
               Odśwież
@@ -119,13 +119,13 @@ export default function AnalyzeView({
         </div>
       )}
 
-      {hasAnyKey && !isSearchingVideo && !!currentVideo && (
+      {hasAnyKey && !isSearchingFilm && !!currentFilm && (
         <div className='flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto pb-2'>
           {/* Video Info Header Card */}
           <div className='bg-base-100 border-base-200 flex shrink-0 items-center rounded-xl border p-2 shadow-sm'>
             <figure className='w-14 shrink-0 overflow-hidden rounded-md'>
               <img
-                src={currentVideo.thumbnailUrl}
+                src={currentFilm.thumbnailUrl}
                 alt='Thumbnail'
                 className='h-9 w-full object-cover shadow-sm'
                 onError={(e) => {
@@ -137,12 +137,12 @@ export default function AnalyzeView({
             <div className='flex min-w-0 flex-grow flex-col justify-center pl-2.5 pr-1'>
               <h3
                 className='text-base-content truncate text-xs font-bold'
-                title={currentVideo.title}
+                title={currentFilm.title}
               >
-                {currentVideo.title}
+                {currentFilm.title}
               </h3>
               <p className='text-base-content/75 truncate text-[11px]'>
-                {currentVideo.author || 'Twórca YouTube'}
+                {currentFilm.author || 'Twórca YouTube'}
               </p>
             </div>
           </div>
@@ -240,7 +240,7 @@ export default function AnalyzeView({
               </div>
               <button
                 type='button'
-                onClick={onSummarizeVideo}
+                onClick={onSummarizeFilm}
                 className='shadow-primary/30 hover:shadow-primary/40 btn btn-primary btn-wide text-primary-content rounded-xl border-none text-sm font-bold shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-95'
                 style={{ textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}
               >

@@ -18,7 +18,7 @@ export interface TranscriptSegment {
   text: string;
 }
 
-export interface ChatMessage {
+export interface ConversationMessage {
   role: 'user' | 'model';
   message: string;
 }
@@ -30,7 +30,7 @@ export interface AnalysisRecord {
   thumbnailUrl: string;
   summary: string | null;
   transcript: TranscriptSegment[];
-  chat: ChatMessage[];
+  chat: ConversationMessage[];
   createdAt: number;
 }
 
@@ -61,7 +61,9 @@ export function isTranscriptSegment(
   );
 }
 
-export function isChatMessage(value: unknown): value is ChatMessage {
+export function isConversationMessage(
+  value: unknown
+): value is ConversationMessage {
   return (
     isObjectRecord(value) &&
     (value.role === 'user' || value.role === 'model') &&
@@ -77,7 +79,7 @@ export function isAnalysisRecord(value: unknown): value is AnalysisRecord {
     Array.isArray(record.transcript) &&
     record.transcript.every(isTranscriptSegment) &&
     Array.isArray(record.chat) &&
-    record.chat.every(isChatMessage) &&
+    record.chat.every(isConversationMessage) &&
     typeof record.createdAt === 'number'
   );
 }

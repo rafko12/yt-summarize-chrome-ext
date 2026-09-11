@@ -8,15 +8,15 @@ import {
   YoutubeIntegration,
 } from './types';
 
-function createFallbackVideo(
+function createFallbackFilm(
   videoId: string,
   tab: ActiveYoutubeTab,
-  fallbackVideo?: Film
+  fallbackFilm?: Film
 ): Film {
   return {
     videoId,
     title: tab.title || 'Film YouTube',
-    author: fallbackVideo?.author || 'YouTube Creator',
+    author: fallbackFilm?.author || 'YouTube Creator',
     thumbnailUrl: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
   };
 }
@@ -25,7 +25,7 @@ export default function createYoutube(
   adapter: YoutubeAdapter = createChromeYoutubeAdapter()
 ): YoutubeIntegration {
   return {
-    async readActiveVideo(fallbackVideo?: Film): Promise<Film | null> {
+    async readActiveFilm(fallbackFilm?: Film): Promise<Film | null> {
       try {
         const tab = await adapter.getActiveTab();
         if (
@@ -54,7 +54,7 @@ export default function createYoutube(
           // Preserve the existing fallback when the content script cannot respond.
         }
 
-        return createFallbackVideo(videoId, tab, fallbackVideo);
+        return createFallbackFilm(videoId, tab, fallbackFilm);
       } catch {
         return null;
       }

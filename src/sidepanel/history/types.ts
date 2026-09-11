@@ -3,21 +3,21 @@ import { MouseEvent } from 'react';
 import {
   AnalysisRecord,
   AnalysisRecordInput,
-  ChatMessage,
+  ConversationMessage,
   TranscriptSegment,
 } from '../../domain/analysis';
 
 export type {
   AnalysisRecord,
   AnalysisRecordInput,
-  ChatMessage,
+  ConversationMessage,
   TranscriptSegment,
 };
 
 export interface AnalysisHistory {
   getRecords(): Promise<AnalysisRecord[]>;
   saveRecord(item: AnalysisRecordInput): Promise<AnalysisRecord[]>;
-  updateRecordChat(videoId: string, chat: ChatMessage[]): Promise<void>;
+  updateRecordChat(videoId: string, chat: ConversationMessage[]): Promise<void>;
   /**
    * Persists chat messages for an analysis session.
    *
