@@ -579,25 +579,231 @@ describe('AI client', () => {
     });
   });
 
-  describe('Error handling', () => {
-    it('normalizes network errors before they reach the UI', async () => {
-      vi.stubGlobal(
-        'fetch',
-        vi.fn().mockRejectedValue(new TypeError('Failed to fetch'))
+  describe('AI provider error handling through public client with controlled fetch', () => {
+    const dummyTranscript = [{ start: 0, duration: 5, text: 'Fragment' }];
+    const dummyChatHistory = [{ role: 'user' as const, message: 'Cześć' }];
+
+    describe.each([
+      { provider: 'gemini' as const, model: 'gemini-3.6-flash' },
+      { provider: 'openai' as const, model: 'gpt-4o-mini' },
+      { provider: 'claude' as const, model: 'claude-sonnet-5' },
+    ])('$provider provider', ({ provider, model }) => {
+      it.each([
+        {
+          status: 401,
+          description: '401 Unauthorized',
+          expectedMessage:
+            'Klucz API został odrzucony. Sprawdź jego poprawność.',
+        },
+        {
+          status: 403,
+          description: '403 Forbidden',
+          expectedMessage:
+            'Klucz API został odrzucony. Sprawdź jego poprawność.',
+        },
+        {
+          status: 429,
+          description: '429 Rate Limit',
+          expectedMessage:
+            'Osiągnięto limit zapytań API. Spróbuj ponownie później.',
+        },
+        {
+          status: 500,
+          description: '500 Server Error',
+          expectedMessage: `Usługa ${provider} jest chwilowo niedostępna. Spróbuj ponownie później.`,
+        },
+        {
+          status: 503,
+          description: '503 Service Unavailable',
+          expectedMessage: `Usługa ${provider} jest chwilowo niedostępna. Spróbuj ponownie później.`,
+        },
+        {
+          status: 404,
+          description: '404 Other Error',
+          expectedMessage: `Nie udało się uzyskać odpowiedzi od dostawcy ${provider}.`,
+        },
+      ])(
+        'protects and classifies $description error in generateSummary',
+        async ({ status, expectedMessage }) => {
+          const customFetch = vi
+            .fn()
+            .mockResolvedValue(mockJsonResponse({}, false, status));
+          const client = createAiClient(customFetch);
+
+          const error = await client
+            .generateSummary('test-key', dummyTranscript, 'Polski', model)
+            .catch((e: unknown) => e);
+
+          expect(error).toBeInstanceOf(Error);
+          expect(error).toMatchObject({
+            name: 'AiRequestError',
+            provider,
+            status,
+            message: expectedMessage,
+          });
+          expect(customFetch).toHaveBeenCalledTimes(1);
+        }
       );
 
-      await expect(
-        generateSummary(
-          'test-key',
-          [{ start: 0, duration: 1, text: 'Transcript' }],
-          'Polski',
-          'gemini-3.6-flash'
-        )
-      ).rejects.toMatchObject({
-        provider: 'gemini',
-        status: undefined,
-        message: 'Nie udało się uzyskać odpowiedzi od dostawcy gemini.',
+      it('protects and classifies HTTP 500 error in generateChatResponse', async () => {
+        const customFetch = vi
+          .fn()
+          .mockResolvedValue(mockJsonResponse({}, false, 500));
+        const client = createAiClient(customFetch);
+
+        const error = await client
+          .generateChatResponse(
+            'test-key',
+            dummyTranscript,
+            dummyChatHistory,
+            'Pytanie',
+            'Polski',
+            model
+          )
+          .catch((e: unknown) => e);
+
+        expect(error).toBeInstanceOf(Error);
+        expect(error).toMatchObject({
+          name: 'AiRequestError',
+          provider,
+          status: 500,
+          message: `Usługa ${provider} jest chwilowo niedostępna. Spróbuj ponownie później.`,
+        });
+        expect(customFetch).toHaveBeenCalledTimes(1);
       });
+
+      it('normalizes network errors in generateSummary and generateChatResponse', async () => {
+        const customFetch = vi
+          .fn()
+          .mockRejectedValue(new TypeError('Failed to fetch'));
+        const client = createAiClient(customFetch);
+
+        const summaryError = await client
+          .generateSummary('test-key', dummyTranscript, 'Polski', model)
+          .catch((e: unknown) => e);
+
+        expect(summaryError).toBeInstanceOf(Error);
+        expect(summaryError).toMatchObject({
+          name: 'AiRequestError',
+          provider,
+          status: undefined,
+          message: `Nie udało się uzyskać odpowiedzi od dostawcy ${provider}.`,
+        });
+
+        const chatError = await client
+          .generateChatResponse(
+            'test-key',
+            dummyTranscript,
+            dummyChatHistory,
+            'Pytanie',
+            'Polski',
+            model
+          )
+          .catch((e: unknown) => e);
+
+        expect(chatError).toBeInstanceOf(Error);
+        expect(chatError).toMatchObject({
+          name: 'AiRequestError',
+          provider,
+          status: undefined,
+          message: `Nie udało się uzyskać odpowiedzi od dostawcy ${provider}.`,
+        });
+        expect(customFetch).toHaveBeenCalledTimes(2);
+      });
+
+      it.each([
+        {
+          status: 401,
+          description: '401 Unauthorized',
+          expectedError: 'Klucz API został odrzucony. Sprawdź jego poprawność.',
+        },
+        {
+          status: 403,
+          description: '403 Forbidden',
+          expectedError: 'Klucz API został odrzucony. Sprawdź jego poprawność.',
+        },
+        {
+          status: 429,
+          description: '429 Rate Limit',
+          expectedError:
+            'Osiągnięto limit zapytań API. Spróbuj ponownie później.',
+        },
+        {
+          status: 500,
+          description: '500 Server Error',
+          expectedError: `Usługa ${provider} jest chwilowo niedostępna. Spróbuj ponownie później.`,
+        },
+        {
+          status: 503,
+          description: '503 Service Unavailable',
+          expectedError: `Usługa ${provider} jest chwilowo niedostępna. Spróbuj ponownie później.`,
+        },
+        {
+          status: 404,
+          description: '404 Other Error',
+          expectedError: `Nie udało się uzyskać odpowiedzi od dostawcy ${provider}.`,
+        },
+      ])(
+        'returns safe validation result for $description in validateApiKey',
+        async ({ status, expectedError }) => {
+          const customFetch = vi
+            .fn()
+            .mockResolvedValue(mockJsonResponse({}, false, status));
+          const client = createAiClient(customFetch);
+
+          const result = await client.validateApiKey(
+            'test-key',
+            undefined,
+            provider
+          );
+          expect(result).toEqual({
+            valid: false,
+            error: expectedError,
+          });
+          expect(customFetch).toHaveBeenCalledTimes(1);
+        }
+      );
+
+      it('returns safe validation result for network failure in validateApiKey', async () => {
+        const customFetch = vi
+          .fn()
+          .mockRejectedValue(new TypeError('Failed to fetch'));
+        const client = createAiClient(customFetch);
+
+        const result = await client.validateApiKey(
+          'test-key',
+          undefined,
+          provider
+        );
+        expect(result).toEqual({
+          valid: false,
+          error: `Nie udało się uzyskać odpowiedzi od dostawcy ${provider}.`,
+        });
+        expect(customFetch).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('rejects unsupported model with unknown provider identification and canonical error', async () => {
+      const customFetch = vi.fn();
+      const client = createAiClient(customFetch);
+
+      const error = await client
+        .generateSummary(
+          'test-key',
+          dummyTranscript,
+          'Polski',
+          'unsupported-model-x'
+        )
+        .catch((e: unknown) => e);
+
+      expect(error).toBeInstanceOf(Error);
+      expect(error).toMatchObject({
+        name: 'AiRequestError',
+        provider: 'unknown',
+        status: undefined,
+        message: 'Wybrany model nie jest obsługiwany przez rozszerzenie.',
+      });
+      expect(customFetch).not.toHaveBeenCalled();
     });
   });
 });
