@@ -5,7 +5,7 @@ import {
   getSafeErrorMessage,
 } from '../types';
 
-export function createAnthropicProvider(
+export default function createAnthropicProvider(
   customFetch?: typeof fetch
 ): AiProviderAdapter {
   const fetchImpl: typeof fetch =
@@ -67,7 +67,3 @@ export function createAnthropicProvider(
     },
   };
 }
-
-const anthropicProvider = createAnthropicProvider();
-
-export default anthropicProvider;

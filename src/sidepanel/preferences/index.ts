@@ -1,7 +1,13 @@
-import createUserPreferences, { DEFAULT_SETTINGS } from './userPreferences';
-
-export * from './types';
 export { default as SettingsView } from './SettingsView';
+export type {
+  AiProvider,
+  InitialPreferences,
+  Settings,
+  Theme,
+  UserPreferences,
+} from './types';
 export { default as useSettings } from './useSettings';
-export { createUserPreferences, DEFAULT_SETTINGS };
-export default createUserPreferences;
+export {
+  default as createUserPreferences,
+  DEFAULT_SETTINGS,
+} from './userPreferences';

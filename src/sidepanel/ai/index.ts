@@ -1,5 +1,8 @@
-export * from './client';
-export * from './modelPolicy';
-export * from './prompts';
-export * from './modelCatalog';
-export * from './types';
+export {
+  generateChatResponse,
+  generateSummary,
+  getProvider,
+  validateApiKey,
+} from './client';
+export { AI_MODELS, AI_PROVIDERS, type AiProvider } from './modelCatalog';
+export { isModelAvailable, resolveCompatibleModel } from './modelPolicy';

@@ -5,7 +5,7 @@ import {
   getSafeErrorMessage,
 } from '../types';
 
-export function createGeminiProvider(
+export default function createGeminiProvider(
   customFetch?: typeof fetch
 ): AiProviderAdapter {
   const fetchImpl: typeof fetch =
@@ -70,7 +70,3 @@ export function createGeminiProvider(
     },
   };
 }
-
-const geminiProvider = createGeminiProvider();
-
-export default geminiProvider;

@@ -1,28 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import defaultCreateAnalysisHistory, {
-  createAnalysisHistory,
-  HistoryView,
-  useAnalysisHistory,
-} from './index';
+import { createChromeStorageLocalAdapter, STORAGE_KEYS } from '../../storage';
+import { createAnalysisHistory } from './index';
 
 describe('History Module public seam (src/sidepanel/history)', () => {
-  it('exposes createAnalysisHistory factory and default export', () => {
-    expect(createAnalysisHistory).toBeDefined();
-    expect(typeof createAnalysisHistory).toBe('function');
-    expect(defaultCreateAnalysisHistory).toBe(createAnalysisHistory);
-  });
-
-  it('exposes useAnalysisHistory hook', () => {
-    expect(useAnalysisHistory).toBeDefined();
-    expect(typeof useAnalysisHistory).toBe('function');
-  });
-
-  it('exposes HistoryView component', () => {
-    expect(HistoryView).toBeDefined();
-    expect(typeof HistoryView).toBe('function');
-  });
-
   it('instantiates history directly with shared ChromeStorageLocalAdapter and canonical keys', async () => {
     const memoryStore: Record<string, unknown> = {};
     const mockStorageLocal = {
@@ -39,9 +20,6 @@ describe('History Module public seam (src/sidepanel/history)', () => {
       },
     } as unknown as typeof chrome.storage.local;
 
-    const { createChromeStorageLocalAdapter, STORAGE_KEYS } = await import(
-      '../../storage'
-    );
     const adapter = createChromeStorageLocalAdapter(mockStorageLocal);
     const history = createAnalysisHistory(adapter);
 

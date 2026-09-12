@@ -1,1 +1,28 @@
-export * from './messages';
+export {
+  isBackgroundMessage,
+  isContentMessage,
+  isErrorResponse,
+  isPanelNotification,
+} from './messages';
+export type {
+  BackgroundMessage,
+  BackgroundResponse,
+  ContentMessage,
+  ContentResponse,
+  ErrorResponse,
+  ExtensionMessage,
+  ExtensionResponse,
+  GetPinStateMessage,
+  GetTranscriptMessage,
+  GetVideoDataMessage,
+  PanelInitMessage,
+  PanelNotification,
+  PinGlobalMessage,
+  PinStateResponse,
+  SeekToMessage,
+  SuccessResponse,
+  TranscriptResponse,
+  TranscriptSegmentResponse,
+  VideoDataResponse,
+  YoutubeUrlUpdatedNotification,
+} from './messages';

@@ -8,8 +8,6 @@ import {
   UserPreferences,
 } from './types';
 
-export * from './types';
-
 export const DEFAULT_SETTINGS: Settings = {
   language: 'Polski',
   model: 'gemini-3.5-flash',

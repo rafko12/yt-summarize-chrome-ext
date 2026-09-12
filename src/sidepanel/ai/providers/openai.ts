@@ -5,7 +5,7 @@ import {
   getSafeErrorMessage,
 } from '../types';
 
-export function createOpenaiProvider(
+export default function createOpenaiProvider(
   customFetch?: typeof fetch
 ): AiProviderAdapter {
   const fetchImpl: typeof fetch =
@@ -82,7 +82,3 @@ export function createOpenaiProvider(
     },
   };
 }
-
-const openaiProvider = createOpenaiProvider();
-
-export default openaiProvider;

@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { ConversationMessage, TranscriptSegment } from '../../domain/analysis';
-import { StorageAdapter } from '../../storage';
 import {
   AnalysisRecord,
   AnalysisRecordInput,
-  createAnalysisHistory,
-} from './index';
+  ConversationMessage,
+  TranscriptSegment,
+} from '../../domain/analysis';
+import { StorageAdapter } from '../../storage';
+import { createAnalysisHistory } from './index';
 
 function createMemoryPlatform(
   initialData: Record<string, unknown> = {}

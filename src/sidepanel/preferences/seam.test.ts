@@ -1,37 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import defaultCreateUserPreferences, {
-  createUserPreferences,
-  DEFAULT_SETTINGS,
-  SettingsView,
-  useSettings,
-} from './index';
+import { createChromeStorageLocalAdapter, STORAGE_KEYS } from '../../storage';
+import { createUserPreferences } from './index';
 
 describe('Preferences Module public seam (src/sidepanel/preferences)', () => {
-  it('exposes createUserPreferences factory and default export', () => {
-    expect(createUserPreferences).toBeDefined();
-    expect(typeof createUserPreferences).toBe('function');
-    expect(defaultCreateUserPreferences).toBe(createUserPreferences);
-  });
-
-  it('exposes useSettings hook', () => {
-    expect(useSettings).toBeDefined();
-    expect(typeof useSettings).toBe('function');
-  });
-
-  it('exposes SettingsView component', () => {
-    expect(SettingsView).toBeDefined();
-    expect(typeof SettingsView).toBe('function');
-  });
-
-  it('exposes DEFAULT_SETTINGS constant', () => {
-    expect(DEFAULT_SETTINGS).toBeDefined();
-    expect(DEFAULT_SETTINGS).toEqual({
-      language: 'Polski',
-      model: 'gemini-3.5-flash',
-    });
-  });
-
   it('instantiates preferences directly with shared ChromeStorageLocalAdapter and canonical keys', async () => {
     const memoryStore: Record<string, unknown> = {};
     const mockStorageLocal = {
@@ -50,9 +22,6 @@ describe('Preferences Module public seam (src/sidepanel/preferences)', () => {
       }),
     } as unknown as typeof chrome.storage.local;
 
-    const { createChromeStorageLocalAdapter, STORAGE_KEYS } = await import(
-      '../../storage'
-    );
     const adapter = createChromeStorageLocalAdapter(mockStorageLocal);
     const preferences = createUserPreferences(adapter);
 

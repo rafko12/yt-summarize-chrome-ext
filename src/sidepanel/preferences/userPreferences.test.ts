@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { STORAGE_KEYS, StorageAdapter } from '../../storage';
-import createUserPreferences, {
-  DEFAULT_SETTINGS,
-  UserPreferences,
-} from './userPreferences';
+import { UserPreferences } from './types';
+import createUserPreferences, { DEFAULT_SETTINGS } from './userPreferences';
 
 describe('UserPreferences', () => {
   let storageData: Record<string, unknown>;

@@ -3,7 +3,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { AnalysisRecord, HistoryView } from './index';
+import { AnalysisRecord } from '../../domain/analysis';
+import { HistoryView } from './index';
 
 const sampleRecord: AnalysisRecord = {
   videoId: 'v123',

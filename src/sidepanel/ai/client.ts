@@ -7,9 +7,9 @@ import {
   getValidationSystemInstruction,
   getValidationUserMessage,
 } from './prompts';
-import { createAnthropicProvider } from './providers/anthropic';
-import { createGeminiProvider } from './providers/gemini';
-import { createOpenaiProvider } from './providers/openai';
+import createAnthropicProvider from './providers/anthropic';
+import createGeminiProvider from './providers/gemini';
+import createOpenaiProvider from './providers/openai';
 import {
   AiProviderAdapter,
   AiRequest,
@@ -193,5 +193,3 @@ export const generateSummary =
   defaultAiClient.generateSummary.bind(defaultAiClient);
 export const generateChatResponse =
   defaultAiClient.generateChatResponse.bind(defaultAiClient);
-
-export default createAiClient;
