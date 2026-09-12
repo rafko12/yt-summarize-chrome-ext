@@ -13,14 +13,14 @@ import {
 } from './analysisSessionReducer';
 
 export interface UseAnalysisSessionProps {
-  youtubePageOverride?: YoutubeIntegration;
+  youtubeOverride?: YoutubeIntegration;
   historyOverride?: AnalysisHistory;
   onHistoryUpdated?: () => void;
   onRequireSettings?: (message: string) => void;
 }
 
 export default function useAnalysisSession({
-  youtubePageOverride,
+  youtubeOverride,
   historyOverride,
   onHistoryUpdated,
   onRequireSettings,
@@ -32,9 +32,9 @@ export default function useAnalysisSession({
   const stateRef = useRef(state);
   stateRef.current = state;
 
-  const youtubePage = useMemo(
-    () => youtubePageOverride || createYoutube(),
-    [youtubePageOverride]
+  const youtube = useMemo(
+    () => youtubeOverride || createYoutube(),
+    [youtubeOverride]
   );
 
   const history = useMemo(
@@ -48,7 +48,7 @@ export default function useAnalysisSession({
     useCallback(async (): Promise<AnalysisRecord | null> => {
       dispatch({ type: 'START_SEARCHING' });
       try {
-        const activeFilm = await youtubePage.readActiveFilm();
+        const activeFilm = await youtube.readActiveFilm();
         if (!activeFilm) {
           dispatch({ type: 'SET_ACTIVE_FILM', film: null });
           return null;
@@ -83,7 +83,7 @@ export default function useAnalysisSession({
         dispatch({ type: 'STOP_SEARCHING' });
         return null;
       }
-    }, [history, youtubePage]);
+    }, [history, youtube]);
 
   const ensureVideoAndTranscript = useCallback(
     async (language: string, onInjecting?: () => void) => {
@@ -99,14 +99,14 @@ export default function useAnalysisSession({
         };
       }
 
-      const activeFilm = await youtubePage.readActiveFilm(targetFilm);
+      const activeFilm = await youtube.readActiveFilm(targetFilm);
 
       if (activeFilm && activeFilm.videoId !== targetFilm.videoId) {
         targetFilm = activeFilm;
         dispatch({ type: 'SET_ACTIVE_FILM', film: targetFilm });
       }
 
-      const response = await youtubePage.fetchActiveTranscript(
+      const response = await youtube.fetchActiveTranscript(
         targetFilm.videoId,
         language === 'Polski' ? 'pl' : 'en',
         { onInjecting }
@@ -130,7 +130,7 @@ export default function useAnalysisSession({
         targetFilm,
       };
     },
-    [youtubePage]
+    [youtube]
   );
 
   const handleSummarizeFilm = useCallback(
@@ -177,7 +177,7 @@ export default function useAnalysisSession({
           settings.model || 'gemini-3.6-flash'
         );
 
-        const activeFilmAfter = await youtubePage.readActiveFilm(targetFilm);
+        const activeFilmAfter = await youtube.readActiveFilm(targetFilm);
         if (
           !activeFilmAfter ||
           activeFilmAfter.videoId !== targetFilm.videoId
@@ -225,7 +225,7 @@ export default function useAnalysisSession({
       history,
       onHistoryUpdated,
       onRequireSettings,
-      youtubePage,
+      youtube,
     ]
   );
 
@@ -365,13 +365,13 @@ export default function useAnalysisSession({
   const handleSeekToTimestamp = useCallback(
     async (seconds: number) => {
       try {
-        await youtubePage.seekToTimestamp(seconds);
+        await youtube.seekToTimestamp(seconds);
       } catch (error: unknown) {
         // eslint-disable-next-line no-console
         console.error('Failed to seek player:', error);
       }
     },
-    [youtubePage]
+    [youtube]
   );
 
   const handleClearSession = useCallback(() => {
