@@ -1,11 +1,13 @@
 import {
+  AiProviderAdapter,
+  AiRequest,
+  AiRequestError,
   getSafeErrorMessage,
-  LlmProvider,
-  LlmRequest,
-  LlmRequestError,
 } from '../types';
 
-export function createOpenaiProvider(customFetch?: typeof fetch): LlmProvider {
+export function createOpenaiProvider(
+  customFetch?: typeof fetch
+): AiProviderAdapter {
   const fetchImpl: typeof fetch =
     customFetch ?? ((...args) => globalThis.fetch(...args));
 
@@ -18,7 +20,7 @@ export function createOpenaiProvider(customFetch?: typeof fetch): LlmProvider {
       userMessage,
       chatHistory = [],
       maxTokens,
-    }: LlmRequest): Promise<string> {
+    }: AiRequest): Promise<string> {
       const isReasoningModel =
         model.startsWith('o') || model.startsWith('gpt-5');
       const body: {
@@ -61,7 +63,7 @@ export function createOpenaiProvider(customFetch?: typeof fetch): LlmProvider {
       }
 
       if (!response.ok) {
-        throw new LlmRequestError(
+        throw new AiRequestError(
           'openai',
           getSafeErrorMessage('openai', response.status),
           response.status
@@ -71,7 +73,7 @@ export function createOpenaiProvider(customFetch?: typeof fetch): LlmProvider {
       const result = await response.json();
       const text = result?.choices?.[0]?.message?.content;
       if (!text) {
-        throw new LlmRequestError(
+        throw new AiRequestError(
           'openai',
           'Dostawca AI zwrócił pustą odpowiedź.'
         );

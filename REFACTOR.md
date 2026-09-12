@@ -14,7 +14,7 @@ Zmniejszyć ryzyko regresji i koszt dalszego rozwoju rozszerzenia bez zamierzony
 
 - Wspieramy wyłącznie Google Chrome. Zobacz [ADR-0001](docs/adr/0001-google-chrome-jako-jedyna-wspierana-przegladarka.md).
 - Zachowujemy istniejące klucze i akceptowane formaty danych użytkownika.
-- Żądania LLM i operacje Historii analiz pozostają w panelu.
+- Żądania Dostawców AI i operacje Historii analiz pozostają w panelu.
 - Nie dodajemy zależności produkcyjnych bez przewagi niemożliwej do osiągnięcia małym modułem własnym.
 - Nie dodajemy funkcji, nie zmieniamy modeli AI, nie projektujemy ponownie UI i nie wykonujemy dużych aktualizacji zależności.
 - Dzielimy kod według odpowiedzialności i szwów, nie według arbitralnego limitu linii.

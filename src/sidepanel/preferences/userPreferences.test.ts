@@ -174,7 +174,7 @@ describe('UserPreferences', () => {
       });
     });
 
-    it('deterministically selects the first available provider in registry order when multiple keys exist and current model is unavailable', async () => {
+    it('deterministically selects the first available provider in model catalog order when multiple keys exist and current model is unavailable', async () => {
       // Order is gemini -> openai -> claude
       // Here: OpenAI and Claude have keys, current model is invalid Gemini model
       storageData[STORAGE_KEYS.OPENAI_API_KEY] = 'openai-key';

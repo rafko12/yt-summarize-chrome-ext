@@ -1,4 +1,5 @@
 import { ConversationMessage, TranscriptSegment } from '../../domain/analysis';
+import { AiProvider, getAiModel, getAiProvider } from './modelCatalog';
 import {
   getChatSystemInstruction,
   getSummarySystemInstruction,
@@ -9,12 +10,11 @@ import {
 import { createAnthropicProvider } from './providers/anthropic';
 import { createGeminiProvider } from './providers/gemini';
 import { createOpenaiProvider } from './providers/openai';
-import { AiProvider, getAiModel, getAiProvider } from './registry';
 import {
+  AiProviderAdapter,
+  AiRequest,
+  AiRequestError,
   getSafeErrorMessage,
-  LlmProvider,
-  LlmRequest,
-  LlmRequestError,
 } from './types';
 
 export interface ValidationResult {
@@ -58,7 +58,7 @@ export const formatTranscript = (transcript: TranscriptSegment[]) =>
 export function getProvider(model: string): AiProvider {
   const configuredModel = getAiModel(model);
   if (configuredModel) return configuredModel.provider;
-  throw new LlmRequestError(
+  throw new AiRequestError(
     'unknown',
     'Wybrany model nie jest obsługiwany przez rozszerzenie.'
   );
@@ -67,7 +67,7 @@ export function getProvider(model: string): AiProvider {
 export function createAiClient(customFetch?: typeof fetch): AiClient {
   const fetchImpl: typeof fetch =
     customFetch ?? ((...args) => globalThis.fetch(...args));
-  const providers: Record<AiProvider, LlmProvider> = {
+  const providers: Record<AiProvider, AiProviderAdapter> = {
     gemini: createGeminiProvider(fetchImpl),
     openai: createOpenaiProvider(fetchImpl),
     claude: createAnthropicProvider(fetchImpl),
@@ -75,19 +75,19 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
 
   async function requestProvider(
     provider: AiProvider,
-    request: LlmRequest
+    request: AiRequest
   ): Promise<string> {
     try {
       return await providers[provider].request(request);
     } catch (error: unknown) {
-      if (error instanceof LlmRequestError) throw error;
-      throw new LlmRequestError(provider, getSafeErrorMessage(provider));
+      if (error instanceof AiRequestError) throw error;
+      throw new AiRequestError(provider, getSafeErrorMessage(provider));
     }
   }
 
   async function requestForModel(
     model: string,
-    request: Omit<LlmRequest, 'model'>
+    request: Omit<AiRequest, 'model'>
   ): Promise<string> {
     return requestProvider(getProvider(model), { ...request, model });
   }

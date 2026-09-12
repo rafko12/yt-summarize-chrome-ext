@@ -1,12 +1,11 @@
 import { ConversationMessage, TranscriptSegment } from '../../domain/analysis';
-import { AiProvider } from './registry';
+import { AiProvider } from './modelCatalog';
 
 export type { ConversationMessage, TranscriptSegment };
 
-export type LlmProviderName = AiProvider;
-export type LlmErrorProviderName = LlmProviderName | 'unknown';
+export type AiErrorProviderName = AiProvider | 'unknown';
 
-export interface LlmRequest {
+export interface AiRequest {
   apiKey: string;
   model: string;
   systemInstruction: string;
@@ -15,30 +14,26 @@ export interface LlmRequest {
   maxTokens?: number;
 }
 
-export interface LlmProvider {
-  readonly name: LlmProviderName;
-  request(request: LlmRequest): Promise<string>;
+export interface AiProviderAdapter {
+  readonly name: AiProvider;
+  request(request: AiRequest): Promise<string>;
 }
 
-export class LlmRequestError extends Error {
-  readonly provider: LlmErrorProviderName;
+export class AiRequestError extends Error {
+  readonly provider: AiErrorProviderName;
 
   readonly status?: number;
 
-  constructor(
-    provider: LlmErrorProviderName,
-    message: string,
-    status?: number
-  ) {
+  constructor(provider: AiErrorProviderName, message: string, status?: number) {
     super(message);
-    this.name = 'LlmRequestError';
+    this.name = 'AiRequestError';
     this.provider = provider;
     this.status = status;
   }
 }
 
 export function getSafeErrorMessage(
-  provider: LlmErrorProviderName,
+  provider: AiErrorProviderName,
   status?: number
 ): string {
   if (status === 401 || status === 403) {

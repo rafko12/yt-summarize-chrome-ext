@@ -1,13 +1,13 @@
 import {
+  AiProviderAdapter,
+  AiRequest,
+  AiRequestError,
   getSafeErrorMessage,
-  LlmProvider,
-  LlmRequest,
-  LlmRequestError,
 } from '../types';
 
 export function createAnthropicProvider(
   customFetch?: typeof fetch
-): LlmProvider {
+): AiProviderAdapter {
   const fetchImpl: typeof fetch =
     customFetch ?? ((...args) => globalThis.fetch(...args));
 
@@ -20,7 +20,7 @@ export function createAnthropicProvider(
       userMessage,
       chatHistory = [],
       maxTokens,
-    }: LlmRequest): Promise<string> {
+    }: AiRequest): Promise<string> {
       const response = await fetchImpl(
         'https://api.anthropic.com/v1/messages',
         {
@@ -48,7 +48,7 @@ export function createAnthropicProvider(
       );
 
       if (!response.ok) {
-        throw new LlmRequestError(
+        throw new AiRequestError(
           'claude',
           getSafeErrorMessage('claude', response.status),
           response.status
@@ -58,7 +58,7 @@ export function createAnthropicProvider(
       const result = await response.json();
       const text = result?.content?.[0]?.text;
       if (!text) {
-        throw new LlmRequestError(
+        throw new AiRequestError(
           'claude',
           'Dostawca AI zwrócił pustą odpowiedź.'
         );

@@ -1,11 +1,13 @@
 import {
+  AiProviderAdapter,
+  AiRequest,
+  AiRequestError,
   getSafeErrorMessage,
-  LlmProvider,
-  LlmRequest,
-  LlmRequestError,
 } from '../types';
 
-export function createGeminiProvider(customFetch?: typeof fetch): LlmProvider {
+export function createGeminiProvider(
+  customFetch?: typeof fetch
+): AiProviderAdapter {
   const fetchImpl: typeof fetch =
     customFetch ?? ((...args) => globalThis.fetch(...args));
 
@@ -18,7 +20,7 @@ export function createGeminiProvider(customFetch?: typeof fetch): LlmProvider {
       userMessage,
       chatHistory = [],
       maxTokens,
-    }: LlmRequest): Promise<string> {
+    }: AiRequest): Promise<string> {
       const body: {
         contents: { role: string; parts: { text: string }[] }[];
         systemInstruction: { parts: { text: string }[] };
@@ -47,7 +49,7 @@ export function createGeminiProvider(customFetch?: typeof fetch): LlmProvider {
       );
 
       if (!response.ok) {
-        throw new LlmRequestError(
+        throw new AiRequestError(
           'gemini',
           getSafeErrorMessage('gemini', response.status),
           response.status
@@ -57,7 +59,7 @@ export function createGeminiProvider(customFetch?: typeof fetch): LlmProvider {
       const result = await response.json();
       const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!text) {
-        throw new LlmRequestError(
+        throw new AiRequestError(
           'gemini',
           result?.candidates?.[0]?.finishReason === 'SAFETY'
             ? 'Dostawca AI odmówił wygenerowania odpowiedzi ze względów bezpieczeństwa.'

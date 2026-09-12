@@ -33,7 +33,7 @@ function mockJsonResponse(body: unknown, ok = true, status = 200) {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('LLM client', () => {
+describe('AI client', () => {
   describe('formatTranscript', () => {
     it('should format transcript correctly for normal times', () => {
       const transcript = [

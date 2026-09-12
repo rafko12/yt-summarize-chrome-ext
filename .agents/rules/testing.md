@@ -27,7 +27,7 @@ Testuj zachowanie przez interfejs używany przez kod produkcyjny:
 1. panel boczny — instalacja sterownika z kontrolowanym adapterem Chrome;
 2. storage — operacje wysokiego poziomu, np. zapis analizy albo odczyt ustawień;
 3. komunikacja — wysłana wiadomość i otrzymana odpowiedź;
-4. Dostawcy AI — wspólny klient LLM z kontrolowanym adapterem `fetch`;
+4. Dostawcy AI — wspólny klient AI z kontrolowanym adapterem `fetch`;
 5. YouTube — wiadomości content scriptu i zapisane przykłady HTML;
 6. panel boczny — działanie użytkownika i widoczny rezultat.
 
@@ -48,7 +48,7 @@ Jeżeli test potwierdzi błąd, zachowaj bieżące zachowanie w refaktorze i utw
 ## Docelowe coverage
 
 - minimum 80% linii i 75% gałęzi globalnie;
-- 100% gałęzi dla sterownika panelu, kontraktów wiadomości, migracji storage i rejestru modeli.
+- 100% gałęzi dla sterownika panelu, kontraktów wiadomości, migracji storage i katalogu Modeli AI.
 
 Coverage jest bramką regresji, nie celem samym w sobie. Test musi opisywać istotne zachowanie przez zatwierdzony szew.
 

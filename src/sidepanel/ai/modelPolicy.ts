@@ -3,7 +3,7 @@ import {
   AiProvider,
   getAiModel,
   getAiProvider,
-} from './registry';
+} from './modelCatalog';
 
 /**
  * Sprawdza, czy klucz API dla danego Dostawcy AI jest niepusty.
@@ -18,8 +18,8 @@ export function hasApiKey(
 }
 
 /**
- * Sprawdza, czy wskazany model jest zarejestrowany, widoczny w interfejsie
- * oraz czy odpowiadający mu Dostawca AI posiada zapisany klucz API.
+ * Sprawdza, czy wskazany model znajduje się w katalogu Modeli AI, jest widoczny
+ * w interfejsie oraz czy odpowiadający mu Dostawca AI posiada zapisany klucz API.
  */
 export function isModelAvailable(
   model: string | null | undefined,
@@ -40,9 +40,9 @@ export interface ResolveCompatibleModelOptions {
 /**
  * Deterministyczna reguła domenowa wyboru aktywnego modelu.
  *
- * 1. Jeśli bieżący model jest zarejestrowany, widoczny w interfejsie i posiada klucz, jest zachowywany.
+ * 1. Jeśli bieżący model znajduje się w katalogu Modeli AI, jest widoczny w interfejsie i posiada klucz, jest zachowywany.
  * 2. Jeśli bieżący model jest niedostępny, a podany preferredProvider posiada klucz, wybierany jest model domyślny tego dostawcy.
- * 3. W przeciwnym razie wybierany jest model domyślny pierwszego Dostawcy AI z rejestru (AI_PROVIDERS), który posiada klucz.
+ * 3. W przeciwnym razie wybierany jest model domyślny pierwszego Dostawcy AI z katalogu Modeli AI (AI_PROVIDERS), który posiada klucz.
  * 4. W przypadku braku jakichkolwiek kluczy zwracany jest dotychczasowy model (lub domyślny fallback),
  *    bez modyfikacji trwałego formatu storage i bez tworzenia pozornie aktywnego modelu.
  */

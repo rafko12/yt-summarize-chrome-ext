@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import { AI_MODELS, AI_PROVIDERS, getDefaultAiModel } from './modelCatalog';
 import {
   hasApiKey,
   isModelAvailable,
   resolveCompatibleModel,
 } from './modelPolicy';
-import { AI_MODELS, AI_PROVIDERS, getDefaultAiModel } from './registry';
 
-describe('AI model compatibility policy and registry defaults', () => {
-  describe('Provider default models in registry', () => {
+describe('AI model compatibility policy and model catalog defaults', () => {
+  describe('Provider default models in model catalog', () => {
     it('every supported AI provider has exactly one explicit default model present in AI_MODELS', () => {
       expect(AI_PROVIDERS.length).toBeGreaterThan(0);
 
@@ -164,7 +164,7 @@ describe('AI model compatibility policy and registry defaults', () => {
       expect(result).toBe('claude-sonnet-5');
     });
 
-    it('deterministically selects the first provider in registry order when multiple keys exist and current model is invalid', () => {
+    it('deterministically selects the first provider in model catalog order when multiple keys exist and current model is invalid', () => {
       // Order in AI_PROVIDERS is gemini -> openai -> claude
       const resultWithoutGemini = resolveCompatibleModel({
         currentModel: 'invalid-model',
@@ -249,7 +249,7 @@ describe('AI model compatibility policy and registry defaults', () => {
       expect(isModelAvailable('gemini-3.6-flash', {})).toBe(false);
     });
 
-    it('falls back to registry order when preferredProvider has no key', () => {
+    it('falls back to model catalog order when preferredProvider has no key', () => {
       const result = resolveCompatibleModel({
         currentModel: 'unavailable-model',
         apiKeys: {

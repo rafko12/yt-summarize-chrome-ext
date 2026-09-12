@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   AI_MODELS,
   AI_PROVIDERS,
+  AiRequestError,
   createAiClient,
   formatTranscript,
   generateChatResponse,
@@ -25,9 +26,10 @@ describe('AI Module public seam (src/sidepanel/ai)', () => {
     expect(generateChatResponse).toBeDefined();
     expect(formatTranscript).toBeDefined();
     expect(getProvider).toBeDefined();
+    expect(AiRequestError).toBeDefined();
   });
 
-  it('exposes AI registry and model policy at the public seam', () => {
+  it('exposes AI model catalog and model policy at the public seam', () => {
     expect(AI_PROVIDERS).toBeDefined();
     expect(AI_MODELS).toBeDefined();
     expect(hasApiKey).toBeDefined();
