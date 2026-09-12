@@ -1,5 +1,3 @@
-import { MouseEvent } from 'react';
-
 import {
   AnalysisRecord,
   AnalysisRecordInput,
@@ -38,5 +36,5 @@ export interface AnalysisHistory {
 export interface HistoryViewProps {
   historyList: AnalysisRecord[];
   onResumeSession: (item: AnalysisRecord) => void;
-  onDeleteHistory: (e: MouseEvent, videoId: string) => void;
+  onDeleteHistory: (videoId: string) => void;
 }

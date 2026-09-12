@@ -1,4 +1,4 @@
-import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { AnalysisHistory, AnalysisRecord } from './types';
 
@@ -20,32 +20,26 @@ export default function useAnalysisHistory({
     loadHistory();
   }, [loadHistory]);
 
-  const handleDeleteHistory = async (e: MouseEvent, videoId: string) => {
-    e.stopPropagation();
-    // eslint-disable-next-line no-alert
-    if (window.confirm('Czy chcesz usunąć to podsumowanie z historii?')) {
+  const deleteRecord = useCallback(
+    async (videoId: string): Promise<AnalysisRecord[]> => {
       const updated = await history.deleteRecord(videoId);
       setHistoryList(updated);
-      return true; // Indicate it was deleted
-    }
-    return false;
-  };
+      return updated;
+    },
+    [history]
+  );
 
-  const handleClearHistory = async () => {
-    if (
-      // eslint-disable-next-line no-alert -- intentional user confirmation
-      window.confirm('Czy na pewno chcesz usunąć całą historię podsumowań?')
-    ) {
-      await history.clearRecords();
-      setHistoryList([]);
-    }
-  };
+  const clearRecords = useCallback(async (): Promise<void> => {
+    await history.clearRecords();
+    setHistoryList([]);
+  }, [history]);
 
   return {
     historyList,
     loadHistory,
-    handleDeleteHistory,
-    handleClearHistory,
-    clearRecords: () => history.clearRecords(),
+    deleteRecord,
+    clearRecords,
+    handleDeleteHistory: deleteRecord,
+    handleClearHistory: clearRecords,
   };
 }

@@ -60,7 +60,10 @@ export default function HistoryView({
               <div className='flex shrink-0 gap-1'>
                 <button
                   type='button'
-                  onClick={(e) => onDeleteHistory(e, item.videoId)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteHistory(item.videoId);
+                  }}
                   className='btn btn-ghost btn-xs text-error hover:bg-error/15 btn-circle'
                   title='Usuń'
                   aria-label='Usuń z historii'

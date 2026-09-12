@@ -885,6 +885,62 @@ describe('side panel user flow', () => {
     );
   });
 
+  test('cancels clearing all API keys and history in danger zone when user rejects confirmation in window.confirm', async () => {
+    const confirmSpy = vi
+      .spyOn(window, 'confirm')
+      .mockImplementation(() => false);
+
+    stored.gemini_api_key = 'preserved-gemini-key';
+    stored.theme = 'night';
+    stored.user_settings = { language: 'English', model: 'gpt-5.6-terra' };
+    stored.summarizer_history = [
+      {
+        videoId: 'movie',
+        title: 'Movie',
+        author: 'Creator',
+        thumbnailUrl: 'thumbnail',
+        summary: 'Preserved summary',
+        transcript: [],
+        chat: [],
+        createdAt: 1000,
+      },
+    ];
+
+    renderApp();
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+    // Switch to settings
+    fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+    await waitFor(() => expect(screen.getByText(/Konfiguracja/)).toBeVisible());
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: /Usuń wszystkie klucze API i historię/,
+      })
+    );
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      'Czy na pewno chcesz usunąć wszystkie klucze API oraz całą historię? Tej operacji nie można cofnąć.'
+    );
+
+    // Verify data in storage was not changed
+    expect(stored.gemini_api_key).toBe('preserved-gemini-key');
+    expect(stored.summarizer_history).toHaveLength(1);
+    expect(stored.theme).toBe('night');
+    expect(stored.user_settings).toEqual({
+      language: 'English',
+      model: 'gpt-5.6-terra',
+    });
+
+    // Switch back to analyze tab - session still preserved and no API key error
+    fireEvent.click(screen.getByRole('button', { name: 'Analizuj' }));
+    await waitFor(() => {
+      expect(screen.getByText('Preserved summary')).toBeVisible();
+      expect(screen.queryByText('Wymagany klucz API')).not.toBeInTheDocument();
+    });
+  });
+
   test('renders a single vertical scroll container for long summary and chat conversation with interactive timestamps', async () => {
     const longSummary =
       '## Główne wątki\n- Pierwszy punkt [01:15]\n- Drugi punkt z opisem [04:30]\n### Szczegóły\nKolejne rozwinięcie [10:00]';

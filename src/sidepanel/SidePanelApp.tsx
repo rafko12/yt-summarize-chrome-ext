@@ -1,4 +1,4 @@
-import { JSX, MouseEvent, useEffect, useRef, useState } from 'react';
+import { JSX, useEffect, useRef, useState } from 'react';
 import { WarningCircle } from '@phosphor-icons/react';
 
 import { AnalysisRecord } from '../domain/analysis';
@@ -99,10 +99,20 @@ export default function SidePanelApp({
     setActiveTab('analyze');
   };
 
-  const handleDeleteHistory = async (e: MouseEvent, videoId: string) => {
-    const deleted = await historyHook.handleDeleteHistory(e, videoId);
-    if (deleted) {
+  const handleDeleteHistory = async (videoId: string) => {
+    // eslint-disable-next-line no-alert -- intentional user confirmation
+    if (window.confirm('Czy chcesz usunąć to podsumowanie z historii?')) {
+      await historyHook.deleteRecord(videoId);
       analysisSession.handleDeleteHistoryCleanup(videoId);
+    }
+  };
+
+  const handleClearHistory = async () => {
+    if (
+      // eslint-disable-next-line no-alert -- intentional user confirmation
+      window.confirm('Czy na pewno chcesz usunąć całą historię podsumowań?')
+    ) {
+      await historyHook.clearRecords();
     }
   };
 
@@ -213,7 +223,7 @@ export default function SidePanelApp({
               onDeleteApiKey={settingsHook.handleDeleteApiKey}
               onModelChange={settingsHook.handleModelChange}
               onLanguageChange={settingsHook.handleLanguageChange}
-              onClearHistory={historyHook.handleClearHistory}
+              onClearHistory={handleClearHistory}
               onClearApiKeysAndHistory={handleClearApiKeysAndHistory}
             />
           )}

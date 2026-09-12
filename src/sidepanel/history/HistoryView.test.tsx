@@ -65,12 +65,30 @@ describe('HistoryView (src/sidepanel/history)', () => {
 
     const deleteButton = screen.getByRole('button', { name: /Usuń/ });
     fireEvent.click(deleteButton);
-    expect(onDeleteHistory).toHaveBeenCalledWith(expect.anything(), 'v123');
+    expect(onDeleteHistory).toHaveBeenCalledWith('v123');
+    // Clicking delete button must not trigger onResumeSession on the parent card (e.stopPropagation)
+    expect(onResumeSession).toHaveBeenCalledTimes(3);
 
     const thumbnail = screen.getByAltText('Thumbnail');
     fireEvent.error(thumbnail);
     expect((thumbnail as HTMLImageElement).src).toContain(
       'https://www.youtube.com/img/desktop/yt_1200.png'
     );
+  });
+
+  it('stops click propagation when clicking delete button so that resuming session is not triggered', () => {
+    render(
+      <HistoryView
+        historyList={[sampleRecord]}
+        onResumeSession={onResumeSession}
+        onDeleteHistory={onDeleteHistory}
+      />
+    );
+
+    const deleteButton = screen.getByRole('button', { name: /Usuń/ });
+    fireEvent.click(deleteButton);
+
+    expect(onDeleteHistory).toHaveBeenCalledWith('v123');
+    expect(onResumeSession).not.toHaveBeenCalled();
   });
 });
