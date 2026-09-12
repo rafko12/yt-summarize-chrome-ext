@@ -765,6 +765,46 @@ describe('side panel user flow', () => {
     expect(record.chat).toEqual([]);
   });
 
+  test('cancels clearing chat when user rejects confirmation in window.confirm', async () => {
+    const confirmSpy = vi
+      .spyOn(window, 'confirm')
+      .mockImplementation(() => false);
+
+    stored.summarizer_history = [
+      {
+        videoId: 'movie',
+        title: 'Movie',
+        author: 'Creator',
+        thumbnailUrl: 'thumbnail',
+        summary: 'Existing summary',
+        transcript: [{ start: 0, duration: 2, text: 'Transcript' }],
+        chat: [
+          { role: 'user', message: 'Hello' },
+          { role: 'model', message: 'Hi there' },
+        ],
+        createdAt: 1000,
+      },
+    ];
+
+    renderApp();
+
+    await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+    expect(screen.getByText('Hi there')).toBeVisible();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Wyczyść' }));
+
+    expect(confirmSpy).toHaveBeenCalledWith(
+      'Wyczyścić rozmowę dla tego filmu?'
+    );
+    expect(screen.getByText('Hi there')).toBeVisible();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const record = (stored.summarizer_history as any[]).find(
+      (r) => r.videoId === 'movie'
+    );
+    expect(record.chat).toHaveLength(2);
+  });
+
   test('cleans up analysis session when current video history record is deleted', async () => {
     vi.spyOn(window, 'confirm').mockImplementation(() => true);
 

@@ -1,4 +1,4 @@
-import { FormEvent, useCallback, useReducer, useRef } from 'react';
+import { useCallback, useReducer, useRef } from 'react';
 
 import { AnalysisRecord, ConversationMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../messaging';
@@ -220,12 +220,7 @@ export default function useAnalysisSession({
   );
 
   const handleSendChatMessage = useCallback(
-    async (
-      e: FormEvent,
-      settings: Settings,
-      apiKeys: Record<AiProvider, string>
-    ) => {
-      e.preventDefault();
+    async (settings: Settings, apiKeys: Record<AiProvider, string>) => {
       const {
         currentFilm,
         chatInput,
@@ -322,12 +317,9 @@ export default function useAnalysisSession({
   );
 
   const handleClearChat = useCallback(() => {
-    // eslint-disable-next-line no-alert
-    if (window.confirm('Wyczyścić rozmowę dla tego filmu?')) {
-      dispatch({ type: 'CLEAR_CHAT' });
-      if (stateRef.current.currentFilm) {
-        history.updateRecordChat(stateRef.current.currentFilm.videoId, []);
-      }
+    dispatch({ type: 'CLEAR_CHAT' });
+    if (stateRef.current.currentFilm) {
+      history.updateRecordChat(stateRef.current.currentFilm.videoId, []);
     }
   }, [history]);
 

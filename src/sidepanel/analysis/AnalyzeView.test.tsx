@@ -20,7 +20,7 @@ const callbacks = {
   save: vi.fn(),
   seek: vi.fn(),
   selectTab: vi.fn(),
-  send: vi.fn((event) => event.preventDefault()),
+  send: vi.fn(),
   setTab: vi.fn(),
   summarize: vi.fn(),
   theme: vi.fn(),
@@ -86,9 +86,13 @@ describe('AnalyzeView', () => {
     fireEvent.change(screen.getByPlaceholderText(/Zadaj pytanie/), {
       target: { value: 'Inne pytanie' },
     });
-    fireEvent.submit(
-      screen.getByPlaceholderText(/Zadaj pytanie/).closest('form')!
-    );
+    const chatForm = screen
+      .getByPlaceholderText(/Zadaj pytanie/)
+      .closest('form')!;
+    const notPrevented = fireEvent.submit(chatForm);
+    expect(notPrevented).toBe(false);
+    expect(callbacks.send).toHaveBeenCalledExactlyOnceWith();
+
     fireEvent.click(screen.getByRole('button', { name: '00:45' }));
     expect(callbacks.seek).toHaveBeenCalledWith(45);
 
@@ -97,7 +101,6 @@ describe('AnalyzeView', () => {
 
     expect(callbacks.clear).toHaveBeenCalled();
     expect(callbacks.input).toHaveBeenCalledWith('Inne pytanie');
-    expect(callbacks.send).toHaveBeenCalled();
 
     const scrollContainer = screen
       .getByText(film.title)

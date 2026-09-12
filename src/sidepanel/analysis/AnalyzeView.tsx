@@ -28,7 +28,7 @@ interface AnalyzeViewProps {
 
   onLoadActiveFilm: () => void;
   onClearChat: () => void;
-  onSendChatMessage: (e: FormEvent) => void;
+  onSendChatMessage: () => void;
   onChatInputChange: (val: string) => void;
   onSummarizeFilm: () => void;
   onSetActiveTab: (tab: SidePanelTab) => void;
@@ -62,6 +62,11 @@ export default function AnalyzeView({
       chatListRef.current.scrollTop = chatListRef.current.scrollHeight;
     }
   }, [chatMessages, isSendingChat, isLoading]);
+
+  const handleSubmitChatMessage = (e: FormEvent) => {
+    e.preventDefault();
+    onSendChatMessage();
+  };
 
   return (
     <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
@@ -208,7 +213,7 @@ export default function AnalyzeView({
                 )}
 
                 <form
-                  onSubmit={onSendChatMessage}
+                  onSubmit={handleSubmitChatMessage}
                   className={`bg-base-100 flex items-center gap-1.5 p-1.5 ${chatMessages.length === 0 ? 'rounded-xl' : ''}`}
                 >
                   <input

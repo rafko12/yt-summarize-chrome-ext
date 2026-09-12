@@ -123,6 +123,13 @@ export default function SidePanelApp({
     }
   };
 
+  const handleClearChat = () => {
+    // eslint-disable-next-line no-alert -- intentional user confirmation
+    if (window.confirm('Wyczyścić rozmowę dla tego filmu?')) {
+      analysisSession.handleClearChat();
+    }
+  };
+
   return (
     <div id='my-ext' data-theme={settingsHook.theme}>
       <div className='bg-base-100 relative flex h-dvh w-full flex-col overflow-hidden font-sans'>
@@ -161,10 +168,9 @@ export default function SidePanelApp({
               chatInput={analysisSession.chatInput}
               settings={settingsHook.settings}
               onLoadActiveFilm={analysisSession.loadActiveFilm}
-              onClearChat={analysisSession.handleClearChat}
-              onSendChatMessage={(e) =>
+              onClearChat={handleClearChat}
+              onSendChatMessage={() =>
                 analysisSession.handleSendChatMessage(
-                  e,
                   settingsHook.settings,
                   settingsHook.apiKeys
                 )
