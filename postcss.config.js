@@ -24,7 +24,11 @@ function transformSelector(prefix, selector, prefixedSelector) {
   if (selector === ':host') {
     return ':host';
   }
-  if (selector === prefix || selector === '#my-ext') {
+  if (
+    selector === prefix ||
+    selector === '#my-ext' ||
+    selector === '#my-ext-sidepanel-page'
+  ) {
     return selector;
   }
   if (

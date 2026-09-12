@@ -426,4 +426,48 @@ describe('konfiguracja buildu Vite i manifestu', () => {
     );
     expect(viteSource).toContain("'assets/fonts/[name][extname]'");
   });
+
+  it('potwierdza przełączenie panelu bocznego na bezpośredni root React bez Shadow DOM (AC #79)', () => {
+    // 1. Punkt wejścia panelu bocznego nie importuje createIsolatedRoot ani stylów z ?inline
+    const sidePanelIndexSource = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/index.tsx'),
+      'utf-8'
+    );
+    expect(sidePanelIndexSource).not.toContain('createIsolatedRoot');
+    expect(sidePanelIndexSource).not.toContain('index.css?inline');
+    expect(sidePanelIndexSource).toContain("import '@assets/styles/index.css'");
+    expect(sidePanelIndexSource).toContain('loadGeistFonts');
+    expect(sidePanelIndexSource).toContain('createRoot');
+    expect(sidePanelIndexSource).toContain('my-ext-sidepanel-page');
+
+    // 2. Dokument panelu bocznego ładuje arkusz stylów i definiuje kontener roota
+    const sidePanelHtml = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/index.html'),
+      'utf-8'
+    );
+    expect(sidePanelHtml).toContain('id="my-ext-sidepanel-page"');
+    expect(sidePanelHtml).toContain(
+      '<link rel="stylesheet" href="../assets/styles/index.css"'
+    );
+
+    // 3. Style zawierają reguły zapobiegające overflow i zapewniające pełną wysokość
+    const indexCss = fs.readFileSync(
+      resolve(__dirname, 'src/assets/styles/index.css'),
+      'utf-8'
+    );
+    expect(indexCss).toContain('#my-ext-sidepanel-page');
+
+    // 4. Artefakt produkcyjny ładuje bezpośredni arkusz CSS do dokumentu panelu
+    const distSidePanelHtmlPath = resolve(
+      __dirname,
+      'dist_chrome/src/sidepanel/index.html'
+    );
+    if (fs.existsSync(distSidePanelHtmlPath)) {
+      const distHtml = fs.readFileSync(distSidePanelHtmlPath, 'utf-8');
+      expect(distHtml).toMatch(
+        /<link rel="stylesheet"[^>]*href="\/assets\/index-[^"]+\.css">/
+      );
+      expect(distHtml).toContain('id="my-ext-sidepanel-page"');
+    }
+  });
 });
