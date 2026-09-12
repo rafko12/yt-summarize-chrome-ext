@@ -188,4 +188,58 @@ describe('konfiguracja buildu Vite i manifestu', () => {
       fs.existsSync(resolve(__dirname, 'src/sidepanel/ai/registry.ts'))
     ).toBe(false);
   });
+
+  it('potwierdza brak przejściowych aliasów i nierespektowanych wzorców w kodzie produkcyjnym oraz testach', () => {
+    const srcDir = resolve(__dirname, 'src');
+
+    function getAllSourceFiles(dir: string): string[] {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      const files: string[] = [];
+      entries.forEach((entry) => {
+        const fullPath = resolve(dir, entry.name);
+        if (entry.isDirectory()) {
+          files.push(...getAllSourceFiles(fullPath));
+        } else if (/\.(ts|tsx)$/.test(entry.name)) {
+          files.push(fullPath);
+        }
+      });
+      return files;
+    }
+
+    const forbiddenPatterns = [
+      'PopupContainer',
+      'PopupTab',
+      'YoutubePagePlatform',
+      'createYoutubePage',
+      'youtubePageOverride',
+      'saveAnalysisSession',
+      'createLocalStorageAdapter',
+      'ChromeSidePanelPlatform',
+      'ChromeStorageLocalPlatform',
+    ];
+
+    const allFiles = getAllSourceFiles(srcDir);
+    allFiles.forEach((filePath) => {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      forbiddenPatterns.forEach((pattern) => {
+        expect(
+          content.includes(pattern),
+          `Plik ${filePath} nie powinien zawierać wycofanego aliasu ${pattern}`
+        ).toBe(false);
+      });
+    });
+  });
+
+  it('potwierdza konfigurację progów 100% gałęzi dla krytycznych modułów w vitest.config.ts', () => {
+    const vitestSource = fs.readFileSync(
+      resolve(__dirname, 'vitest.config.ts'),
+      'utf-8'
+    );
+    expect(vitestSource).toContain(
+      "'src/background/sidePanelController.ts': {"
+    );
+    expect(vitestSource).toContain("'src/messaging/messages.ts': {");
+    expect(vitestSource).toContain("'src/sidepanel/ai/modelCatalog.ts': {");
+    expect(vitestSource).toContain('branches: 100');
+  });
 });
