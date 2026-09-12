@@ -51,14 +51,13 @@ Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/
 
 ### Strona opcji
 
-`src/options/` jest osobnym punktem wejścia React (`Options.tsx`). Nie współdzieli stanu renderowania z panelem bocznym.
+`src/options/` jest osobnym punktem wejścia React (`Options.tsx`), montowanym bezpośrednio w dokumencie strony opcji (`mountOptions`). Nie współdzieli stanu renderowania z panelem bocznym.
 
 ## Moduły współdzielone
 
 - `src/domain/analysis.ts` — kanoniczne typy domeny analizy (Film, segment transkrypcji, wiadomość rozmowy, Zapis analizy).
 - `src/messaging/` — czyste kontrakty wiadomości, odpowiedzi i ich walidatory (`messages.ts`, `index.ts`).
 - `src/storage/` — kanoniczne źródło stabilnych kluczy storage (`keys.ts`) oraz jedyny wspólny adapter `chrome.storage.local` (`chromeStorageLocalAdapter.ts`).
-- `src/ui/createIsolatedRoot.ts` — tworzenie izolowanego korzenia UI (host, Shadow DOM, pointer events, fonty, arkusz stylów, fallback i React root).
 - `src/assets/` — style i fonty (`geistFonts.ts`).
 
 ## Przepływy danych

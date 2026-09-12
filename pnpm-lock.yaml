@@ -49,9 +49,6 @@ devDependencies:
   '@testing-library/user-event':
     specifier: ^14.6.5
     version: 14.6.5(@testing-library/dom@10.4.1)
-  '@thedutchcoder/postcss-rem-to-px':
-    specifier: ^0.0.2
-    version: 0.0.2(postcss@8.5.6)
   '@types/chrome':
     specifier: ^0.0.268
     version: 0.0.268
@@ -124,9 +121,6 @@ devDependencies:
   postcss:
     specifier: ^8.5.6
     version: 8.5.6
-  postcss-prefix-selector:
-    specifier: ^1.16.0
-    version: 1.16.0(postcss@8.5.6)
   prettier:
     specifier: ^3.2.5
     version: 3.2.5
@@ -2060,15 +2054,6 @@ packages:
       '@testing-library/dom': '>=7.21.4'
     dependencies:
       '@testing-library/dom': 10.4.1
-    dev: true
-
-  /@thedutchcoder/postcss-rem-to-px@0.0.2(postcss@8.5.6):
-    resolution: {integrity: sha512-M2T3bJSTgLtZF8+KDYDtSDAFGuTlaxYfitpjkmNswnfJ8AjbQ/g7NC+bqgAAViYWFV9I3tdrQuQ3Bu8j7GrjwA==}
-    engines: {node: '>=12.0.0'}
-    peerDependencies:
-      postcss: ^8.3.0
-    dependencies:
-      postcss: 8.5.6
     dev: true
 
   /@types/aria-query@5.0.4:
@@ -5365,14 +5350,6 @@ packages:
     engines: {node: '>=12'}
     peerDependencies:
       postcss: ^8.3.5
-    dependencies:
-      postcss: 8.5.6
-    dev: true
-
-  /postcss-prefix-selector@1.16.0(postcss@8.5.6):
-    resolution: {integrity: sha512-rdVMIi7Q4B0XbXqNUEI+Z4E+pueiu/CS5E6vRCQommzdQ/sgsS4dK42U7GX8oJR+TJOtT+Qv3GkNo6iijUMp3Q==}
-    peerDependencies:
-      postcss: '>4 <9'
     dependencies:
       postcss: 8.5.6
     dev: true

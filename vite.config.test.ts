@@ -374,35 +374,18 @@ describe('konfiguracja buildu Vite i manifestu', () => {
     expect(indexCss).toContain('night --default');
     expect(indexCss).toContain('nord');
 
-    // 2. Właściciele stylów dokumentu, korzenia i przewijania nie wymagają wyłącznie :host
+    // 2. Właściciele stylów dokumentu, korzenia i przewijania nie wymagają :host
     expect(indexCss).toMatch(
       /html,\s*body\s*\{[^}]*font-family:\s*'Geist Sans'/
     );
     expect(indexCss).toMatch(/html,\s*body\s*\{[^}]*overflow:\s*hidden/);
-    expect(indexCss).toMatch(
-      /:host,\s*#my-ext\s*\{[^}]*font-family:\s*'Geist Sans'/
-    );
-    expect(indexCss).toMatch(/:host,\s*#my-ext\s*\{[^}]*font-weight:\s*500/);
-    expect(indexCss).toMatch(/:host,\s*#my-ext\s*\{[^}]*font-size:\s*16px/);
+    expect(indexCss).toMatch(/#my-ext\s*\{[^}]*font-family:\s*'Geist Sans'/);
+    expect(indexCss).toMatch(/#my-ext\s*\{[^}]*font-weight:\s*500/);
+    expect(indexCss).toMatch(/#my-ext\s*\{[^}]*font-size:\s*16px/);
     expect(indexCss).toContain('::-webkit-scrollbar');
     expect(indexCss).toContain('scrollbar-width: thin');
 
-    // 3. PostCSS transformSelector udostępnia selektory dokumentu, roota i motywów bez wyłącznego :host
-    const postcssConfig = fs.readFileSync(
-      resolve(__dirname, 'postcss.config.js'),
-      'utf-8'
-    );
-    expect(postcssConfig).toContain("selector === ':root'");
-    expect(postcssConfig).toContain("':host, :root'");
-    expect(postcssConfig).toContain("selector === 'html'");
-    expect(postcssConfig).toContain("':host, html'");
-    expect(postcssConfig).toContain("selector === 'body'");
-    expect(postcssConfig).toContain("':host, body'");
-    expect(postcssConfig).toContain("selector === '#my-ext'");
-    // eslint-disable-next-line no-template-curly-in-string
-    expect(postcssConfig).toContain('`:host ${selector}, ${selector}`');
-
-    // 4. Fonty można ładować bezpośrednio bez adaptera Chrome (chrome.runtime.getURL)
+    // 3. Fonty można ładować bezpośrednio bez adaptera Chrome (chrome.runtime.getURL)
     const geistFontsSource = fs.readFileSync(
       resolve(__dirname, 'src/assets/geistFonts.ts'),
       'utf-8'
@@ -413,13 +396,7 @@ describe('konfiguracja buildu Vite i manifestu', () => {
     expect(geistFontsSource).toContain('export function loadGeistFonts');
     expect(geistFontsSource).not.toContain('chrome.runtime.getURL');
 
-    const isolatedRootSource = fs.readFileSync(
-      resolve(__dirname, 'src/ui/createIsolatedRoot.ts'),
-      'utf-8'
-    );
-    expect(isolatedRootSource).not.toContain('chrome.runtime.getURL');
-
-    // 5. Konfiguracja wyjścia Rollup gwarantuje emisję fontów do assets/fonts/
+    // 4. Konfiguracja wyjścia Rollup gwarantuje emisję fontów do assets/fonts/
     const viteSource = fs.readFileSync(
       resolve(__dirname, 'vite.config.ts'),
       'utf-8'
@@ -465,9 +442,86 @@ describe('konfiguracja buildu Vite i manifestu', () => {
     if (fs.existsSync(distSidePanelHtmlPath)) {
       const distHtml = fs.readFileSync(distSidePanelHtmlPath, 'utf-8');
       expect(distHtml).toMatch(
-        /<link rel="stylesheet"[^>]*href="\/assets\/index-[^"]+\.css">/
+        /<link rel="stylesheet"[^>]*href="\/assets\/[^"]+\.css">/
       );
       expect(distHtml).toContain('id="my-ext-sidepanel-page"');
+    }
+  });
+
+  it('potwierdza przełączenie strony opcji i usunięcie nieużywanej izolacji UI (AC #80)', () => {
+    // 1. Punkt wejścia strony opcji montuje React bezpośrednio bez createIsolatedRoot i inline CSS
+    const optionsIndexSource = fs.readFileSync(
+      resolve(__dirname, 'src/options/index.tsx'),
+      'utf-8'
+    );
+    expect(optionsIndexSource).not.toContain('createIsolatedRoot');
+    expect(optionsIndexSource).not.toContain('index.css?inline');
+    expect(optionsIndexSource).toContain("import '@assets/styles/index.css'");
+    expect(optionsIndexSource).toContain('loadGeistFonts');
+    expect(optionsIndexSource).toContain('createRoot');
+    expect(optionsIndexSource).toContain('my-ext-options-page');
+
+    // 2. Dokument strony opcji ładuje arkusz stylów i posiada kontener roota
+    const optionsHtml = fs.readFileSync(
+      resolve(__dirname, 'src/options/index.html'),
+      'utf-8'
+    );
+    expect(optionsHtml).toContain('id="my-ext-options-page"');
+    expect(optionsHtml).toContain(
+      '<link rel="stylesheet" href="../assets/styles/index.css"'
+    );
+
+    // 3. Całkowite usunięcie modułu Shadow DOM (src/ui)
+    expect(fs.existsSync(resolve(__dirname, 'src/ui'))).toBe(false);
+
+    // 4. PostCSS i style nie zawierają prefiksu selektorów, rem-to-px ani reguł :host
+    const postcssConfig = fs.readFileSync(
+      resolve(__dirname, 'postcss.config.js'),
+      'utf-8'
+    );
+    expect(postcssConfig).not.toContain('postcssPrefixSelector');
+    expect(postcssConfig).not.toContain('postcssRemToPx');
+    expect(postcssConfig).not.toContain('transformSelector');
+    expect(postcssConfig).toContain('tailwindcss()');
+    expect(postcssConfig).toContain('autoprefixer()');
+
+    const indexCss = fs.readFileSync(
+      resolve(__dirname, 'src/assets/styles/index.css'),
+      'utf-8'
+    );
+    expect(indexCss).not.toContain(':host');
+    expect(indexCss).toContain('#my-ext-options-page');
+
+    // 5. Niestandardowy plugin touchGlobalCSSPlugin został usunięty z vite.config.ts
+    const viteConfigSource = fs.readFileSync(
+      resolve(__dirname, 'vite.config.ts'),
+      'utf-8'
+    );
+    expect(viteConfigSource).not.toContain('touchGlobalCSSPlugin');
+    expect(viteConfigSource).not.toContain('touchFile');
+
+    // 6. Zależności usunięte z manifestu pakietu
+    const packageJson = JSON.parse(
+      fs.readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
+    );
+    expect(
+      packageJson.devDependencies['@thedutchcoder/postcss-rem-to-px']
+    ).toBeUndefined();
+    expect(
+      packageJson.devDependencies['postcss-prefix-selector']
+    ).toBeUndefined();
+
+    // 7. Artefakt produkcyjny strony opcji zawiera bezpośredni arkusz CSS
+    const distOptionsHtmlPath = resolve(
+      __dirname,
+      'dist_chrome/src/options/index.html'
+    );
+    if (fs.existsSync(distOptionsHtmlPath)) {
+      const distHtml = fs.readFileSync(distOptionsHtmlPath, 'utf-8');
+      expect(distHtml).toMatch(
+        /<link rel="stylesheet"[^>]*href="\/assets\/[^"]+\.css">/
+      );
+      expect(distHtml).toContain('id="my-ext-options-page"');
     }
   });
 });
