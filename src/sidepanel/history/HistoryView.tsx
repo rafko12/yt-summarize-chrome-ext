@@ -1,8 +1,12 @@
 import { ClockCounterClockwise, Trash } from '@phosphor-icons/react';
 
-import { AnalysisRecord, HistoryViewProps } from './types';
+import { AnalysisRecord } from '../../domain/analysis';
 
-export type { AnalysisRecord, HistoryViewProps };
+export interface HistoryViewProps {
+  historyList: AnalysisRecord[];
+  onResumeSession: (item: AnalysisRecord) => void;
+  onDeleteHistory: (videoId: string) => void;
+}
 
 export default function HistoryView({
   historyList,

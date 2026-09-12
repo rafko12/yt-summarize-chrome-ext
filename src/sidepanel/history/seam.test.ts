@@ -23,8 +23,6 @@ describe('History Module public seam (src/sidepanel/history)', () => {
     const adapter = createChromeStorageLocalAdapter(mockStorageLocal);
     const history = createAnalysisHistory(adapter);
 
-    expect(typeof history.saveChat).toBe('function');
-
     await history.saveChat({
       videoId: 'seam-vid',
       title: 'Seam Title',

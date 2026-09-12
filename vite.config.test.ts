@@ -242,4 +242,50 @@ describe('konfiguracja buildu Vite i manifestu', () => {
     expect(vitestSource).toContain("'src/sidepanel/ai/modelCatalog.ts': {");
     expect(vitestSource).toContain('branches: 100');
   });
+
+  it("potwierdza domknięcie granic feature'ów analizy i Historii analiz (AC #76)", () => {
+    // 1. Kontrakty nie mogą importować Reacta
+    const historyTypes = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/history/types.ts'),
+      'utf-8'
+    );
+    expect(historyTypes).not.toContain('react');
+    expect(historyTypes).not.toContain('React');
+
+    const analysisTypes = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/analysis/analysisSessionTypes.ts'),
+      'utf-8'
+    );
+    expect(analysisTypes).not.toContain('react');
+    expect(analysisTypes).not.toContain('React');
+
+    // 2. Typy właściwości widoków muszą być kolokowane z widokami, a nie w kontraktach persistence
+    expect(historyTypes).not.toContain('HistoryViewProps');
+
+    const historyViewSource = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/history/HistoryView.tsx'),
+      'utf-8'
+    );
+    expect(historyViewSource).toContain('interface HistoryViewProps');
+
+    // 3. Publiczne wejścia eksportują wyłącznie symbole używane przez composition root / produkcję
+    const analysisIndex = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/analysis/index.ts'),
+      'utf-8'
+    );
+    expect(analysisIndex).not.toContain('UseAnalysisSessionProps');
+
+    const historyIndex = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/history/index.ts'),
+      'utf-8'
+    );
+    expect(historyIndex).not.toContain('UseAnalysisHistoryProps');
+
+    // 4. Testy nie weryfikują obecności eksportów
+    const historySeamTest = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/history/seam.test.ts'),
+      'utf-8'
+    );
+    expect(historySeamTest).not.toContain('expect(typeof history.saveChat)');
+  });
 });

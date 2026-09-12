@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
-import { AnalysisHistory, AnalysisRecord } from './types';
+import { AnalysisRecord } from '../../domain/analysis';
+import { AnalysisHistory } from './types';
 
 export interface UseAnalysisHistoryProps {
   history: AnalysisHistory;

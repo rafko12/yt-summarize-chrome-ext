@@ -2,15 +2,7 @@ import {
   AnalysisRecord,
   AnalysisRecordInput,
   ConversationMessage,
-  TranscriptSegment,
 } from '../../domain/analysis';
-
-export type {
-  AnalysisRecord,
-  AnalysisRecordInput,
-  ConversationMessage,
-  TranscriptSegment,
-};
 
 export interface AnalysisHistory {
   getRecords(): Promise<AnalysisRecord[]>;
@@ -31,10 +23,4 @@ export interface AnalysisHistory {
   saveChat(session: AnalysisRecordInput): Promise<AnalysisRecord[]>;
   deleteRecord(videoId: string): Promise<AnalysisRecord[]>;
   clearRecords(): Promise<void>;
-}
-
-export interface HistoryViewProps {
-  historyList: AnalysisRecord[];
-  onResumeSession: (item: AnalysisRecord) => void;
-  onDeleteHistory: (videoId: string) => void;
 }
