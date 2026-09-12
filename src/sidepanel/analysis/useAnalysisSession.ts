@@ -1,48 +1,37 @@
-import { FormEvent, useCallback, useMemo, useReducer, useRef } from 'react';
+import { FormEvent, useCallback, useReducer, useRef } from 'react';
 
 import { AnalysisRecord, ConversationMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../messaging';
-import { createChromeStorageLocalAdapter } from '../../storage';
-import { generateChatResponse, generateSummary, getProvider } from '../ai';
-import { AnalysisHistory, createAnalysisHistory } from '../history';
+import { AiClient } from '../ai';
+import { AnalysisHistory } from '../history';
 import { AiProvider, Settings } from '../preferences';
-import { createYoutube, YoutubeIntegration } from '../youtube';
+import { YoutubeIntegration } from '../youtube';
 import {
   analysisSessionReducer,
   initialAnalysisSessionState,
 } from './analysisSessionReducer';
 
 export interface UseAnalysisSessionProps {
-  youtubeOverride?: YoutubeIntegration;
-  historyOverride?: AnalysisHistory;
+  youtube: YoutubeIntegration;
+  history: AnalysisHistory;
+  aiClient: AiClient;
   onHistoryUpdated?: () => void;
   onRequireSettings?: (message: string) => void;
 }
 
 export default function useAnalysisSession({
-  youtubeOverride,
-  historyOverride,
+  youtube,
+  history,
+  aiClient,
   onHistoryUpdated,
   onRequireSettings,
-}: UseAnalysisSessionProps = {}) {
+}: UseAnalysisSessionProps) {
   const [state, dispatch] = useReducer(
     analysisSessionReducer,
     initialAnalysisSessionState
   );
   const stateRef = useRef(state);
   stateRef.current = state;
-
-  const youtube = useMemo(
-    () => youtubeOverride || createYoutube(),
-    [youtubeOverride]
-  );
-
-  const history = useMemo(
-    () =>
-      historyOverride ||
-      createAnalysisHistory(createChromeStorageLocalAdapter()),
-    [historyOverride]
-  );
 
   const loadActiveFilm =
     useCallback(async (): Promise<AnalysisRecord | null> => {
@@ -138,7 +127,7 @@ export default function useAnalysisSession({
       const { currentFilm } = stateRef.current;
       if (!currentFilm) return;
 
-      const provider = getProvider(settings.model);
+      const provider = aiClient.getProvider(settings.model);
       const keyToUse = apiKeys[provider];
 
       if (!keyToUse) {
@@ -170,7 +159,7 @@ export default function useAnalysisSession({
           message: 'Generowanie podsumowania (może potrwać kilka sekund)...',
         });
 
-        const generatedSummary = await generateSummary(
+        const generatedSummary = await aiClient.generateSummary(
           keyToUse,
           activeTranscript,
           settings.language,
@@ -221,6 +210,7 @@ export default function useAnalysisSession({
       }
     },
     [
+      aiClient,
       ensureVideoAndTranscript,
       history,
       onHistoryUpdated,
@@ -244,7 +234,7 @@ export default function useAnalysisSession({
         chatMessages,
       } = stateRef.current;
 
-      const provider = getProvider(settings.model);
+      const provider = aiClient.getProvider(settings.model);
       const keyToUse = apiKeys[provider];
 
       if (!chatInput.trim() || !currentFilm || isSendingChat || !keyToUse) {
@@ -279,7 +269,7 @@ export default function useAnalysisSession({
 
         dispatch({ type: 'STOP_CHAT_LOADING' });
 
-        const responseText = await generateChatResponse(
+        const responseText = await aiClient.generateChatResponse(
           keyToUse,
           activeTranscript,
           chatMessages,
@@ -328,7 +318,7 @@ export default function useAnalysisSession({
         });
       }
     },
-    [ensureVideoAndTranscript, history, onHistoryUpdated]
+    [aiClient, ensureVideoAndTranscript, history, onHistoryUpdated]
   );
 
   const handleClearChat = useCallback(() => {

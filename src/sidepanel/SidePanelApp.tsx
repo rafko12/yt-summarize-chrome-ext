@@ -8,25 +8,36 @@ import sendMessageToBackground, {
   listenToPanelNotifications,
 } from './chromeBackgroundTransport';
 import { clearApiKeysAndHistory } from './dangerZone';
+import { SidePanelDependencies } from './dependencies';
 import { HistoryView, useAnalysisHistory } from './history';
 import { getCurrentPanelContext, SidePanelContext } from './panelContext';
 import { SettingsView, useSettings } from './preferences';
 import { Header, SidePanelTab, useDocumentTheme } from './shell';
 
-export default function SidePanelApp(): JSX.Element {
+export interface SidePanelAppProps {
+  dependencies: SidePanelDependencies;
+}
+
+export default function SidePanelApp({
+  dependencies,
+}: SidePanelAppProps): JSX.Element {
+  const { preferences, history, youtube, aiClient } = dependencies;
   const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');
   const [isPinnedGlobal, setIsPinnedGlobal] = useState<boolean>(false);
   const panelContextRef = useRef<SidePanelContext | null>(null);
 
   // Ustawienia (theme, api keys)
-  const settingsHook = useSettings();
+  const settingsHook = useSettings({ preferences, aiClient });
   useDocumentTheme(settingsHook.theme);
 
   // Historia analiz (zapisane analizy użytkownika)
-  const historyHook = useAnalysisHistory();
+  const historyHook = useAnalysisHistory({ history });
 
   // Sesja analizy (Film, transkrypcja, podsumowanie, rozmowa, błędy i rewizje operacji)
   const analysisSession = useAnalysisSession({
+    youtube,
+    history,
+    aiClient,
     onHistoryUpdated: historyHook.loadHistory,
     onRequireSettings: (msg) => {
       setActiveTab('settings');

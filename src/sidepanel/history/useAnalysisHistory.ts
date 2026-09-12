@@ -1,16 +1,14 @@
-import { MouseEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import { MouseEvent, useCallback, useEffect, useState } from 'react';
 
-import { createChromeStorageLocalAdapter } from '../../storage';
-import createAnalysisHistory from './analysisHistory';
 import { AnalysisHistory, AnalysisRecord } from './types';
 
-export default function useAnalysisHistory(historyOverride?: AnalysisHistory) {
-  const history = useMemo(
-    () =>
-      historyOverride ||
-      createAnalysisHistory(createChromeStorageLocalAdapter()),
-    [historyOverride]
-  );
+export interface UseAnalysisHistoryProps {
+  history: AnalysisHistory;
+}
+
+export default function useAnalysisHistory({
+  history,
+}: UseAnalysisHistoryProps) {
   const [historyList, setHistoryList] = useState<AnalysisRecord[]>([]);
 
   const loadHistory = useCallback(async () => {

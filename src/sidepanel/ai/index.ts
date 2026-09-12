@@ -1,4 +1,6 @@
 export {
+  createAiClient,
+  type AiClient,
   generateChatResponse,
   generateSummary,
   getProvider,

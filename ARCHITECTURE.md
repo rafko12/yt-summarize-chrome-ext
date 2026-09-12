@@ -35,7 +35,8 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 
 `src/sidepanel/` jest aplikacją React obsługującą analizę, Historię analiz i ustawienia.
 
-- `SidePanelApp.tsx` składa widoki i hooki jako composition root panelu.
+- `dependencies.ts` jest jawnym composition root panelu bocznego (`SidePanelDependencies`), tworzącym pojedynczy współdzielony adapter lokalnego storage dla modułów preferencji i Historii analiz oraz instancje integracji YouTube i klienta AI.
+- `SidePanelApp.tsx` składa widoki i hooki w oparciu o jawnie wstrzyknięty zestaw zależności (`SidePanelDependencies`).
 - `shell/` integruje powłokę i nagłówek panelu (`Header.tsx`) oraz synchronizację motywu dokumentu (`useDocumentTheme.ts`).
 - `analysis/` integruje widoki analizy (`AnalyzeView.tsx`, `SummaryView.tsx`), prezentacyjny renderer Markdown z timestampami (`MarkdownWithTimestamps.tsx`), parser timestampów (`timestampParser.ts`), stan analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`). Renderer timestampów nie tworzy adaptera Chrome — otrzymuje jawny callback `onSeek` z orkiestracji sesji. Przewijanie rozmowy jest efektem widoku `AnalyzeView`, nie orkiestracji sesji.
 - `youtube/` integruje dostęp do aktywnego Filmu YouTube, ukrywając odczyt karty, messaging z ponawianiem i wstrzykiwaniem skryptu oraz fallback metadanych za jednym interfejsem publicznym (`youtube.ts`) z adapterem Chrome (`chromeYoutubeAdapter.ts`).

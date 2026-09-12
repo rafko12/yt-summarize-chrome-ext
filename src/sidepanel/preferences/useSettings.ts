@@ -1,18 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-import { createChromeStorageLocalAdapter } from '../../storage';
-import { resolveCompatibleModel, validateApiKey } from '../ai';
+import { AiClient, resolveCompatibleModel } from '../ai';
 import { AiProvider, Settings, Theme, UserPreferences } from './types';
-import createUserPreferences from './userPreferences';
 
-export default function useSettings(preferencesOverride?: UserPreferences) {
-  const preferences = useMemo(
-    () =>
-      preferencesOverride ||
-      createUserPreferences(createChromeStorageLocalAdapter()),
-    [preferencesOverride]
-  );
+export interface UseSettingsProps {
+  preferences: UserPreferences;
+  aiClient: AiClient;
+}
 
+export default function useSettings({
+  preferences,
+  aiClient,
+}: UseSettingsProps) {
   // Theme state
   const [theme, setTheme] = useState<Theme>(() =>
     typeof window !== 'undefined' &&
@@ -77,7 +76,7 @@ export default function useSettings(preferencesOverride?: UserPreferences) {
     setKeyValidationMsg(null);
 
     const trimmedKey = apiKeyInput.trim();
-    const { valid, error } = await validateApiKey(
+    const { valid, error } = await aiClient.validateApiKey(
       trimmedKey,
       settings.model || 'gemini-3.6-flash',
       selectedProvider

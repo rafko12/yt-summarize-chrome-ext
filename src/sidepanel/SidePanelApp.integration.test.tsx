@@ -11,7 +11,22 @@ import {
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 import registerYoutubeNavigationEvents from '../background/youtubeNavigationEvents';
+import {
+  createSidePanelDependencies,
+  SidePanelDependencies,
+} from './dependencies';
 import SidePanelApp from './SidePanelApp';
+
+function renderApp(customDeps?: Partial<SidePanelDependencies>) {
+  return render(
+    <SidePanelApp
+      dependencies={{
+        ...createSidePanelDependencies(),
+        ...customDeps,
+      }}
+    />
+  );
+}
 
 type RuntimeListener = (message: unknown) => boolean;
 type TabUpdatedListener = (
@@ -132,7 +147,7 @@ beforeEach(() => {
 
 describe('side panel user flow', () => {
   test('loads a video, changes user preferences, and reacts to a URL update', async () => {
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
@@ -203,7 +218,7 @@ describe('side panel user flow', () => {
   });
 
   test('refreshes the visible Film after a YouTube URL update', async () => {
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -242,7 +257,7 @@ describe('side panel user flow', () => {
   });
 
   test('refreshes the visible Film from a YouTube tab update event', async () => {
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     activeTab = {
@@ -290,7 +305,7 @@ describe('side panel user flow', () => {
       },
     ];
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() =>
       expect(screen.getByText('Saved Movie Title')).toBeVisible()
@@ -320,7 +335,7 @@ describe('side panel user flow', () => {
       }),
     })) as unknown as typeof fetch;
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -359,7 +374,7 @@ describe('side panel user flow', () => {
       }),
     })) as unknown as typeof fetch;
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
@@ -391,7 +406,7 @@ describe('side panel user flow', () => {
       }
     );
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     fireEvent.click(screen.getByRole('button', { name: /Generuj/ }));
@@ -409,7 +424,7 @@ describe('side panel user flow', () => {
 
     global.fetch = vi.fn(() => pendingFetchPromise) as unknown as typeof fetch;
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -500,7 +515,7 @@ describe('side panel user flow', () => {
       },
     ];
 
-    render(<SidePanelApp />);
+    renderApp();
 
     // Wait for active tab video to load first
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
@@ -559,7 +574,7 @@ describe('side panel user flow', () => {
   });
 
   test('sends a chat question when transcript is not pre-fetched, retrieving transcript automatically', async () => {
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -603,7 +618,7 @@ describe('side panel user flow', () => {
   });
 
   test('handles AI error during chat while preserving existing chat history', async () => {
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -657,7 +672,7 @@ describe('side panel user flow', () => {
 
     global.fetch = vi.fn(() => pendingChatPromise) as unknown as typeof fetch;
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -732,7 +747,7 @@ describe('side panel user flow', () => {
       },
     ];
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     expect(screen.getByText('Hi there')).toBeVisible();
@@ -766,7 +781,7 @@ describe('side panel user flow', () => {
       },
     ];
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
     expect(screen.getByText('Summary to delete')).toBeVisible();
@@ -804,7 +819,7 @@ describe('side panel user flow', () => {
       },
     ];
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -850,7 +865,7 @@ describe('side panel user flow', () => {
       },
     ];
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() =>
       expect(
@@ -887,7 +902,7 @@ describe('side panel user flow', () => {
   });
 
   test('toggles theme between night and nord maintaining data-theme attribute and utility classes on document and extension root', async () => {
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -943,7 +958,7 @@ describe('side panel user flow', () => {
       }),
     })) as unknown as typeof fetch;
 
-    render(<SidePanelApp />);
+    renderApp();
 
     await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
@@ -971,7 +986,7 @@ describe('side panel user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1031,7 +1046,7 @@ describe('side panel user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1079,7 +1094,7 @@ describe('side panel user flow', () => {
         model: 'gemini-3.5-flash', // hidden legacy model
       };
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1127,7 +1142,7 @@ describe('side panel user flow', () => {
         model: 'gpt-5.6-terra', // user manually picked terra
       };
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1175,7 +1190,7 @@ describe('side panel user flow', () => {
         model: 'gpt-5.6-luna',
       };
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1214,7 +1229,7 @@ describe('side panel user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1252,7 +1267,7 @@ describe('side panel user flow', () => {
         model: 'gemini-3.6-flash',
       };
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open settings tab
@@ -1327,7 +1342,7 @@ describe('side panel user flow', () => {
       }) as unknown as typeof fetch;
 
       // 2. Render initial side panel
-      const { unmount } = render(<SidePanelApp />);
+      const { unmount } = renderApp();
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1413,7 +1428,7 @@ describe('side panel user flow', () => {
       // 5. Simulate reopening / reloading the panel
       unmount();
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(
           screen.getByText('Podsumowanie filmu wygenerowane przez OpenAI')
@@ -1461,7 +1476,7 @@ describe('side panel user flow', () => {
         };
       }) as unknown as typeof fetch;
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open Settings and add Claude as second key
@@ -1533,7 +1548,7 @@ describe('side panel user flow', () => {
       stored.openai_api_key = 'openai-saved-key';
       stored.claude_api_key = '';
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
@@ -1561,7 +1576,7 @@ describe('side panel user flow', () => {
     });
 
     test('toggles API key input visibility between password and text', async () => {
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
@@ -1604,7 +1619,7 @@ describe('side panel user flow', () => {
         }),
       })) as unknown as typeof fetch;
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1637,7 +1652,7 @@ describe('side panel user flow', () => {
     test('disables save button when API key input is empty or whitespace', async () => {
       stored.gemini_api_key = '';
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Wymagany klucz API')).toBeVisible()
       );
@@ -1687,7 +1702,7 @@ describe('side panel user flow', () => {
         },
       ];
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Movie Title 1')).toBeVisible()
       );
@@ -1726,7 +1741,7 @@ describe('side panel user flow', () => {
         },
       ];
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Active Movie')).toBeVisible()
       );
@@ -1796,7 +1811,7 @@ describe('side panel user flow', () => {
         },
       ];
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Active Movie')).toBeVisible()
       );
@@ -1853,7 +1868,7 @@ describe('side panel user flow', () => {
         },
       ];
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() =>
         expect(screen.getByText('Movie To Keep')).toBeVisible()
       );
@@ -1909,7 +1924,7 @@ describe('side panel user flow', () => {
         },
       ];
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open Settings tab
@@ -1966,7 +1981,7 @@ describe('side panel user flow', () => {
         },
       ];
 
-      render(<SidePanelApp />);
+      renderApp();
       await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
 
       // Open Settings tab
@@ -1990,6 +2005,94 @@ describe('side panel user flow', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Historia' }));
       await waitFor(() => {
         expect(screen.getByText('Zapisane Sesje (2)')).toBeVisible();
+      });
+    });
+
+    test('initializes panel, reads active film, preferences, and analysis history using explicitly injected controlled adapters', async () => {
+      const memory: Record<string, unknown> = {};
+      const controlledStorageAdapter = {
+        read: vi.fn(async (keys: readonly string[]) =>
+          Object.fromEntries(keys.map((k) => [k, memory[k]]))
+        ),
+        write: vi.fn(async (values: Record<string, unknown>) => {
+          Object.assign(memory, values);
+        }),
+      };
+
+      const controlledYoutubeAdapter = {
+        getActiveTab: vi.fn(async () => ({
+          id: 42,
+          url: 'https://www.youtube.com/watch?v=controlled-vid',
+          title: 'Controlled Video Title',
+        })),
+        getVideoData: vi.fn(async () => ({
+          success: true as const,
+          videoId: 'controlled-vid',
+          title: 'Controlled Video Title',
+          author: 'Controlled Author',
+          thumbnailUrl: 'https://example.com/controlled.jpg',
+        })),
+        getTranscript: vi.fn(async () => ({
+          success: true as const,
+          transcript: [
+            { start: 0, duration: 3, text: 'Controlled transcript' },
+          ],
+        })),
+        seekTo: vi.fn(async () => ({ success: true as const })),
+      };
+
+      const customFetch = vi.fn(async () => ({
+        ok: true,
+        json: async () => ({
+          candidates: [
+            { content: { parts: [{ text: 'Controlled AI response' }] } },
+          ],
+        }),
+      })) as unknown as typeof fetch;
+
+      const deps = createSidePanelDependencies({
+        storage: controlledStorageAdapter,
+        youtubeAdapter: controlledYoutubeAdapter,
+        customFetch,
+      });
+
+      // Seed preferences and history through the controlled modules
+      await deps.preferences.setApiKey('gemini', 'controlled-gemini-key');
+      await deps.preferences.setSettings({
+        language: 'Polski',
+        model: 'gemini-3.6-flash',
+      });
+      await deps.history.saveRecord({
+        videoId: 'controlled-vid',
+        title: 'Controlled Video Title',
+        author: 'Controlled Author',
+        thumbnailUrl: 'https://example.com/controlled.jpg',
+        summary: 'Controlled Summary',
+        transcript: [{ start: 0, duration: 3, text: 'Controlled transcript' }],
+        chat: [],
+      });
+
+      // Render with explicitly injected dependencies
+      render(<SidePanelApp dependencies={deps} />);
+
+      // Assert active film and restored saved session
+      await waitFor(() =>
+        expect(screen.getByText('Controlled Video Title')).toBeVisible()
+      );
+      await waitFor(() =>
+        expect(screen.getByText('Controlled Summary')).toBeVisible()
+      );
+
+      // Verify history tab access through the controlled adapter
+      fireEvent.click(screen.getByRole('button', { name: 'Historia' }));
+      await waitFor(() => {
+        expect(screen.getByText('Zapisane Sesje (1)')).toBeVisible();
+      });
+
+      // Verify settings tab access through the controlled adapter
+      fireEvent.click(screen.getByRole('button', { name: 'Opcje' }));
+      await waitFor(() => {
+        expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible();
       });
     });
   });
