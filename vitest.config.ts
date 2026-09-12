@@ -5,7 +5,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),
-      '@utils': resolve(__dirname, './src/utils'),
       '@assets': resolve(__dirname, './src/assets'),
     },
   },
@@ -29,6 +28,12 @@ export default defineConfig({
         lines: 80,
         branches: 75,
         'src/background/sidePanelController.ts': {
+          branches: 100,
+        },
+        'src/messaging/messages.ts': {
+          branches: 100,
+        },
+        'src/sidepanel/ai/modelCatalog.ts': {
           branches: 100,
         },
       },

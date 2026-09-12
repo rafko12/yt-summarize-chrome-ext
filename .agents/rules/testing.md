@@ -48,7 +48,7 @@ Jeżeli test potwierdzi błąd, zachowaj bieżące zachowanie w refaktorze i utw
 ## Docelowe coverage
 
 - minimum 80% linii i 75% gałęzi globalnie;
-- 100% gałęzi dla sterownika panelu, kontraktów wiadomości, migracji storage i katalogu Modeli AI.
+- 100% gałęzi dla sterownika panelu, kontraktów wiadomości i katalogu Modeli AI (oraz dla migracji storage po dodaniu produkcyjnego modułu migracji).
 
 Coverage jest bramką regresji, nie celem samym w sobie. Test musi opisywać istotne zachowanie przez zatwierdzony szew.
 
