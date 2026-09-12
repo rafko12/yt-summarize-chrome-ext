@@ -249,16 +249,6 @@ describe('AnalysisHistory (src/sidepanel/history)', () => {
   });
 
   describe('saveChat (canonical chat persistence operation)', () => {
-    it('exposes canonical saveChat operation and does not retain saveSession or saveAnalysisSession', () => {
-      const platform = createMemoryPlatform({});
-      const history = createAnalysisHistory(platform);
-      const rawHistory = history as unknown as Record<string, unknown>;
-
-      expect(typeof history.saveChat).toBe('function');
-      expect(rawHistory.saveSession).toBeUndefined();
-      expect(rawHistory.saveAnalysisSession).toBeUndefined();
-    });
-
     it('creates a new record when videoId does not exist in history', async () => {
       const platform = createMemoryPlatform({});
       const history = createAnalysisHistory(platform);

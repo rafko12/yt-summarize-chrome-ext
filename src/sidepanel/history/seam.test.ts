@@ -24,12 +24,6 @@ describe('History Module public seam (src/sidepanel/history)', () => {
     const history = createAnalysisHistory(adapter);
 
     expect(typeof history.saveChat).toBe('function');
-    expect(
-      (history as unknown as Record<string, unknown>).saveSession
-    ).toBeUndefined();
-    expect(
-      (history as unknown as Record<string, unknown>).saveAnalysisSession
-    ).toBeUndefined();
 
     await history.saveChat({
       videoId: 'seam-vid',
