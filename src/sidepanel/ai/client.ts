@@ -55,7 +55,7 @@ export const formatTranscript = (transcript: TranscriptSegment[]) =>
     })
     .join('\n');
 
-export function getProvider(model: string): AiProvider {
+function getProvider(model: string): AiProvider {
   const configuredModel = getAiModel(model);
   if (configuredModel) return configuredModel.provider;
   throw new AiRequestError(
@@ -184,12 +184,3 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
     },
   };
 }
-
-const defaultAiClient = createAiClient();
-
-export const validateApiKey =
-  defaultAiClient.validateApiKey.bind(defaultAiClient);
-export const generateSummary =
-  defaultAiClient.generateSummary.bind(defaultAiClient);
-export const generateChatResponse =
-  defaultAiClient.generateChatResponse.bind(defaultAiClient);

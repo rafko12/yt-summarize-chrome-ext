@@ -1,14 +1,7 @@
 // cspell:ignore generativelanguage
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  createAiClient,
-  formatTranscript,
-  generateChatResponse,
-  generateSummary,
-  getProvider,
-  validateApiKey,
-} from './client';
+import { createAiClient, formatTranscript } from './client';
 
 const existingModelProviders = {
   'gemini-3.6-flash': 'gemini',
@@ -34,6 +27,8 @@ function mockJsonResponse(body: unknown, ok = true, status = 200) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe('AI client', () => {
+  const defaultClient = createAiClient();
+
   describe('formatTranscript', () => {
     it('should format transcript correctly for normal times', () => {
       const transcript = [
@@ -56,12 +51,12 @@ describe('AI client', () => {
   describe('getProvider', () => {
     it('maps every previously supported model to its provider', () => {
       Object.entries(existingModelProviders).forEach(([model, provider]) => {
-        expect(getProvider(model)).toBe(provider);
+        expect(defaultClient.getProvider(model)).toBe(provider);
       });
     });
 
     it('rejects models missing from the explicit configuration', () => {
-      expect(() => getProvider('unknown-model')).toThrow(
+      expect(() => defaultClient.getProvider('unknown-model')).toThrow(
         'Wybrany model nie jest obsługiwany przez rozszerzenie.'
       );
     });
@@ -101,7 +96,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const summary = await generateSummary(
+      const summary = await defaultClient.generateSummary(
         'gemini-test-key',
         [{ start: 10, duration: 5, text: 'Fragment 1' }],
         'Polski',
@@ -141,7 +136,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const response = await generateChatResponse(
+      const response = await defaultClient.generateChatResponse(
         'gemini-test-key',
         [{ start: 0, duration: 5, text: 'Cześć wideo' }],
         [{ role: 'model', message: 'W czym mogę pomóc?' }],
@@ -174,7 +169,7 @@ describe('AI client', () => {
       );
 
       await expect(
-        generateSummary(
+        defaultClient.generateSummary(
           'gemini-test-key',
           [{ start: 0, duration: 5, text: 'Wrażliwa treść' }],
           'Polski',
@@ -194,7 +189,7 @@ describe('AI client', () => {
       );
 
       await expect(
-        generateSummary(
+        defaultClient.generateSummary(
           'gemini-test-key',
           [{ start: 0, duration: 5, text: 'Tekst' }],
           'Polski',
@@ -213,7 +208,7 @@ describe('AI client', () => {
       );
 
       await expect(
-        generateSummary(
+        defaultClient.generateSummary(
           'secret-key-12345',
           [{ start: 0, duration: 5, text: 'Tekst' }],
           'Polski',
@@ -236,7 +231,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const summary = await generateSummary(
+      const summary = await defaultClient.generateSummary(
         'openai-test-key',
         [{ start: 30, duration: 10, text: 'Treść odcinka' }],
         'Polski',
@@ -277,7 +272,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      await generateSummary(
+      await defaultClient.generateSummary(
         'openai-test-key',
         [{ start: 0, duration: 5, text: 'Tekst' }],
         'Polski',
@@ -309,7 +304,7 @@ describe('AI client', () => {
         );
       vi.stubGlobal('fetch', fetchMock);
 
-      const result = await generateSummary(
+      const result = await defaultClient.generateSummary(
         'openai-test-key',
         [{ start: 0, duration: 5, text: 'Tekst' }],
         'Polski',
@@ -332,7 +327,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const response = await generateChatResponse(
+      const response = await defaultClient.generateChatResponse(
         'openai-test-key',
         [{ start: 0, duration: 5, text: 'Tekst wideo' }],
         [
@@ -366,7 +361,7 @@ describe('AI client', () => {
       );
 
       await expect(
-        generateSummary(
+        defaultClient.generateSummary(
           'openai-test-key',
           [{ start: 0, duration: 5, text: 'Tekst' }],
           'Polski',
@@ -388,7 +383,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const summary = await generateSummary(
+      const summary = await defaultClient.generateSummary(
         'claude-test-key',
         [{ start: 0, duration: 20, text: 'Treść prezentacji' }],
         'Polski',
@@ -429,7 +424,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const response = await generateChatResponse(
+      const response = await defaultClient.generateChatResponse(
         'claude-test-key',
         [{ start: 0, duration: 5, text: 'Napisy filmu' }],
         [{ role: 'model', message: 'Wcześniejsza odpowiedź' }],
@@ -455,7 +450,7 @@ describe('AI client', () => {
       );
 
       await expect(
-        generateSummary(
+        defaultClient.generateSummary(
           'claude-test-key',
           [{ start: 0, duration: 5, text: 'Tekst' }],
           'Polski',
@@ -473,7 +468,7 @@ describe('AI client', () => {
       const fetchMock = vi.fn();
       vi.stubGlobal('fetch', fetchMock);
 
-      const result = await validateApiKey('   ');
+      const result = await defaultClient.validateApiKey('   ');
       expect(result).toEqual({
         valid: false,
         error: 'Klucz API nie może być pusty.',
@@ -489,7 +484,7 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const result = await validateApiKey('valid-key', 'gemini');
+      const result = await defaultClient.validateApiKey('valid-key', 'gemini');
       expect(result).toEqual({ valid: true });
 
       const [, options] = fetchMock.mock.calls[0];
@@ -509,7 +504,7 @@ describe('AI client', () => {
           .mockRejectedValue(new TypeError('Failed to fetch'));
         vi.stubGlobal('fetch', fetchMock);
 
-        await validateApiKey('test-key', undefined, provider);
+        await defaultClient.validateApiKey('test-key', undefined, provider);
 
         const [url, options] = fetchMock.mock.calls[0];
         const requestedModel = String(url).includes('generativelanguage')
@@ -530,7 +525,10 @@ describe('AI client', () => {
       );
       vi.stubGlobal('fetch', fetchMock);
 
-      const result = await validateApiKey('openai-key', 'gpt-5.6-terra');
+      const result = await defaultClient.validateApiKey(
+        'openai-key',
+        'gpt-5.6-terra'
+      );
       expect(result).toEqual({ valid: true });
 
       const [url] = fetchMock.mock.calls[0];
@@ -543,7 +541,11 @@ describe('AI client', () => {
         vi.fn().mockResolvedValue(mockJsonResponse({}, false, 429))
       );
 
-      const result = await validateApiKey('test-key', undefined, 'openai');
+      const result = await defaultClient.validateApiKey(
+        'test-key',
+        undefined,
+        'openai'
+      );
       expect(result).toEqual({
         valid: false,
         error: 'Osiągnięto limit zapytań API. Spróbuj ponownie później.',
@@ -556,7 +558,11 @@ describe('AI client', () => {
         vi.fn().mockResolvedValue(mockJsonResponse({}, false, 503))
       );
 
-      const result = await validateApiKey('test-key', undefined, 'claude');
+      const result = await defaultClient.validateApiKey(
+        'test-key',
+        undefined,
+        'claude'
+      );
       expect(result).toEqual({
         valid: false,
         error:
@@ -571,7 +577,7 @@ describe('AI client', () => {
       );
 
       await expect(
-        validateApiKey('test-key', undefined, 'openai')
+        defaultClient.validateApiKey('test-key', undefined, 'openai')
       ).resolves.toEqual({
         valid: false,
         error: 'Nie udało się uzyskać odpowiedzi od dostawcy openai.',

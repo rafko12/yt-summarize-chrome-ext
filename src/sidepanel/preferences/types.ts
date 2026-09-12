@@ -1,7 +1,5 @@
 import type { AiProvider } from '../ai';
 
-export type { AiProvider };
-
 export interface Settings {
   language: string;
   model: string;
@@ -25,25 +23,4 @@ export interface UserPreferences {
   getTheme(): Promise<Theme | null>;
   setTheme(theme: Theme): Promise<void>;
   clearApiKeys(): Promise<void>;
-}
-
-export interface SettingsViewProps {
-  selectedProvider: AiProvider;
-  apiKeys: Record<AiProvider, string>;
-  apiKeyInput: string;
-  showKey: boolean;
-  isCheckingKey: boolean;
-  keyValidationMsg: { text: string; success: boolean } | null;
-  settings: Settings;
-  hasAnyKey: boolean;
-  historyListLength: number;
-  onSelectProvider: (p: AiProvider) => void;
-  onApiKeyInputChange: (val: string) => void;
-  onToggleShowKey: () => void;
-  onSaveApiKey: () => void;
-  onDeleteApiKey: (p: AiProvider) => void;
-  onModelChange: (val: string) => void;
-  onLanguageChange: (val: string) => void;
-  onClearHistory: () => void;
-  onClearApiKeysAndHistory: () => void;
 }

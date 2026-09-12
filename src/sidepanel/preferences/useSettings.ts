@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import type { AiProvider } from '../ai';
+import type { Settings, Theme, UserPreferences } from './types';
 
 import { AiClient, resolveCompatibleModel } from '../ai';
-import { AiProvider, Settings, Theme, UserPreferences } from './types';
 
 export interface UseSettingsProps {
   preferences: UserPreferences;

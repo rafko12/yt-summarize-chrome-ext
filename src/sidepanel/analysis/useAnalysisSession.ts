@@ -1,10 +1,11 @@
 import { useCallback, useReducer, useRef } from 'react';
+import type { AiProvider } from '../ai';
 
 import { AnalysisRecord, ConversationMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../messaging';
 import { AiClient } from '../ai';
 import { AnalysisHistory } from '../history';
-import { AiProvider, Settings } from '../preferences';
+import { Settings } from '../preferences';
 import { YoutubeIntegration } from '../youtube';
 import {
   analysisSessionReducer,

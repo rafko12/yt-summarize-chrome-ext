@@ -1,8 +1,29 @@
 /* eslint-disable jsx-a11y/label-has-associated-control */
 import { CircleNotch, Eye, EyeSlash, Key, Trash } from '@phosphor-icons/react';
 
-import { AI_MODELS, AI_PROVIDERS } from '../ai';
-import { AiProvider, SettingsViewProps } from './types';
+import { AI_MODELS, AI_PROVIDERS, AiProvider } from '../ai';
+import { Settings } from './types';
+
+export interface SettingsViewProps {
+  selectedProvider: AiProvider;
+  apiKeys: Record<AiProvider, string>;
+  apiKeyInput: string;
+  showKey: boolean;
+  isCheckingKey: boolean;
+  keyValidationMsg: { text: string; success: boolean } | null;
+  settings: Settings;
+  hasAnyKey: boolean;
+  historyListLength: number;
+  onSelectProvider: (p: AiProvider) => void;
+  onApiKeyInputChange: (val: string) => void;
+  onToggleShowKey: () => void;
+  onSaveApiKey: () => void;
+  onDeleteApiKey: (p: AiProvider) => void;
+  onModelChange: (val: string) => void;
+  onLanguageChange: (val: string) => void;
+  onClearHistory: () => void;
+  onClearApiKeysAndHistory: () => void;
+}
 
 export default function SettingsView({
   selectedProvider,

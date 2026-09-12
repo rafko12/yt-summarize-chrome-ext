@@ -1,12 +1,8 @@
+import type { AiProvider } from '../ai';
+
 import { STORAGE_KEYS, StorageAdapter } from '../../storage';
 import { isModelAvailable, resolveCompatibleModel } from '../ai';
-import {
-  AiProvider,
-  InitialPreferences,
-  Settings,
-  Theme,
-  UserPreferences,
-} from './types';
+import { InitialPreferences, Settings, Theme, UserPreferences } from './types';
 
 export const DEFAULT_SETTINGS: Settings = {
   language: 'Polski',

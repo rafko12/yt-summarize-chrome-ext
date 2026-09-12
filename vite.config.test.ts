@@ -288,4 +288,78 @@ describe('konfiguracja buildu Vite i manifestu', () => {
     );
     expect(historySeamTest).not.toContain('expect(typeof history.saveChat)');
   });
+
+  it('potwierdza domknięcie interfejsów preferencji, AI, YouTube i shella (AC #77)', () => {
+    // 1. Kontrakty preferencji, AI i integracji YouTube nie zawierają typów właściwości widoków
+    const preferencesTypes = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/preferences/types.ts'),
+      'utf-8'
+    );
+    expect(preferencesTypes).not.toContain('SettingsViewProps');
+    expect(preferencesTypes).not.toContain('react');
+    expect(preferencesTypes).not.toContain('React');
+    expect(preferencesTypes).not.toContain('export type { AiProvider }');
+
+    const aiTypes = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/ai/types.ts'),
+      'utf-8'
+    );
+    expect(aiTypes).not.toContain('react');
+    expect(aiTypes).not.toContain('React');
+    expect(aiTypes).not.toContain('Props');
+    expect(aiTypes).not.toContain('export type { ConversationMessage');
+    expect(aiTypes).not.toContain('export type { TranscriptSegment');
+
+    const youtubeTypes = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/youtube/types.ts'),
+      'utf-8'
+    );
+    expect(youtubeTypes).not.toContain('react');
+    expect(youtubeTypes).not.toContain('React');
+    expect(youtubeTypes).not.toContain('Props');
+
+    // 2. Typy właściwości ustawień i shella są kolokowane z widokami, które ich używają
+    const settingsViewSource = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/preferences/SettingsView.tsx'),
+      'utf-8'
+    );
+    expect(settingsViewSource).toContain('interface SettingsViewProps');
+
+    const headerSource = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/shell/Header.tsx'),
+      'utf-8'
+    );
+    expect(headerSource).toContain('interface HeaderProps');
+
+    // 3. Publiczne wejścia feature'ów mają jawne, minimalne eksporty bez równoległych aliasów
+    const preferencesIndex = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/preferences/index.ts'),
+      'utf-8'
+    );
+    expect(preferencesIndex).not.toContain('AiProvider');
+    expect(preferencesIndex).not.toContain('UseSettingsProps');
+
+    const aiIndex = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/ai/index.ts'),
+      'utf-8'
+    );
+    expect(aiIndex).not.toContain('generateSummary');
+    expect(aiIndex).not.toContain('generateChatResponse');
+    expect(aiIndex).not.toContain('validateApiKey');
+    expect(aiIndex).not.toContain('getProvider');
+
+    const shellIndex = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/shell/index.ts'),
+      'utf-8'
+    );
+    expect(shellIndex).not.toContain('HeaderProps');
+
+    // 4. Klient AI i integracja YouTube ukrywają adaptery za publicznymi interfejsami
+    const dependenciesSource = fs.readFileSync(
+      resolve(__dirname, 'src/sidepanel/dependencies.ts'),
+      'utf-8'
+    );
+    expect(dependenciesSource).toContain('createAiClient');
+    expect(dependenciesSource).toContain('createYoutube');
+  });
 });

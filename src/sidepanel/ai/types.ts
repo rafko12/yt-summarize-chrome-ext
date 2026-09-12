@@ -1,7 +1,5 @@
-import { ConversationMessage, TranscriptSegment } from '../../domain/analysis';
-import { AiProvider } from './modelCatalog';
-
-export type { ConversationMessage, TranscriptSegment };
+import type { ConversationMessage } from '../../domain/analysis';
+import type { AiProvider } from './modelCatalog';
 
 export type AiErrorProviderName = AiProvider | 'unknown';
 
