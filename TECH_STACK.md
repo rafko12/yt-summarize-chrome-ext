@@ -36,17 +36,26 @@ Artefakt nie zawiera konfiguracji deweloperskich, testów, mocków ani plików t
 | Typografia i ikony  | Geist Sans, Phosphor Icons  | Font i ikony interfejsu                      | [`package.json`](package.json), [`src/assets/`](src/assets/)                                           |
 
 Bootstrap content scriptu jest zwykłym modułem TypeScript bez zależności od
-Reacta.
+Reacta. Content script nie renderuje żadnego interfejsu użytkownika na stronie
+YouTube, w związku z czym rozszerzenie nie deklaruje ani nie stosuje izolacji od
+CSS YouTube.
+
+Punkty wejścia panelu bocznego (`src/sidepanel/index.tsx`) oraz strony opcji
+(`src/options/index.tsx`) montują aplikację React bezpośrednio w dedykowanych
+elementach kontenerów DOM dokumentu (`#my-ext-sidepanel-page` oraz
+`#my-ext-options-page`) bez Shadow DOM ani sztucznych korzeni izolacji. Arkusz
+stylów (`src/assets/styles/index.css`) oraz fonty Geist Sans są ładowane
+bezpośrednio do dokumentu rozszerzenia.
 
 ## Build i zależności
 
-| Obszar                      | Technologia           | Zastosowanie                                                             | Źródło prawdy                                                            |
-| --------------------------- | --------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| Środowisko                  | Node.js 20 lub nowszy | Uruchamianie narzędzi projektu                                           | [`package.json`](package.json)                                           |
-| Pakiety                     | pnpm                  | Jedyny wspierany menedżer pakietów                                       | [`package.json`](package.json), [`pnpm-lock.yaml`](pnpm-lock.yaml)       |
-| Build i serwer deweloperski | Vite                  | Budowanie i lokalna pętla deweloperska                                   | [`vite.config.ts`](vite.config.ts), [`package.json`](package.json)       |
-| Integracja rozszerzenia     | CRXJS Vite Plugin     | Generowanie rozszerzenia z typowanego manifestu                          | [`vite.config.ts`](vite.config.ts), [`src/manifest.ts`](src/manifest.ts) |
-| Przetwarzanie CSS           | PostCSS               | Tailwind, prefiks selektorów, zamiana `rem` na `px` i prefiksy dostawców | [`postcss.config.js`](postcss.config.js)                                 |
+| Obszar                      | Technologia           | Zastosowanie                                    | Źródło prawdy                                                            |
+| --------------------------- | --------------------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| Środowisko                  | Node.js 20 lub nowszy | Uruchamianie narzędzi projektu                  | [`package.json`](package.json)                                           |
+| Pakiety                     | pnpm                  | Jedyny wspierany menedżer pakietów              | [`package.json`](package.json), [`pnpm-lock.yaml`](pnpm-lock.yaml)       |
+| Build i serwer deweloperski | Vite                  | Budowanie i lokalna pętla deweloperska          | [`vite.config.ts`](vite.config.ts), [`package.json`](package.json)       |
+| Integracja rozszerzenia     | CRXJS Vite Plugin     | Generowanie rozszerzenia z typowanego manifestu | [`vite.config.ts`](vite.config.ts), [`src/manifest.ts`](src/manifest.ts) |
+| Przetwarzanie CSS           | PostCSS               | Tailwind CSS 4 oraz reguły Autoprefixer         | [`postcss.config.js`](postcss.config.js)                                 |
 
 ## Testy i jakość
 

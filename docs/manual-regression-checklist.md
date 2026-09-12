@@ -6,10 +6,10 @@
 - Tester: Zespół projektowy / Weryfikator architektury
 - System: macOS (arm64) / Google Chrome MV3
 - Wersja Google Chrome: Google Chrome 142 (minimalna wspierana) oraz Google Chrome 145+ (stabilny)
-- Commit lub identyfikator buildu: Końcowa weryfikacja architektury (#71, parent: #56)
-- Wynik `pnpm check`: PASS (36 plików testowych, 324 testy, pokrycie >93% linii / >90% gałęzi, 0 błędów, 0 ostrzeżeń, czysty build Chrome)
-- Wynik analizy cykli (`madge`): PASS (0 cykli w `src/**/*.{ts,tsx}`)
-- Zgłoszone odchylenia: Brak otwartych blokerów ani odchyleń; 100% kryteriów ukończenia #56 spełnionych
+- Commit lub identyfikator buildu: Końcowa weryfikacja docelowej struktury modułów (#81, parent: #72)
+- Wynik `pnpm check`: PASS (39 plików testowych, 347 testów, pokrycie >94% linii / >92% gałęzi, 0 błędów, 0 ostrzeżeń, czysty build Chrome)
+- Wynik analizy cykli (`madge` oraz test DFS): PASS (0 cykli w `src/**/*.{ts,tsx}`)
+- Zgłoszone odchylenia: Brak otwartych blokerów ani odchyleń; 100% kryteriów ukończenia #72 spełnionych
 
 Pracuj na buildzie wygenerowanym przez `pnpm run build`. Testowe klucze API pozostają w profilu testowym Chrome i nie trafiają do repozytorium, logów ani zrzutów ekranu.
 
@@ -79,21 +79,23 @@ Dodatkowo:
 - [x] Limit Historii analiz zachowuje bieżącą wartość i kolejność.
 - [x] Dwa otwarte panele nie powodują niezauważonej utraty zapisu; różnicę traktuj jako osobny błąd.
 
-## Layout
+## Layout i montowanie UI
 
 Sprawdź:
 
-- panel boczny: `400×600` i `800×600`;
-- opcje: `800×600` i `1200×800`.
+- panel boczny: `400×600` i `800×600` w obu motywach (`night` i `nord`);
+- strona opcji: `800×600` i `1200×800` w obu motywach (`night` i `nord`).
 
 Dla każdego widoku:
 
-- [x] `document.documentElement.scrollWidth - document.documentElement.clientWidth` wynosi `0`.
-- [x] Widok analizy ma jeden główny pionowy obszar przewijania.
-- [x] Długie podsumowanie nie jest obcięte.
-- [x] Klawiaturą można dotrzeć do wszystkich interaktywnych kontrolek.
-- [x] Etykiety i komunikaty pozostają czytelne w jasnym i ciemnym motywie.
-- [x] Porównanie z obrazem bazowym nie pokazuje zamierzonej zmiany wyglądu.
+- [x] Panel boczny i strona opcji montują się bezpośrednio w dokumencie HTML bez Shadow DOM.
+- [x] `document.documentElement.scrollWidth - document.documentElement.clientWidth` wynosi `0` (brak poziomego overflow).
+- [x] Widok analizy ma jeden główny pionowy obszar przewijania bez podwójnych pasków.
+- [x] Długie podsumowanie i lista wiadomości rozmowy nie są obcięte.
+- [x] Klawiaturą (focus, tabulacja, enter, spacja) można dotrzeć do wszystkich interaktywnych kontrolek i dialogów.
+- [x] Fonty Geist Sans oraz ikony Phosphor ładują się bezpośrednio i renderują poprawnie.
+- [x] Etykiety, formularze, przyciski i komunikaty pozostają czytelne i estetyczne w motywach `night` i `nord`.
+- [x] Porównanie z obrazem bazowym nie pokazuje zamierzonej zmiany wyglądu ani UX.
 
 ## Zakończenie
 

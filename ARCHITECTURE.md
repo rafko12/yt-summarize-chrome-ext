@@ -29,13 +29,13 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 - przesunięcie odtwarzacza do wskazanego czasu;
 - obsługę wiadomości wysłanych z panelu.
 
-`playerResponseExtractor.ts` izoluje parsowanie `ytInitialPlayerResponse` i jest testowany na zapisanych przykładach HTML. Bootstrap content scriptu (`youtubeContentScript.ts`) i jego punkt wejścia (`index.ts`) są zwykłymi modułami TypeScript bez zależności od Reacta.
+`playerResponseExtractor.ts` ekstrahuje metadane z `ytInitialPlayerResponse` i jest testowany na zapisanych przykładach HTML. Bootstrap content scriptu (`youtubeContentScript.ts`) i jego punkt wejścia (`index.ts`) są zwykłymi modułami TypeScript bez zależności od Reacta. Content script nie renderuje żadnego interfejsu użytkownika (UI) w DOM YouTube, w związku z czym architektura nie deklaruje ani nie stosuje izolacji stylów (Shadow DOM ani prefiksów CSS) od CSS YouTube.
 
 ### Panel boczny
 
-`src/sidepanel/` jest aplikacją React obsługującą analizę, Historię analiz i ustawienia.
+`src/sidepanel/` jest aplikacją React montowaną bezpośrednio w kontenerze `#my-ext-sidepanel-page` własnego dokumentu HTML panelu (`src/sidepanel/index.html`), bez użycia Shadow DOM ani izolacji stylów. Obsługuje analizę, Historię analiz i ustawienia.
 
-- `dependencies.ts` jest jawnym composition root panelu bocznego (`SidePanelDependencies`), tworzącym pojedynczy współdzielony adapter lokalnego storage dla modułów preferencji i Historii analiz oraz instancje integracji YouTube i klienta AI.
+- `dependencies.ts` jest jedynym jawnym composition root panelu bocznego (`SidePanelDependencies`), tworzącym pojedynczy współdzielony adapter lokalnego storage dla modułów preferencji i Historii analiz oraz instancje integracji YouTube i klienta AI. Produkcja i testy przekazują zależności przez ten sam interfejs.
 - `SidePanelApp.tsx` składa widoki i hooki w oparciu o jawnie wstrzyknięty zestaw zależności (`SidePanelDependencies`).
 - `shell/` integruje powłokę i nagłówek panelu (`Header.tsx`) oraz synchronizację motywu dokumentu (`useDocumentTheme.ts`).
 - `analysis/` integruje widoki analizy (`AnalyzeView.tsx`, `SummaryView.tsx`), prezentacyjny renderer Markdown z timestampami (`MarkdownWithTimestamps.tsx`), parser timestampów (`timestampParser.ts`), stan analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`). Renderer timestampów nie tworzy adaptera Chrome — otrzymuje jawny callback `onSeek` z orkiestracji sesji. Przewijanie rozmowy jest efektem widoku `AnalyzeView`, nie orkiestracji sesji.
@@ -51,7 +51,7 @@ Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/
 
 ### Strona opcji
 
-`src/options/` jest osobnym punktem wejścia React (`Options.tsx`), montowanym bezpośrednio w dokumencie strony opcji (`mountOptions`). Nie współdzieli stanu renderowania z panelem bocznym.
+`src/options/` jest osobnym punktem wejścia React (`Options.tsx`), montowanym bezpośrednio w kontenerze `#my-ext-options-page` dokumentu strony opcji (`src/options/index.html`) bez użycia Shadow DOM ani izolacji stylów. Nie współdzieli stanu renderowania z panelem bocznym.
 
 ## Moduły współdzielone
 
@@ -95,6 +95,9 @@ Adapter Chrome
 ## Reguły zależności
 
 - Manifest i uprawnienia mają jedno źródło prawdy w `src/manifest.ts`.
+- Panel boczny posiada jeden jawny composition root (`dependencies.ts`), przez który produkcja i testy przekazują zależności.
+- Kontrakty domenowe, aplikacyjne, adaptery i moduły storage nie zależą od Reacta; importy biblioteki UI należą wyłącznie do widoków, hooków i punktów montowania.
+- Montowanie UI w panelu i na stronie opcji odbywa się bezpośrednio w dokumencie HTML rozszerzenia bez Shadow DOM ani sztucznej izolacji stylów.
 - Widoki nie wykonują bezpośrednio operacji platformowych, jeśli istnieje moduł posiadający tę odpowiedzialność.
 - Kontrakty wiadomości pozostają niezależne od transportu Chrome.
 - Adaptery Dostawców AI ukrywają różnice protokołów za wspólnym klientem.

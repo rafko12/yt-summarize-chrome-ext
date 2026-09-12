@@ -18,4 +18,7 @@ odpowiedzialności modułów opisuje
 - Zachowuj klucze i akceptowane formaty danych z `STORAGE_KEYS`; zmiana wymaga migracji.
 - Wykonuj żądania Dostawców AI oraz operacje Historii analiz w panelu, dopóki osobna decyzja architektoniczna nie zmieni kontekstu wykonania.
 - Konfiguruj tematy DaisyUI w głównym CSS przez `@plugin "daisyui"`.
+- Składaj zależności panelu przez jeden jawny composition root (`dependencies.ts`); produkcja i testy przekazują zależności przez ten sam interfejs.
+- Montuj UI panelu bocznego i strony opcji bezpośrednio w dokumentach rozszerzenia bez Shadow DOM ani sztucznej izolacji stylów.
+- Zachowuj neutralność kontraktów aplikacyjnych, domenowych, adapterów i storage względem Reacta.
 - Generuj `dist_chrome` przez build. Artefaktu nie edytuj jako źródła.

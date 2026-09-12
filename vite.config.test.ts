@@ -524,4 +524,197 @@ describe('konfiguracja buildu Vite i manifestu', () => {
       expect(distHtml).toContain('id="my-ext-options-page"');
     }
   });
+
+  it('potwierdza brak cykli importów oraz brak zależności kontraktów aplikacyjnych od Reacta (AC #81)', () => {
+    const srcDir = resolve(__dirname, 'src');
+
+    function getAllSourceFiles(dir: string): string[] {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      const files: string[] = [];
+      entries.forEach((entry) => {
+        const fullPath = resolve(dir, entry.name);
+        if (entry.isDirectory()) {
+          files.push(...getAllSourceFiles(fullPath));
+        } else if (
+          /\.(ts|tsx)$/.test(entry.name) &&
+          !entry.name.includes('.test.')
+        ) {
+          files.push(fullPath);
+        }
+      });
+      return files;
+    }
+
+    const allSourceFiles = getAllSourceFiles(srcDir);
+
+    // 1. Brak cykli importów w kodzie produkcyjnym (DFS cycle detection)
+    function resolveImportPath(
+      fromFile: string,
+      importSpecifier: string
+    ): string | null {
+      let candidate = '';
+      if (importSpecifier.startsWith('@/')) {
+        candidate = resolve(srcDir, importSpecifier.slice(2));
+      } else if (importSpecifier.startsWith('@assets/')) {
+        candidate = resolve(srcDir, 'assets', importSpecifier.slice(8));
+      } else if (importSpecifier.startsWith('.')) {
+        candidate = resolve(resolve(fromFile, '..'), importSpecifier);
+      } else {
+        return null; // External package
+      }
+
+      const extensions = ['.ts', '.tsx', '/index.ts', '/index.tsx'];
+      if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+        return candidate;
+      }
+      const matchingExt = extensions.find((ext) => {
+        const targetWithExt = candidate + ext;
+        return (
+          fs.existsSync(targetWithExt) && fs.statSync(targetWithExt).isFile()
+        );
+      });
+      if (matchingExt) {
+        return candidate + matchingExt;
+      }
+      return null;
+    }
+
+    const graph = new Map<string, string[]>();
+    allSourceFiles.forEach((filePath) => {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const importMatches = Array.from(
+        content.matchAll(
+          /(?:import|export)\s+(?:type\s+)?(?:[\s\S]*?from\s+)?['"]([^'"]+)['"]/g
+        )
+      );
+      const dependencies: string[] = [];
+      importMatches.forEach((match) => {
+        const target = resolveImportPath(filePath, match[1]);
+        if (target && target.startsWith(srcDir) && !target.includes('.test.')) {
+          dependencies.push(target);
+        }
+      });
+      graph.set(filePath, dependencies);
+    });
+
+    const visited = new Map<string, number>(); // 0: unvisited, 1: visiting, 2: visited
+    const cycles: string[][] = [];
+
+    function detectCycles(node: string, path: string[]) {
+      visited.set(node, 1);
+      path.push(node);
+
+      const neighbors = graph.get(node) || [];
+      neighbors.forEach((neighbor) => {
+        const state = visited.get(neighbor) || 0;
+        if (state === 1) {
+          const cycleStart = path.indexOf(neighbor);
+          cycles.push(path.slice(cycleStart).concat(neighbor));
+        } else if (state === 0) {
+          detectCycles(neighbor, path);
+        }
+      });
+
+      path.pop();
+      visited.set(node, 2);
+    }
+
+    allSourceFiles.forEach((file) => {
+      if ((visited.get(file) || 0) === 0) {
+        detectCycles(file, []);
+      }
+    });
+
+    expect(
+      cycles,
+      `Wykryto cykle importów: ${cycles.map((c) => c.join(' -> ')).join('; ')}`
+    ).toEqual([]);
+
+    // 2. Kontrakty aplikacyjne, domenowe, magazyn i orkiestracja nie importują Reacta
+    const nonUiContractFiles = [
+      'src/domain/analysis.ts',
+      'src/messaging/messages.ts',
+      'src/messaging/index.ts',
+      'src/storage/keys.ts',
+      'src/storage/chromeStorageLocalAdapter.ts',
+      'src/storage/types.ts',
+      'src/sidepanel/ai/types.ts',
+      'src/sidepanel/ai/client.ts',
+      'src/sidepanel/ai/modelCatalog.ts',
+      'src/sidepanel/ai/modelPolicy.ts',
+      'src/sidepanel/ai/prompts.ts',
+      'src/sidepanel/ai/providers/gemini.ts',
+      'src/sidepanel/ai/providers/openai.ts',
+      'src/sidepanel/ai/providers/anthropic.ts',
+      'src/sidepanel/history/types.ts',
+      'src/sidepanel/history/analysisHistory.ts',
+      'src/sidepanel/preferences/types.ts',
+      'src/sidepanel/preferences/userPreferences.ts',
+      'src/sidepanel/youtube/types.ts',
+      'src/sidepanel/youtube/youtube.ts',
+      'src/sidepanel/youtube/chromeYoutubeAdapter.ts',
+      'src/sidepanel/analysis/analysisSessionTypes.ts',
+      'src/sidepanel/analysis/analysisSessionReducer.ts',
+      'src/sidepanel/analysis/timestampParser.ts',
+      'src/sidepanel/dependencies.ts',
+      'src/sidepanel/panelContext.ts',
+      'src/sidepanel/chromeBackgroundTransport.ts',
+      'src/sidepanel/dangerZone.ts',
+      'src/background/sidePanelController.ts',
+      'src/background/chromeSidePanelAdapter.ts',
+      'src/background/youtubeNavigationEvents.ts',
+      'src/content/index.ts',
+      'src/content/youtubeContentScript.ts',
+      'src/content/playerResponseExtractor.ts',
+    ];
+
+    nonUiContractFiles.forEach((relPath) => {
+      const fullPath = resolve(__dirname, relPath);
+      expect(
+        fs.existsSync(fullPath),
+        `Plik kontraktu ${relPath} powinien istnieć`
+      ).toBe(true);
+      const content = fs.readFileSync(fullPath, 'utf-8');
+      expect(
+        content.includes("from 'react'"),
+        `Plik kontraktu ${relPath} nie może importować 'react'`
+      ).toBe(false);
+      expect(
+        content.includes('from "react"'),
+        `Plik kontraktu ${relPath} nie może importować "react"`
+      ).toBe(false);
+      expect(
+        content.includes("from 'react-dom'"),
+        `Plik kontraktu ${relPath} nie może importować 'react-dom'`
+      ).toBe(false);
+      expect(
+        content.includes('from "react-dom"'),
+        `Plik kontraktu ${relPath} nie może importować "react-dom"`
+      ).toBe(false);
+      expect(
+        content.includes('React.'),
+        `Plik kontraktu ${relPath} nie może odwoływać się do przestrzeni React.`
+      ).toBe(false);
+    });
+
+    // 3. Sprawdzenie, że importy Reacta są ograniczone wyłącznie do widoków (*.tsx), hooków (use*.ts) i korzeni
+    allSourceFiles.forEach((filePath) => {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const hasReactImport =
+        /from\s+['"]react(-dom(\/client)?)?['"]/.test(content) ||
+        /import\s+['"]react(-dom(\/client)?)?['"]/.test(content);
+
+      if (hasReactImport) {
+        const basename = filePath.split('/').pop() || '';
+        const isAllowedUiModule =
+          basename.endsWith('.tsx') ||
+          basename.startsWith('use') ||
+          basename === 'index.tsx';
+        expect(
+          isAllowedUiModule,
+          `Moduł ${filePath} importuje Reacta, ale nie jest widokiem (*.tsx), hookiem (use*.ts) ani punktem montowania (index.tsx)`
+        ).toBe(true);
+      }
+    });
+  });
 });
