@@ -7,9 +7,7 @@ import { createRoot } from 'react-dom/client';
  * @returns {import('react-dom/client').Root} - React root rendered inside the shadow root.
  */
 export default function createIsolatedRoot(styles: string) {
-  const stylesWithFonts = `${createGeistFontStyles((url) =>
-    url.startsWith('/') ? chrome.runtime.getURL(url.slice(1)) : url
-  )}\n${styles}`;
+  const stylesWithFonts = `${createGeistFontStyles()}\n${styles}`;
   const host = document.createElement('div');
 
   // Full-screen layout is required for the side-panel UI.

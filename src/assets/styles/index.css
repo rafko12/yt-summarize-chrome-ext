@@ -12,6 +12,19 @@ body {
   width: 100%;
   height: 100%;
   overflow: hidden !important;
+  font-family: 'Geist Sans', sans-serif;
+}
+
+/* Application root typography and defaults independent of Shadow DOM */
+:host,
+#my-ext {
+  color: inherit;
+  font: inherit;
+  font-weight: 500 !important;
+  font-size: 16px !important;
+  line-height: normal;
+  font-family: 'Geist Sans', sans-serif !important;
+  letter-spacing: normal;
 }
 
 :host {
@@ -28,20 +41,9 @@ body {
   height: 100%;
   overflow: hidden !important;
   pointer-events: none;
-  color: inherit;
-  font: inherit;
-  font-weight: 500 !important;
-  font-size: 16px !important;
-  line-height: normal;
-  font-family: 'Geist Sans', sans-serif !important;
-  letter-spacing: normal;
 }
 
-body {
-  font-family: 'Geist Sans', sans-serif;
-}
-
-/* Custom sleek scrollbar styles for Shadow DOM */
+/* Sleek scrollbar styles for extension document and scroll containers */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;

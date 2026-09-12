@@ -12,8 +12,20 @@ import tailwindcss from '@tailwindcss/postcss';
  * @returns {string} The transformed CSS selector.
  */
 function transformSelector(prefix, selector, prefixedSelector) {
-  if ([':root', ':host', 'html', 'body'].includes(selector)) {
+  if (selector === ':root') {
+    return ':host, :root';
+  }
+  if (selector === 'html') {
+    return ':host, html';
+  }
+  if (selector === 'body') {
+    return ':host, body';
+  }
+  if (selector === ':host') {
     return ':host';
+  }
+  if (selector === prefix || selector === '#my-ext') {
+    return selector;
   }
   if (
     [
@@ -24,7 +36,7 @@ function transformSelector(prefix, selector, prefixedSelector) {
       '[data-theme=nord]',
     ].includes(selector)
   ) {
-    return `:host ${selector}`;
+    return `:host ${selector}, ${selector}`;
   }
   return prefixedSelector;
 }

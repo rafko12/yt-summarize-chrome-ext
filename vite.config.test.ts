@@ -362,4 +362,68 @@ describe('konfiguracja buildu Vite i manifestu', () => {
     expect(dependenciesSource).toContain('createAiClient');
     expect(dependenciesSource).toContain('createYoutube');
   });
+
+  it('potwierdza przygotowanie stylów i fontów niezależnych od Shadow DOM (AC #78)', () => {
+    // 1. Główny CSS zachowuje konfigurację motywów DaisyUI w trybie CSS-first
+    const indexCss = fs.readFileSync(
+      resolve(__dirname, 'src/assets/styles/index.css'),
+      'utf-8'
+    );
+    expect(indexCss).toContain("@import 'tailwindcss';");
+    expect(indexCss).toContain('@plugin "daisyui"');
+    expect(indexCss).toContain('night --default');
+    expect(indexCss).toContain('nord');
+
+    // 2. Właściciele stylów dokumentu, korzenia i przewijania nie wymagają wyłącznie :host
+    expect(indexCss).toMatch(
+      /html,\s*body\s*\{[^}]*font-family:\s*'Geist Sans'/
+    );
+    expect(indexCss).toMatch(/html,\s*body\s*\{[^}]*overflow:\s*hidden/);
+    expect(indexCss).toMatch(
+      /:host,\s*#my-ext\s*\{[^}]*font-family:\s*'Geist Sans'/
+    );
+    expect(indexCss).toMatch(/:host,\s*#my-ext\s*\{[^}]*font-weight:\s*500/);
+    expect(indexCss).toMatch(/:host,\s*#my-ext\s*\{[^}]*font-size:\s*16px/);
+    expect(indexCss).toContain('::-webkit-scrollbar');
+    expect(indexCss).toContain('scrollbar-width: thin');
+
+    // 3. PostCSS transformSelector udostępnia selektory dokumentu, roota i motywów bez wyłącznego :host
+    const postcssConfig = fs.readFileSync(
+      resolve(__dirname, 'postcss.config.js'),
+      'utf-8'
+    );
+    expect(postcssConfig).toContain("selector === ':root'");
+    expect(postcssConfig).toContain("':host, :root'");
+    expect(postcssConfig).toContain("selector === 'html'");
+    expect(postcssConfig).toContain("':host, html'");
+    expect(postcssConfig).toContain("selector === 'body'");
+    expect(postcssConfig).toContain("':host, body'");
+    expect(postcssConfig).toContain("selector === '#my-ext'");
+    // eslint-disable-next-line no-template-curly-in-string
+    expect(postcssConfig).toContain('`:host ${selector}, ${selector}`');
+
+    // 4. Fonty można ładować bezpośrednio bez adaptera Chrome (chrome.runtime.getURL)
+    const geistFontsSource = fs.readFileSync(
+      resolve(__dirname, 'src/assets/geistFonts.ts'),
+      'utf-8'
+    );
+    expect(geistFontsSource).toContain(
+      'resolveUrl: (url: string) => string = (url) => url'
+    );
+    expect(geistFontsSource).toContain('export function loadGeistFonts');
+    expect(geistFontsSource).not.toContain('chrome.runtime.getURL');
+
+    const isolatedRootSource = fs.readFileSync(
+      resolve(__dirname, 'src/ui/createIsolatedRoot.ts'),
+      'utf-8'
+    );
+    expect(isolatedRootSource).not.toContain('chrome.runtime.getURL');
+
+    // 5. Konfiguracja wyjścia Rollup gwarantuje emisję fontów do assets/fonts/
+    const viteSource = fs.readFileSync(
+      resolve(__dirname, 'vite.config.ts'),
+      'utf-8'
+    );
+    expect(viteSource).toContain("'assets/fonts/[name][extname]'");
+  });
 });

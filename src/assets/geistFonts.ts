@@ -13,11 +13,11 @@ const fontFaces = [
 ] as const;
 
 /**
- * Builds font faces with extension URLs so styles injected into a Shadow DOM
- * do not resolve `/assets` against the host page (for example, youtube.com).
+ * Builds font faces directly or with extension URLs so styles do not resolve
+ * `/assets` against an external host page if injected externally.
  */
 export default function createGeistFontStyles(
-  resolveUrl: (url: string) => string
+  resolveUrl: (url: string) => string = (url) => url
 ): string {
   return fontFaces
     .map(
@@ -30,4 +30,20 @@ export default function createGeistFontStyles(
 }`
     )
     .join('\n');
+}
+
+/**
+ * Loads font declarations directly into the extension document head.
+ * Ensures font availability without requiring manual Chrome adapter URL rewriting.
+ */
+export function loadGeistFonts(doc: Document = document): HTMLStyleElement {
+  const existing = doc.querySelector('style[data-font="geist-sans"]');
+  if (existing instanceof HTMLStyleElement) {
+    return existing;
+  }
+  const styleEl = doc.createElement('style');
+  styleEl.setAttribute('data-font', 'geist-sans');
+  styleEl.textContent = createGeistFontStyles();
+  doc.head.appendChild(styleEl);
+  return styleEl;
 }
