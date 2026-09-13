@@ -3,146 +3,50 @@
 import {
   act,
   fireEvent,
-  render,
   screen,
   waitFor,
   within,
 } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import registerYoutubeNavigationEvents from '../background/youtubeNavigationEvents';
+import { SidePanelDependencies } from './dependencies';
 import {
-  createSidePanelDependencies,
-  SidePanelDependencies,
-} from './dependencies';
-import SidePanelApp from './SidePanelApp';
+  createSidePanelHarness,
+  SidePanelHarness,
+} from './sidePanelHarness.test';
+
+let harness: SidePanelHarness;
 
 function renderApp(customDeps?: Partial<SidePanelDependencies>) {
-  return render(
-    <SidePanelApp
-      dependencies={{
-        ...createSidePanelDependencies(),
-        ...customDeps,
-      }}
-    />
-  );
+  return harness.render(customDeps);
 }
 
-type RuntimeListener = (message: unknown) => boolean;
-type TabUpdatedListener = (
-  tabId: number,
-  changeInfo: chrome.tabs.TabChangeInfo
-) => void;
-let stored: Record<string, unknown>;
-let runtimeListener: RuntimeListener | undefined;
-let tabUpdatedListener: TabUpdatedListener | undefined;
+const stored = new Proxy({} as Record<string, unknown>, {
+  get: (_target, prop: string) => harness?.storage?.data?.[prop],
+  set: (_target, prop: string, value: unknown) => {
+    if (harness?.storage) {
+      harness.storage.data[prop] = value;
+    }
+    return true;
+  },
+  deleteProperty: (_target, prop: string) => {
+    if (harness?.storage) {
+      delete harness.storage.data[prop];
+    }
+    return true;
+  },
+});
+
 let activeTab: Partial<chrome.tabs.Tab>;
 
 beforeEach(() => {
-  document.documentElement.removeAttribute('data-theme');
-  document.documentElement.className = '';
-  document.body.className = '';
-  stored = {
-    gemini_api_key: 'key',
-    summarizer_settings: { language: 'Polski', model: 'gemini-3.6-flash' },
-    summarizer_history: [],
-    ui_theme: 'night',
-  };
-  runtimeListener = undefined;
-  tabUpdatedListener = undefined;
-  activeTab = {
-    id: 3,
-    windowId: 4,
-    url: 'https://www.youtube.com/watch?v=movie',
-    title: 'Movie from tab',
-  };
-  global.fetch = vi.fn(async () => ({
-    ok: true,
-    json: async () => ({
-      candidates: [{ content: { parts: [{ text: 'AI response' }] } }],
-      content: [{ type: 'text', text: 'AI response' }],
-      choices: [{ message: { content: 'AI response' } }],
-    }),
-  })) as unknown as typeof fetch;
-  window.matchMedia = vi.fn(() => ({
-    matches: true,
-  })) as unknown as typeof window.matchMedia;
-  global.chrome = {
-    ...chrome,
-    tabs: {
-      ...chrome.tabs,
-      query: vi.fn(async () => [activeTab]),
-      get: vi.fn(async (tabId: number) =>
-        tabId === 3
-          ? {
-              id: 3,
-              url: 'https://www.youtube.com/watch?v=movie',
-            }
-          : undefined
-      ),
-      sendMessage: vi.fn(async (_tabId, message) => {
-        if (message.type === 'GET_TRANSCRIPT') {
-          return {
-            success: true,
-            transcript: [{ start: 0, duration: 2, text: 'Transcript' }],
-          };
-        }
-        if (message.type === 'GET_VIDEO_DATA') {
-          return {
-            success: true,
-            videoId: 'movie',
-            title: 'Movie',
-            author: 'Creator',
-            thumbnailUrl: 'thumbnail',
-          };
-        }
-        return { success: true };
-      }),
-      onUpdated: {
-        addListener: vi.fn((listener: TabUpdatedListener) => {
-          tabUpdatedListener = listener;
-        }),
-        removeListener: vi.fn(),
-      },
-    },
-    storage: {
-      local: {
-        get: vi.fn(
-          (
-            keys: string[],
-            callback: (result: Record<string, unknown>) => void
-          ) =>
-            callback(Object.fromEntries(keys.map((key) => [key, stored[key]])))
-        ),
-        set: vi.fn((values: Record<string, unknown>, callback: () => void) => {
-          Object.assign(stored, values);
-          callback();
-        }),
-        remove: vi.fn((keys: string[], callback: () => void) => {
-          keys.forEach((key) => delete stored[key]);
-          callback();
-        }),
-      },
-    },
-    runtime: {
-      ...chrome.runtime,
-      sendMessage: vi.fn(async (message) => {
-        if (message.type === 'YOUTUBE_URL_UPDATED') {
-          runtimeListener?.(message);
-          return undefined;
-        }
-        return message.type === 'PANEL_INIT'
-          ? { isPinnedGlobal: false }
-          : { success: true };
-      }),
-      onMessage: {
-        addListener: vi.fn((listener: RuntimeListener) => {
-          runtimeListener = listener;
-        }),
-        removeListener: vi.fn(),
-      },
-    },
-  } as unknown as typeof chrome;
+  harness = createSidePanelHarness();
+  activeTab = harness.youtube.activeTab;
+});
+
+afterEach(() => {
+  harness?.cleanup();
 });
 
 describe('side panel user flow', () => {
@@ -185,9 +89,9 @@ describe('side panel user flow', () => {
     });
 
     vi.mocked(chrome.tabs.query).mockClear();
-    expect(runtimeListener).toBeDefined();
+    expect(harness.runtimeListener).toBeDefined();
     await act(async () => {
-      runtimeListener!({
+      harness.runtimeListener!({
         type: 'YOUTUBE_URL_UPDATED',
         tabId: 3,
         url: 'https://www.youtube.com/watch?v=movie',
@@ -202,9 +106,9 @@ describe('side panel user flow', () => {
 
     vi.mocked(chrome.tabs.sendMessage).mockClear();
     stored.summarizer_history = [];
-    expect(runtimeListener).toBeDefined();
+    expect(harness.runtimeListener).toBeDefined();
     await act(async () => {
-      runtimeListener!({
+      harness.runtimeListener!({
         type: 'YOUTUBE_URL_UPDATED',
         tabId: 3,
         url: 'https://www.youtube.com/watch?v=movie',
@@ -229,6 +133,7 @@ describe('side panel user flow', () => {
       url: 'https://www.youtube.com/watch?v=next-movie',
       title: 'Next Movie from tab',
     };
+    harness.youtube.activeTab = activeTab;
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValueOnce({
       success: true,
       videoId: 'next-movie',
@@ -237,10 +142,10 @@ describe('side panel user flow', () => {
       thumbnailUrl: 'next-thumbnail',
     });
 
-    expect(runtimeListener).toBeDefined();
+    expect(harness.runtimeListener).toBeDefined();
     await act(async () => {
       expect(
-        runtimeListener!({
+        harness.runtimeListener!({
           type: 'YOUTUBE_URL_UPDATED',
           tabId: 3,
           url: 'https://www.youtube.com/watch?v=next-movie',
@@ -266,6 +171,7 @@ describe('side panel user flow', () => {
       url: 'https://www.youtube.com/watch?v=next-movie',
       title: 'Next Movie from tab',
     };
+    harness.youtube.activeTab = activeTab;
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValueOnce({
       success: true,
       videoId: 'next-movie',
@@ -275,9 +181,9 @@ describe('side panel user flow', () => {
     });
 
     const unregister = registerYoutubeNavigationEvents(chrome);
-    expect(tabUpdatedListener).toBeDefined();
+    expect(harness.tabUpdatedListener).toBeDefined();
     await act(async () => {
-      tabUpdatedListener!(3, {
+      harness.tabUpdatedListener!(3, {
         url: 'https://www.youtube.com/watch?v=next-movie',
       });
     });
@@ -446,6 +352,7 @@ describe('side panel user flow', () => {
       url: 'https://www.youtube.com/watch?v=other-movie',
       title: 'Other Movie from tab',
     };
+    harness.youtube.activeTab = activeTab;
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
       success: true,
       videoId: 'other-movie',
@@ -455,7 +362,7 @@ describe('side panel user flow', () => {
     });
 
     await act(async () => {
-      runtimeListener!({
+      harness.runtimeListener!({
         type: 'YOUTUBE_URL_UPDATED',
         tabId: 3,
         url: 'https://www.youtube.com/watch?v=other-movie',
@@ -693,6 +600,7 @@ describe('side panel user flow', () => {
       url: 'https://www.youtube.com/watch?v=other-movie',
       title: 'Other Movie from tab',
     };
+    harness.youtube.activeTab = activeTab;
     vi.mocked(chrome.tabs.sendMessage).mockResolvedValue({
       success: true,
       videoId: 'other-movie',
@@ -702,7 +610,7 @@ describe('side panel user flow', () => {
     });
 
     await act(async () => {
-      runtimeListener!({
+      harness.runtimeListener!({
         type: 'YOUTUBE_URL_UPDATED',
         tabId: 3,
         url: 'https://www.youtube.com/watch?v=other-movie',
@@ -2146,19 +2054,22 @@ describe('side panel user flow', () => {
         }),
       })) as unknown as typeof fetch;
 
-      const deps = createSidePanelDependencies({
+      const controlledHarness = createSidePanelHarness({
         storage: controlledStorageAdapter,
         youtubeAdapter: controlledYoutubeAdapter,
         customFetch,
       });
 
       // Seed preferences and history through the controlled modules
-      await deps.preferences.setApiKey('gemini', 'controlled-gemini-key');
-      await deps.preferences.setSettings({
+      await controlledHarness.dependencies.preferences.setApiKey(
+        'gemini',
+        'controlled-gemini-key'
+      );
+      await controlledHarness.dependencies.preferences.setSettings({
         language: 'Polski',
         model: 'gemini-3.6-flash',
       });
-      await deps.history.saveRecord({
+      await controlledHarness.dependencies.history.saveRecord({
         videoId: 'controlled-vid',
         title: 'Controlled Video Title',
         author: 'Controlled Author',
@@ -2168,8 +2079,8 @@ describe('side panel user flow', () => {
         chat: [],
       });
 
-      // Render with explicitly injected dependencies
-      render(<SidePanelApp dependencies={deps} />);
+      // Render with explicitly injected dependencies through harness
+      controlledHarness.render();
 
       // Assert active film and restored saved session
       await waitFor(() =>
@@ -2190,6 +2101,7 @@ describe('side panel user flow', () => {
       await waitFor(() => {
         expect(screen.getByText(/Konfiguracja Rozszerzenia/)).toBeVisible();
       });
+      controlledHarness.cleanup();
     });
   });
 });
