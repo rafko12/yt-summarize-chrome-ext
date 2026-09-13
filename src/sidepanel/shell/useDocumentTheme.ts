@@ -1,8 +1,7 @@
 import { useEffect } from 'react';
+import type { PanelTheme } from '../theme';
 
-import { Theme } from '../settings';
-
-export default function useDocumentTheme(theme: Theme): void {
+export default function useDocumentTheme(theme: PanelTheme): void {
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.documentElement.setAttribute('data-theme', theme);

@@ -4,8 +4,8 @@ import { STORAGE_KEYS, StorageAdapter } from '../../storage';
 import { isModelAvailable, resolveCompatibleModel } from '../ai';
 import {
   InitialPreferences,
+  PanelTheme,
   Settings,
-  Theme,
   UserPreferencesStore,
 } from './types';
 
@@ -54,7 +54,7 @@ function normalizeSettings(value: unknown): Settings {
   };
 }
 
-function normalizeTheme(value: unknown): Theme | null {
+function normalizeTheme(value: unknown): PanelTheme | null {
   return value === 'night' || value === 'nord' ? value : null;
 }
 
@@ -114,7 +114,7 @@ export default function createUserPreferencesStore(
       await platform.write({ [key]: apiKey });
     },
 
-    async setTheme(theme: Theme): Promise<void> {
+    async setTheme(theme: PanelTheme): Promise<void> {
       await platform.write({
         [STORAGE_KEYS.UI_THEME]: theme,
       });

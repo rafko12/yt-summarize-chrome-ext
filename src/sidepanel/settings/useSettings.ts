@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { AiProvider } from '../ai';
-import type { Settings, Theme, UserPreferencesStore } from './types';
+import type { PanelTheme, Settings, UserPreferencesStore } from './types';
 
 import { AiClient, resolveCompatibleModel } from '../ai';
 
@@ -21,7 +21,7 @@ export default function useSettings({
   }
 
   // Theme state
-  const [theme, setTheme] = useState<Theme>(() =>
+  const [theme, setTheme] = useState<PanelTheme>(() =>
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-color-scheme: dark)').matches
       ? 'night'

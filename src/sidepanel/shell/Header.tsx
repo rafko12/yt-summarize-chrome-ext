@@ -1,10 +1,12 @@
 import { Moon, PushPin, Sparkle, Sun } from '@phosphor-icons/react';
 
+import { PanelTheme } from '../theme';
+
 export type SidePanelTab = 'analyze' | 'history' | 'settings';
 
 export interface HeaderProps {
   activeTab: SidePanelTab;
-  theme: 'night' | 'nord';
+  theme: PanelTheme;
   isPinned: boolean;
   onSelectTab: (tab: SidePanelTab) => void;
   onPin: () => void;

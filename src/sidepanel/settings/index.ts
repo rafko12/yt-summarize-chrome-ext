@@ -4,6 +4,7 @@ export { default as SettingsView } from './SettingsView';
 export type { SettingsViewProps } from './SettingsView';
 export type {
   InitialPreferences,
+  PanelTheme,
   Settings,
   Theme,
   UserPreferencesStore,

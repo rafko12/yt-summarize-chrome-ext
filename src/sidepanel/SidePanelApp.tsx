@@ -170,7 +170,7 @@ export default function SidePanelApp({
               chatMessages={analysisSession.chatMessages}
               isSendingChat={analysisSession.isSendingChat}
               chatInput={analysisSession.chatInput}
-              settings={settingsHook.settings}
+              language={settingsHook.settings.language}
               onLoadActiveFilm={analysisSession.loadActiveFilm}
               onClearChat={handleClearChat}
               onSendChatMessage={() =>
@@ -186,7 +186,7 @@ export default function SidePanelApp({
                   settingsHook.apiKeys
                 )
               }
-              onSetActiveTab={setActiveTab}
+              onOpenSettings={() => setActiveTab('settings')}
               onSeekTimestamp={analysisSession.handleSeekToTimestamp}
             />
           )}

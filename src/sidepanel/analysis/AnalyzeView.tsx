@@ -9,12 +9,10 @@ import {
 } from '@phosphor-icons/react';
 
 import { ConversationMessage, Film } from '../../domain/analysis';
-import { Settings } from '../settings';
-import { SidePanelTab } from '../shell';
 import { MarkdownLine } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';
 
-interface AnalyzeViewProps {
+export interface AnalyzeViewProps {
   hasAnyKey: boolean;
   isSearchingFilm: boolean;
   currentFilm: Film | null;
@@ -24,14 +22,14 @@ interface AnalyzeViewProps {
   chatMessages: ConversationMessage[];
   isSendingChat: boolean;
   chatInput: string;
-  settings: Settings;
+  language: string;
 
   onLoadActiveFilm: () => void;
   onClearChat: () => void;
   onSendChatMessage: () => void;
   onChatInputChange: (val: string) => void;
   onSummarizeFilm: () => void;
-  onSetActiveTab: (tab: SidePanelTab) => void;
+  onOpenSettings: () => void;
   onSeekTimestamp: (seconds: number) => void;
 }
 
@@ -45,14 +43,14 @@ export default function AnalyzeView({
   chatMessages,
   isSendingChat,
   chatInput,
-  settings,
+  language,
 
   onLoadActiveFilm,
   onClearChat,
   onSendChatMessage,
   onChatInputChange,
   onSummarizeFilm,
-  onSetActiveTab,
+  onOpenSettings,
   onSeekTimestamp,
 }: AnalyzeViewProps) {
   const chatListRef = useRef<HTMLDivElement>(null);
@@ -81,7 +79,7 @@ export default function AnalyzeView({
             </p>
             <button
               type='button'
-              onClick={() => onSetActiveTab('settings')}
+              onClick={onOpenSettings}
               className='btn btn-primary btn-sm mt-2 rounded-lg'
             >
               Skonfiguruj teraz
@@ -255,9 +253,7 @@ export default function AnalyzeView({
               </button>
               <p className='text-base-content/75 mt-3 text-[11px]'>
                 Język docelowy:{' '}
-                <span className='text-primary font-semibold'>
-                  {settings.language}
-                </span>
+                <span className='text-primary font-semibold'>{language}</span>
               </p>
             </div>
           )}

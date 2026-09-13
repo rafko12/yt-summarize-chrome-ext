@@ -14,6 +14,7 @@ const callbacks = {
   language: vi.fn(),
   load: vi.fn(),
   model: vi.fn(),
+  openSettings: vi.fn(),
   pin: vi.fn(),
   provider: vi.fn(),
   resume: vi.fn(),
@@ -21,13 +22,11 @@ const callbacks = {
   seek: vi.fn(),
   selectTab: vi.fn(),
   send: vi.fn(),
-  setTab: vi.fn(),
   summarize: vi.fn(),
   theme: vi.fn(),
   toggleKey: vi.fn(),
 };
 
-const settings = { language: 'Polski', model: 'gemini-3.6-flash' };
 const film = {
   videoId: 'abc123',
   title: 'Tytuł filmu',
@@ -51,18 +50,18 @@ describe('AnalyzeView', () => {
       chatMessages: [],
       isSendingChat: false,
       chatInput: '',
-      settings,
+      language: 'Polski',
       onLoadActiveFilm: callbacks.load,
       onClearChat: callbacks.clear,
       onSendChatMessage: callbacks.send,
       onChatInputChange: callbacks.input,
       onSummarizeFilm: callbacks.summarize,
-      onSetActiveTab: callbacks.setTab,
+      onOpenSettings: callbacks.openSettings,
       onSeekTimestamp: callbacks.seek,
     };
     const { rerender } = render(<AnalyzeView {...props} />);
     fireEvent.click(screen.getByRole('button', { name: /Skonfiguruj teraz/ }));
-    expect(callbacks.setTab).toHaveBeenCalledWith('settings');
+    expect(callbacks.openSettings).toHaveBeenCalledOnce();
 
     rerender(<AnalyzeView {...props} hasAnyKey isSearchingFilm />);
     expect(screen.getByText(/Szukanie aktywnego/)).toBeVisible();
@@ -70,6 +69,9 @@ describe('AnalyzeView', () => {
     rerender(<AnalyzeView {...props} hasAnyKey />);
     fireEvent.click(screen.getByRole('button', { name: /Od/ }));
     expect(callbacks.load).toHaveBeenCalledOnce();
+
+    rerender(<AnalyzeView {...props} hasAnyKey currentFilm={film} />);
+    expect(screen.getByText('Polski')).toBeVisible();
 
     rerender(
       <AnalyzeView
