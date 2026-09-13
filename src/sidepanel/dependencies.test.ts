@@ -88,4 +88,39 @@ describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
 
     expect(deps.runtime).toBe(mockRuntime);
   });
+
+  it('allows injecting a custom youtube adapter into composition root', async () => {
+    const mockYoutubeAdapter = {
+      getActiveTab: vi.fn(async () => ({
+        id: 123,
+        url: 'https://www.youtube.com/watch?v=custom-123',
+        title: 'Custom Title',
+      })),
+      getVideoData: vi.fn(async () => ({
+        success: true as const,
+        videoId: 'custom-123',
+        title: 'Custom Title',
+        author: 'Custom Author',
+        thumbnailUrl: 'https://example.com/custom.jpg',
+      })),
+      getTranscript: vi.fn(async () => ({
+        success: true as const,
+        transcript: [{ start: 0, duration: 2, text: 'Custom transcript' }],
+      })),
+      seekTo: vi.fn(async () => ({ success: true as const })),
+    };
+
+    const deps = createSidePanelDependencies({
+      youtubeAdapter: mockYoutubeAdapter,
+    });
+
+    const film = await deps.youtube.readActiveFilm();
+    expect(film).toEqual({
+      videoId: 'custom-123',
+      title: 'Custom Title',
+      author: 'Custom Author',
+      thumbnailUrl: 'https://example.com/custom.jpg',
+    });
+    expect(mockYoutubeAdapter.getActiveTab).toHaveBeenCalled();
+  });
 });

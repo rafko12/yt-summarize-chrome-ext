@@ -1,6 +1,5 @@
 import { Film } from '../../domain/analysis';
 import { isErrorResponse } from '../../messaging';
-import createChromeYoutubeAdapter from './chromeYoutubeAdapter';
 import {
   ActiveYoutubeTab,
   TranscriptRequestOptions,
@@ -22,8 +21,11 @@ function createFallbackFilm(
 }
 
 export default function createYoutube(
-  adapter: YoutubeAdapter = createChromeYoutubeAdapter()
+  adapter: YoutubeAdapter
 ): YoutubeIntegration {
+  if (!adapter) {
+    throw new Error('Wymagany jest jawny adapter YouTube.');
+  }
   return {
     async readActiveFilm(fallbackFilm?: Film): Promise<Film | null> {
       try {

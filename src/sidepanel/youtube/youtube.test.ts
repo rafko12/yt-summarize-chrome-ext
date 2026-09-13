@@ -176,31 +176,10 @@ describe('moduł YouTube panelu bocznego (src/sidepanel/youtube)', () => {
     await expect(youtube.readActiveFilm()).resolves.toBeNull();
   });
 
-  test('używa domyślnego adaptera Chrome gdy wywołano createYoutube bez argumentów', async () => {
-    global.chrome = {
-      ...chrome,
-      tabs: {
-        ...chrome.tabs,
-        query: vi.fn(async () => [
-          { id: 10, url: 'https://www.youtube.com/watch?v=def', title: 'Def' },
-        ]),
-        sendMessage: vi.fn(async () => ({
-          success: true,
-          videoId: 'def',
-          title: 'Def Title',
-          author: 'Def Author',
-          thumbnailUrl: 'def.jpg',
-        })),
-      },
-    } as unknown as typeof chrome;
-
-    const youtube = createYoutube();
-    const video = await youtube.readActiveFilm();
-    expect(video).toEqual({
-      videoId: 'def',
-      title: 'Def Title',
-      author: 'Def Author',
-      thumbnailUrl: 'def.jpg',
-    });
+  test('wymaga jawnego adaptera i nie tworzy niejawnego środowiska Chrome', () => {
+    // @ts-expect-error weryfikacja błędu przy braku przekazanego adaptera
+    expect(() => createYoutube()).toThrow(
+      'Wymagany jest jawny adapter YouTube.'
+    );
   });
 });
