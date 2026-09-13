@@ -2104,4 +2104,157 @@ describe('side panel user flow', () => {
       controlledHarness.cleanup();
     });
   });
+
+  describe('panel runtime integration through harness (Issue #85)', () => {
+    test('lifecycle: queries panel context, initializes background panel state, and reflects pinned state', async () => {
+      harness = createSidePanelHarness({
+        panelContext: { tabId: 42, windowId: 7 },
+        isPinnedGlobal: true,
+      });
+
+      renderApp();
+
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+      expect(harness.runtime.initCalls).toContain(42);
+      expect(harness.runtime.isPinnedGlobal).toBe(true);
+      // Pinned panel hides the "Przypnij" button in the header
+      expect(
+        screen.queryByRole('button', { name: /Przypnij/ })
+      ).not.toBeInTheDocument();
+    });
+
+    test('lifecycle: handles missing panel context gracefully without calling initialize', async () => {
+      harness = createSidePanelHarness({
+        panelContext: null,
+      });
+
+      renderApp();
+
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+      expect(harness.runtime.initCalls).toEqual([]);
+      // Since context is null, "Przypnij" remains visible
+      expect(screen.getByRole('button', { name: /Przypnij/ })).toBeVisible();
+    });
+
+    test('subscription cleanup: removes notification listener when unmounted', async () => {
+      harness = createSidePanelHarness();
+      renderApp();
+
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+      expect(harness.runtime.listenerCount).toBe(1);
+
+      harness.cleanup();
+      expect(harness.runtime.listenerCount).toBe(0);
+    });
+
+    test('film update: refreshes active film when runtime notification is emitted', async () => {
+      harness = createSidePanelHarness();
+      renderApp();
+
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+
+      // Change active tab and video data in harness
+      harness.youtube.activeTab = {
+        id: 3,
+        windowId: 4,
+        url: 'https://www.youtube.com/watch?v=runtime-notification-video',
+        title: 'Notification Video from tab',
+      };
+      harness.youtube.videoData = {
+        success: true,
+        videoId: 'runtime-notification-video',
+        title: 'Runtime Notification Video',
+        author: 'Notification Creator',
+        thumbnailUrl: 'https://example.com/notification.jpg',
+      };
+
+      // Emit notification directly through controlled runtime
+      await act(async () => {
+        harness.runtime.emitNotification({
+          type: 'YOUTUBE_URL_UPDATED',
+          tabId: 3,
+          url: 'https://www.youtube.com/watch?v=runtime-notification-video',
+        });
+      });
+
+      await waitFor(() =>
+        expect(screen.getByText('Runtime Notification Video')).toBeVisible()
+      );
+    });
+
+    test('pinning success: clicking pin requests global pin, updates state, and hides pin button', async () => {
+      harness = createSidePanelHarness({
+        panelContext: { tabId: 3, windowId: 4 },
+        isPinnedGlobal: false,
+      });
+      renderApp();
+
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+      const pinButton = screen.getByRole('button', { name: /Przypnij/ });
+      expect(pinButton).toBeVisible();
+
+      fireEvent.click(pinButton);
+
+      await waitFor(() => {
+        expect(harness.runtime.pinCalls).toEqual([{ tabId: 3, windowId: 4 }]);
+        expect(harness.runtime.isPinnedGlobal).toBe(true);
+        expect(
+          screen.queryByRole('button', { name: /Przypnij/ })
+        ).not.toBeInTheDocument();
+      });
+    });
+
+    test('pinning error response: keeps pin button visible and does not set pinned state', async () => {
+      harness = createSidePanelHarness({
+        panelContext: { tabId: 3, windowId: 4 },
+        isPinnedGlobal: false,
+      });
+      harness.runtime.setPinResult({ error: 'Błąd przypinania panelu.' });
+      renderApp();
+
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+      const pinButton = screen.getByRole('button', { name: /Przypnij/ });
+      expect(pinButton).toBeVisible();
+
+      fireEvent.click(pinButton);
+
+      await waitFor(() => {
+        expect(harness.runtime.pinCalls).toEqual([{ tabId: 3, windowId: 4 }]);
+      });
+
+      expect(harness.runtime.isPinnedGlobal).toBe(false);
+      expect(screen.getByRole('button', { name: /Przypnij/ })).toBeVisible();
+    });
+
+    test('pinning rejection: logs error to console and keeps pin button visible', async () => {
+      const consoleErrorSpy = vi
+        .spyOn(console, 'error')
+        .mockImplementation(() => undefined);
+
+      harness = createSidePanelHarness({
+        panelContext: { tabId: 3, windowId: 4 },
+        isPinnedGlobal: false,
+      });
+      harness.runtime.setPinRejection(new Error('Chrome IPC error'));
+      renderApp();
+
+      await waitFor(() => expect(screen.getByText('Movie')).toBeVisible());
+      const pinButton = screen.getByRole('button', { name: /Przypnij/ });
+      expect(pinButton).toBeVisible();
+
+      fireEvent.click(pinButton);
+
+      await waitFor(() => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          'Failed to pin the side panel:',
+          expect.any(Error)
+        );
+      });
+
+      expect(harness.runtime.isPinnedGlobal).toBe(false);
+      expect(screen.getByRole('button', { name: /Przypnij/ })).toBeVisible();
+
+      consoleErrorSpy.mockRestore();
+    });
+  });
 });

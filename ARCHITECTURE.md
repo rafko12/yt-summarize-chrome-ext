@@ -35,7 +35,7 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 
 `src/sidepanel/` jest aplikacją React montowaną bezpośrednio w kontenerze `#my-ext-sidepanel-page` własnego dokumentu HTML panelu (`src/sidepanel/index.html`), bez użycia Shadow DOM ani izolacji stylów. Obsługuje analizę, Historię analiz i ustawienia.
 
-- `dependencies.ts` jest jedynym jawnym composition root panelu bocznego (`SidePanelDependencies`), tworzącym pojedynczy współdzielony adapter lokalnego storage dla modułów preferencji i Historii analiz oraz instancje integracji YouTube i klienta AI. Produkcja i testy przekazują zależności przez ten sam interfejs.
+- `dependencies.ts` jest jedynym jawnym composition root panelu bocznego (`SidePanelDependencies`), tworzącym pojedynczy współdzielony adapter lokalnego storage dla modułów preferencji i Historii analiz, instancje integracji YouTube, klienta AI oraz runtime panelu bocznego. Produkcja i testy przekazują zależności przez ten sam interfejs.
 - `SidePanelApp.tsx` składa widoki i hooki w oparciu o jawnie wstrzyknięty zestaw zależności (`SidePanelDependencies`).
 - `shell/` integruje powłokę i nagłówek panelu (`Header.tsx`) oraz synchronizację motywu dokumentu (`useDocumentTheme.ts`).
 - `analysis/` integruje widoki analizy (`AnalyzeView.tsx`, `SummaryView.tsx`), prezentacyjny renderer Markdown z timestampami (`MarkdownWithTimestamps.tsx`), parser timestampów (`timestampParser.ts`), stan analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`). Renderer timestampów nie tworzy adaptera Chrome — otrzymuje jawny callback `onSeek` z orkiestracji sesji. Przewijanie rozmowy jest efektem widoku `AnalyzeView`, nie orkiestracji sesji.
@@ -44,10 +44,9 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 - `history/` integruje Historię analiz i Zapisy analiz: widok (`HistoryView.tsx`), hook (`useAnalysisHistory.ts`), typy (`types.ts`) oraz operacje persistence (`analysisHistory.ts`) bezpośrednio przez wspólny adapter storage.
 - `preferences/` integruje preferencje użytkownika, klucze API, motyw i ustawienia: widok (`SettingsView.tsx`), hook (`useSettings.ts`), typy (`types.ts`) oraz operacje persistence (`userPreferences.ts`) bezpośrednio przez wspólny adapter storage. Synchronizacja motywu dokumentu HTML należy do shella (`useDocumentTheme`), nie do feature preferencji.
 - `dangerZone.ts` koordynuje bezpieczne czyszczenie wrażliwych danych użytkownika (kluczy API i Historii analiz) przez ich właścicieli domenowych z zachowaniem pozostałych preferencji i stanu panelu.
-- `panelContext.ts` jest właścicielem infrastrukturalnym odczytu kontekstu karty i okna panelu bocznego (`getCurrentPanelContext`).
-- `chromeBackgroundTransport.ts` realizuje transport wiadomości z panelu do background service workera oraz nasłuchiwanie notyfikacji panelu (`listenToPanelNotifications`).
+- `runtime/` integruje szew pomiędzy panelem a hostem Chrome (`PanelRuntime`): pobieranie kontekstu karty i okna, start panelu w tle (`PANEL_INIT`), globalne przypinanie oraz subskrypcję notyfikacji panelu z adapterem produkcyjnym (`chromePanelRuntime.ts`) i kontrolowanym adapterem testowym (`controlledPanelRuntime.ts`).
 
-Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/sidepanel/youtube/`), a z backgroundem przez transport panelu `src/sidepanel/chromeBackgroundTransport.ts`. Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
+Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/sidepanel/youtube/`), a z backgroundem przez jednolity runtime panelu (`src/sidepanel/runtime/`). Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
 
 ### Strona opcji
 

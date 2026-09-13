@@ -8,14 +8,23 @@ import {
 } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { TranscriptResponse, VideoDataResponse } from '../messaging';
+import {
+  isPanelNotification,
+  TranscriptResponse,
+  VideoDataResponse,
+} from '../messaging';
 import { createChromeStorageLocalAdapter } from '../storage';
 import { StorageAdapter } from '../storage/types';
 import {
   createSidePanelDependencies,
   SidePanelDependencies,
 } from './dependencies';
-import { SidePanelContext } from './panelContext';
+import {
+  ControlledPanelRuntime,
+  createControlledPanelRuntime,
+  PanelRuntime,
+  SidePanelContext,
+} from './runtime';
 import SidePanelApp from './SidePanelApp';
 import { YoutubeAdapter } from './youtube/types';
 
@@ -62,14 +71,15 @@ export interface SidePanelHarnessOptions {
   initialVideoData?: VideoData;
   initialTranscript?: TranscriptResult;
   isPinnedGlobal?: boolean;
-  panelContext?: SidePanelContext;
-  runtime?: unknown; // Explicit extension point for Phase 2 panel runtime
+  panelContext?: SidePanelContext | null;
+  runtime?: ControlledPanelRuntime | PanelRuntime;
 }
 
 export interface SidePanelHarness {
   storage: ControlledStorage;
   youtube: ControlledYoutube;
   ai: ControlledAi;
+  runtime: ControlledPanelRuntime;
   dependencies: SidePanelDependencies;
   runtimeExtensionPoint: unknown;
   isPinnedGlobal: boolean;
@@ -289,7 +299,35 @@ export function createSidePanelHarness(
     dispatchEvent: vi.fn(),
   })) as unknown as typeof window.matchMedia;
 
-  // 6. Chrome environment isolation
+  function resolveInitialContext(): SidePanelContext | null {
+    if (options.panelContext !== undefined) {
+      return options.panelContext;
+    }
+    if (
+      options.initialTab?.id !== undefined &&
+      options.initialTab?.windowId !== undefined
+    ) {
+      return {
+        tabId: options.initialTab.id,
+        windowId: options.initialTab.windowId,
+      };
+    }
+    return {
+      tabId: currentActiveTab.id ?? 3,
+      windowId: currentActiveTab.windowId ?? 4,
+    };
+  }
+
+  // 6. Controlled Runtime
+  const controlledRuntime: ControlledPanelRuntime =
+    options.runtime && 'setContext' in options.runtime
+      ? (options.runtime as ControlledPanelRuntime)
+      : createControlledPanelRuntime({
+          initialContext: resolveInitialContext(),
+          initialPinnedGlobal: options.isPinnedGlobal ?? false,
+        });
+
+  // 7. Chrome environment isolation
   type RuntimeListener = (
     message: unknown,
     sender?: chrome.runtime.MessageSender,
@@ -390,7 +428,8 @@ export function createSidePanelHarness(
     runtime: {
       ...global.chrome?.runtime,
       sendMessage: vi.fn(async (message: { type?: string }) => {
-        if (message.type === 'YOUTUBE_URL_UPDATED') {
+        if (isPanelNotification(message)) {
+          controlledRuntime.emitNotification(message);
           runtimeListeners.forEach((listener) => listener(message));
           return undefined;
         }
@@ -414,12 +453,16 @@ export function createSidePanelHarness(
     },
   } as unknown as typeof chrome;
 
-  // 7. Dependencies creation
+  // 8. Dependencies creation
   const dependencies: SidePanelDependencies = {
     ...createSidePanelDependencies({
       storage: options.storage,
       youtubeAdapter: options.youtubeAdapter,
       customFetch: options.customFetch,
+      runtime:
+        options.runtime && 'getContext' in options.runtime
+          ? (options.runtime as PanelRuntime)
+          : controlledRuntime,
     }),
     ...options.dependencies,
   };
@@ -445,12 +488,14 @@ export function createSidePanelHarness(
     storage,
     youtube,
     ai,
+    runtime: controlledRuntime,
     dependencies,
-    runtimeExtensionPoint: options.runtime ?? null,
+    runtimeExtensionPoint: options.runtime ?? controlledRuntime,
     get isPinnedGlobal() {
-      return isPinnedGlobalState;
+      return controlledRuntime.isPinnedGlobal;
     },
     setPinnedGlobal: (pinned: boolean) => {
+      controlledRuntime.setPinnedGlobal(pinned);
       isPinnedGlobalState = pinned;
     },
     render: (customDeps?: Partial<SidePanelDependencies>) =>
@@ -470,6 +515,7 @@ export function createSidePanelHarness(
         ...notification,
       };
       await act(async () => {
+        controlledRuntime.emitNotification(message);
         runtimeListeners.forEach((listener) => {
           listener(message);
         });
@@ -483,7 +529,17 @@ export function createSidePanelHarness(
       });
     },
     get runtimeListener() {
-      return Array.from(runtimeListeners)[0];
+      return (message: unknown) => {
+        if (isPanelNotification(message)) {
+          controlledRuntime.emitNotification(message);
+        }
+        let result: boolean | void = false;
+        runtimeListeners.forEach((listener) => {
+          const res = listener(message);
+          if (typeof res === 'boolean') result = res;
+        });
+        return result;
+      };
     },
     get tabUpdatedListener() {
       return Array.from(tabUpdatedListeners)[0];
@@ -512,7 +568,7 @@ describe('SidePanel Test Harness (src/sidepanel/sidePanelHarness.test.tsx)', () 
     harness?.cleanup();
   });
 
-  it('provides controlled isolated storage, youtube, and aiClient by default', async () => {
+  it('provides controlled isolated storage, youtube, aiClient, and runtime by default', async () => {
     harness = createSidePanelHarness({
       initialStorage: { custom_test_key: 'custom_value' },
     });
@@ -527,6 +583,12 @@ describe('SidePanel Test Harness (src/sidepanel/sidePanelHarness.test.tsx)', () 
     expect(harness.dependencies.history).toBeDefined();
     expect(harness.dependencies.youtube).toBeDefined();
     expect(harness.dependencies.aiClient).toBeDefined();
+    expect(harness.dependencies.runtime).toBeDefined();
+    expect(harness.runtime).toBeDefined();
+    await expect(harness.runtime.getContext()).resolves.toEqual({
+      tabId: 3,
+      windowId: 4,
+    });
   });
 
   it('allows explicitly passing controlled storage, youtubeAdapter, and customFetch', async () => {
@@ -596,11 +658,36 @@ describe('SidePanel Test Harness (src/sidepanel/sidePanelHarness.test.tsx)', () 
     harnessB.cleanup();
   });
 
-  it('contains prepared extension point for panel runtime without creating production abstraction', () => {
+  it('contains prepared extension point for panel runtime and supports custom runtime injection', () => {
     const dummyRuntime = { id: 'mock-runtime-phase-2' };
-    harness = createSidePanelHarness({ runtime: dummyRuntime });
+    harness = createSidePanelHarness({
+      runtime: dummyRuntime as unknown as PanelRuntime,
+    });
 
     expect(harness.runtimeExtensionPoint).toBe(dummyRuntime);
+  });
+
+  it('provides deterministic control over panel runtime through harness.runtime', async () => {
+    harness = createSidePanelHarness({
+      panelContext: { tabId: 10, windowId: 20 },
+      isPinnedGlobal: true,
+    });
+
+    await expect(harness.runtime.getContext()).resolves.toEqual({
+      tabId: 10,
+      windowId: 20,
+    });
+    expect(harness.isPinnedGlobal).toBe(true);
+
+    harness.runtime.setContext(null);
+    await expect(harness.runtime.getContext()).resolves.toBeNull();
+
+    harness.setPinnedGlobal(false);
+    expect(harness.isPinnedGlobal).toBe(false);
+
+    const initResult = await harness.runtime.initialize(10);
+    expect(initResult).toEqual({ isPinnedGlobal: false });
+    expect(harness.runtime.initCalls).toEqual([10]);
   });
 
   it('safely cleans up DOM, mock chrome and listeners on cleanup()', async () => {

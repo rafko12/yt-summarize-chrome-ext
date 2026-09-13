@@ -6,6 +6,7 @@ import {
   createSidePanelDependencies,
   SidePanelDependencies,
 } from './dependencies';
+import { PanelRuntime } from './runtime';
 
 describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
   it('creates production dependencies with a single shared storage adapter for preferences and history', async () => {
@@ -30,6 +31,7 @@ describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
     expect(deps.history).toBeDefined();
     expect(deps.youtube).toBeDefined();
     expect(deps.aiClient).toBeDefined();
+    expect(deps.runtime).toBeDefined();
 
     // Verify storage adapter is shared: write through preferences and read/write through history
     await deps.preferences.setApiKey('gemini', 'test-key-gemini');
@@ -51,7 +53,7 @@ describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
     expect(Array.isArray(memoryStore[STORAGE_KEYS.HISTORY])).toBe(true);
   });
 
-  it('instantiates youtube integration and ai client in composition root', async () => {
+  it('instantiates youtube integration, ai client, and panel runtime in composition root', async () => {
     const deps = createSidePanelDependencies();
 
     // YouTube integration exposes canonical public methods
@@ -64,5 +66,26 @@ describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
     expect(typeof deps.aiClient.generateSummary).toBe('function');
     expect(typeof deps.aiClient.generateChatResponse).toBe('function');
     expect(typeof deps.aiClient.getProvider).toBe('function');
+
+    // Panel runtime exposes canonical public methods
+    expect(typeof deps.runtime.getContext).toBe('function');
+    expect(typeof deps.runtime.initialize).toBe('function');
+    expect(typeof deps.runtime.requestGlobalPin).toBe('function');
+    expect(typeof deps.runtime.subscribeNotifications).toBe('function');
+  });
+
+  it('allows injecting a custom runtime into composition root', () => {
+    const mockRuntime: PanelRuntime = {
+      getContext: vi.fn(),
+      initialize: vi.fn(),
+      requestGlobalPin: vi.fn(),
+      subscribeNotifications: vi.fn(),
+    };
+
+    const deps = createSidePanelDependencies({
+      runtime: mockRuntime,
+    });
+
+    expect(deps.runtime).toBe(mockRuntime);
   });
 });

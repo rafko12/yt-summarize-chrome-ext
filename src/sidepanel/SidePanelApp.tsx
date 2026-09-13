@@ -4,14 +4,11 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { AnalysisRecord } from '../domain/analysis';
 import { isErrorResponse } from '../messaging';
 import { AnalyzeView, useAnalysisSession } from './analysis';
-import sendMessageToBackground, {
-  listenToPanelNotifications,
-} from './chromeBackgroundTransport';
 import { clearApiKeysAndHistory } from './dangerZone';
 import { SidePanelDependencies } from './dependencies';
 import { HistoryView, useAnalysisHistory } from './history';
-import { getCurrentPanelContext, SidePanelContext } from './panelContext';
 import { SettingsView, useSettings } from './preferences';
+import { SidePanelContext } from './runtime';
 import { Header, SidePanelTab, useDocumentTheme } from './shell';
 
 export interface SidePanelAppProps {
@@ -21,7 +18,7 @@ export interface SidePanelAppProps {
 export default function SidePanelApp({
   dependencies,
 }: SidePanelAppProps): JSX.Element {
-  const { preferences, history, youtube, aiClient } = dependencies;
+  const { preferences, history, youtube, aiClient, runtime } = dependencies;
   const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');
   const [isPinnedGlobal, setIsPinnedGlobal] = useState<boolean>(false);
   const panelContextRef = useRef<SidePanelContext | null>(null);
@@ -50,13 +47,10 @@ export default function SidePanelApp({
   // Inicjalizacja side panelu, nasłuchiwanie i sprawdzanie przypięcia
   useEffect(() => {
     const initPanel = async () => {
-      const panelContext = await getCurrentPanelContext();
+      const panelContext = await runtime.getContext();
       if (panelContext) {
         panelContextRef.current = panelContext;
-        const response = await sendMessageToBackground({
-          type: 'PANEL_INIT',
-          tabId: panelContext.tabId,
-        });
+        const response = await runtime.initialize(panelContext.tabId);
         if (response && typeof response.isPinnedGlobal === 'boolean') {
           setIsPinnedGlobal(response.isPinnedGlobal);
         }
@@ -65,24 +59,25 @@ export default function SidePanelApp({
       await loadActiveFilm();
     };
     initPanel();
-  }, [loadActiveFilm]);
+  }, [loadActiveFilm, runtime]);
 
   // Nasłuch na aktualizacje w locie - jak zmienił się URL YouTube
   useEffect(
     () =>
-      listenToPanelNotifications((notification) => {
+      runtime.subscribeNotifications((notification) => {
         if (notification.type === 'YOUTUBE_URL_UPDATED') {
           loadActiveFilm();
         }
       }),
-    [loadActiveFilm]
+    [loadActiveFilm, runtime]
   );
 
   const handlePinGlobal = () => {
     const panelContext = panelContextRef.current;
     if (!panelContext) return;
 
-    sendMessageToBackground({ type: 'PIN_GLOBAL', ...panelContext })
+    runtime
+      .requestGlobalPin(panelContext)
       .then((response) => {
         if (!isErrorResponse(response)) {
           setIsPinnedGlobal(true);

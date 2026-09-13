@@ -9,6 +9,7 @@ export type {
   BackgroundResponse,
   ContentMessage,
   ContentResponse,
+  ErrorResponse,
   ExtensionResponse,
   PanelNotification,
   PinStateResponse,
