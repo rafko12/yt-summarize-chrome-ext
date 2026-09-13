@@ -1,7 +1,10 @@
+/* @vitest-environment jsdom */
+
+import { renderHook, waitFor } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { createChromeStorageLocalAdapter, STORAGE_KEYS } from '../../storage';
-import { createAnalysisHistory } from './index';
+import { createAnalysisHistory, useAnalysisHistory } from './index';
 
 describe('History Module public seam (src/sidepanel/history)', () => {
   it('instantiates history directly with shared ChromeStorageLocalAdapter and canonical keys', async () => {
@@ -39,5 +42,36 @@ describe('History Module public seam (src/sidepanel/history)', () => {
     // Verify stored under canonical STORAGE_KEYS.HISTORY
     const rawStored = memoryStore[STORAGE_KEYS.HISTORY] as unknown[];
     expect(rawStored).toHaveLength(1);
+  });
+
+  it('exposes exactly one canonical deleteRecord and clearRecords operation from useAnalysisHistory without alias duplicates', async () => {
+    const memoryStore: Record<string, unknown> = {};
+    const mockStorageLocal = {
+      get: (
+        keys: string | string[],
+        cb: (res: Record<string, unknown>) => void
+      ) => {
+        const keyList = Array.isArray(keys) ? keys : [keys];
+        cb(Object.fromEntries(keyList.map((k) => [k, memoryStore[k]])));
+      },
+      set: (items: Record<string, unknown>, cb?: () => void) => {
+        Object.assign(memoryStore, items);
+        cb?.();
+      },
+    } as unknown as typeof chrome.storage.local;
+
+    const adapter = createChromeStorageLocalAdapter(mockStorageLocal);
+    const history = createAnalysisHistory(adapter);
+
+    const { result } = renderHook(() => useAnalysisHistory({ history }));
+    await waitFor(() => expect(result.current.historyList).toEqual([]));
+
+    expect(typeof result.current.deleteRecord).toBe('function');
+    expect(typeof result.current.clearRecords).toBe('function');
+    expect(typeof result.current.loadHistory).toBe('function');
+    expect(Array.isArray(result.current.historyList)).toBe(true);
+
+    expect(result.current).not.toHaveProperty('handleDeleteHistory');
+    expect(result.current).not.toHaveProperty('handleClearHistory');
   });
 });

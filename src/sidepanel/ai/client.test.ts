@@ -1,7 +1,7 @@
 // cspell:ignore generativelanguage
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createAiClient, formatTranscript } from './client';
+import { createAiClient } from './client';
 
 const existingModelProviders = {
   'gemini-3.6-flash': 'gemini',
@@ -29,22 +29,60 @@ afterEach(() => vi.unstubAllGlobals());
 describe('AI client', () => {
   const defaultClient = createAiClient();
 
-  describe('formatTranscript', () => {
-    it('should format transcript correctly for normal times', () => {
+  describe('transcript formatting in public AI operations', () => {
+    it('does not expose formatTranscript on the public client interface', () => {
+      expect(defaultClient).not.toHaveProperty('formatTranscript');
+    });
+
+    it('formats transcript segments into the request payload for normal times', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        mockJsonResponse({
+          candidates: [{ content: { parts: [{ text: 'Podsumowanie' }] } }],
+        })
+      );
+      const client = createAiClient(fetchMock);
+
       const transcript = [
         { start: 0, duration: 5, text: 'Hello' },
         { start: 65, duration: 5, text: 'World' },
       ];
-      const result = formatTranscript(transcript);
-      expect(result).toBe('[00:00] Hello\n[01:05] World');
+
+      await client.generateSummary(
+        'test-key',
+        transcript,
+        'Polski',
+        'gemini-3.6-flash'
+      );
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [, options] = fetchMock.mock.calls[0];
+      const parsedBody = JSON.parse(options.body);
+      const sentUserText = parsedBody.contents[0].parts[0].text;
+      expect(sentUserText).toContain('[00:00] Hello\n[01:05] World');
     });
 
-    it('should format transcript correctly for times above 1 hour (as total minutes)', () => {
-      const transcript = [
-        { start: 3690, duration: 5, text: 'Above hour' }, // 61:30
-      ];
-      const result = formatTranscript(transcript);
-      expect(result).toBe('[61:30] Above hour');
+    it('formats transcript segments for times above 1 hour (as total minutes) in request payload', async () => {
+      const fetchMock = vi.fn().mockResolvedValue(
+        mockJsonResponse({
+          candidates: [{ content: { parts: [{ text: 'Podsumowanie' }] } }],
+        })
+      );
+      const client = createAiClient(fetchMock);
+
+      const transcript = [{ start: 3690, duration: 5, text: 'Above hour' }];
+
+      await client.generateSummary(
+        'test-key',
+        transcript,
+        'Polski',
+        'gemini-3.6-flash'
+      );
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [, options] = fetchMock.mock.calls[0];
+      const parsedBody = JSON.parse(options.body);
+      const sentUserText = parsedBody.contents[0].parts[0].text;
+      expect(sentUserText).toContain('[61:30] Above hour');
     });
   });
 

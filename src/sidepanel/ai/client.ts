@@ -43,17 +43,17 @@ export interface AiClient {
     model?: string
   ): Promise<string>;
   getProvider(model: string): AiProvider;
-  formatTranscript(transcript: TranscriptSegment[]): string;
 }
 
-export const formatTranscript = (transcript: TranscriptSegment[]) =>
-  transcript
+function formatTranscript(transcript: TranscriptSegment[]): string {
+  return transcript
     .map((item) => {
       const min = Math.floor(item.start / 60);
       const sec = Math.floor(item.start % 60);
       return `[${String(min).padStart(2, '0')}:${String(sec).padStart(2, '0')}] ${item.text}`;
     })
     .join('\n');
+}
 
 function getProvider(model: string): AiProvider {
   const configuredModel = getAiModel(model);
@@ -93,7 +93,6 @@ export function createAiClient(customFetch?: typeof fetch): AiClient {
   }
 
   return {
-    formatTranscript,
     getProvider,
 
     async validateApiKey(

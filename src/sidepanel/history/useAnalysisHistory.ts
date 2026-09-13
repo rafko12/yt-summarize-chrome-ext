@@ -40,7 +40,5 @@ export default function useAnalysisHistory({
     loadHistory,
     deleteRecord,
     clearRecords,
-    handleDeleteHistory: deleteRecord,
-    handleClearHistory: clearRecords,
   };
 }
