@@ -9,7 +9,7 @@ import {
   UserPreferencesStore,
 } from './types';
 
-export const DEFAULT_SETTINGS: Settings = {
+const DEFAULT_SETTINGS: Settings = {
   language: 'Polski',
   model: 'gemini-3.5-flash',
 };
@@ -103,36 +103,15 @@ export default function createUserPreferencesStore(
       };
     },
 
-    async getSettings(): Promise<Settings> {
-      const raw = await platform.read([STORAGE_KEYS.SETTINGS]);
-      return normalizeSettings(raw[STORAGE_KEYS.SETTINGS]);
-    },
-
     async setSettings(settings: Settings): Promise<void> {
       await platform.write({
         [STORAGE_KEYS.SETTINGS]: settings,
       });
     },
 
-    async getApiKey(provider: AiProvider = 'gemini'): Promise<string> {
-      const key = API_KEY_STORAGE_KEYS[provider];
-      const raw = await platform.read([key]);
-      return normalizeString(raw[key]);
-    },
-
     async setApiKey(provider: AiProvider, apiKey: string): Promise<void> {
       const key = API_KEY_STORAGE_KEYS[provider];
       await platform.write({ [key]: apiKey });
-    },
-
-    async getAllApiKeys(): Promise<Record<AiProvider, string>> {
-      const raw = await platform.read(ALL_API_KEY_KEYS);
-      return normalizeApiKeys(raw);
-    },
-
-    async getTheme(): Promise<Theme | null> {
-      const raw = await platform.read([STORAGE_KEYS.UI_THEME]);
-      return normalizeTheme(raw[STORAGE_KEYS.UI_THEME]);
     },
 
     async setTheme(theme: Theme): Promise<void> {

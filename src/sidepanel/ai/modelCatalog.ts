@@ -103,7 +103,3 @@ export function getAiProvider(provider: AiProvider) {
 export function getAiModel(model: string) {
   return AI_MODELS.find((entry) => entry.id === model);
 }
-
-export function getDefaultAiModel(provider: AiProvider): string {
-  return getAiProvider(provider).defaultModel;
-}

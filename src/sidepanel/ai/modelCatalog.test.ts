@@ -3,10 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   AI_MODELS,
   AI_PROVIDERS,
-  AiProvider,
   getAiModel,
   getAiProvider,
-  getDefaultAiModel,
 } from './modelCatalog';
 
 describe('AI Model Catalog (modelCatalog)', () => {
@@ -48,13 +46,5 @@ describe('AI Model Catalog (modelCatalog)', () => {
 
     const notFound = getAiModel('unknown-model-xyz');
     expect(notFound).toBeUndefined();
-  });
-
-  it('returns default model for each AI provider', () => {
-    const providers: AiProvider[] = ['gemini', 'openai', 'claude'];
-    providers.forEach((provider) => {
-      const defaultModel = getDefaultAiModel(provider);
-      expect(defaultModel).toBe(getAiProvider(provider).defaultModel);
-    });
   });
 });

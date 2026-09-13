@@ -8,9 +8,6 @@ export type {
   Theme,
   UserPreferencesStore,
 } from './types';
-export {
-  default as createUserPreferencesStore,
-  DEFAULT_SETTINGS,
-} from './userPreferencesStore';
+export { default as createUserPreferencesStore } from './userPreferencesStore';
 export { default as useSettings } from './useSettings';
 export type { UseSettingsProps } from './useSettings';

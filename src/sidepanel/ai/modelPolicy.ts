@@ -8,7 +8,7 @@ import {
 /**
  * Sprawdza, czy klucz API dla danego Dostawcy AI jest niepusty.
  */
-export function hasApiKey(
+function hasApiKey(
   apiKeys: Partial<Record<AiProvider, string | null | undefined>> | undefined,
   provider: AiProvider
 ): boolean {

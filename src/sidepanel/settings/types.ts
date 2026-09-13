@@ -15,12 +15,8 @@ export interface InitialPreferences {
 
 export interface UserPreferencesStore {
   readInitialPreferences(): Promise<InitialPreferences>;
-  getSettings(): Promise<Settings>;
   setSettings(settings: Settings): Promise<void>;
-  getApiKey(provider?: AiProvider): Promise<string>;
   setApiKey(provider: AiProvider, apiKey: string): Promise<void>;
-  getAllApiKeys(): Promise<Record<AiProvider, string>>;
-  getTheme(): Promise<Theme | null>;
   setTheme(theme: Theme): Promise<void>;
   clearApiKeys(): Promise<void>;
 }

@@ -10,7 +10,6 @@ import { createAnalysisHistory } from '../sidepanel/history';
 import {
   clearUserData,
   createUserPreferencesStore,
-  DEFAULT_SETTINGS,
 } from '../sidepanel/settings';
 import {
   createChromeStorageLocalAdapter,
@@ -117,27 +116,34 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
     it('normalizes legacy and partially invalid settings', async () => {
       const preferences = createUserPreferencesStore(adapter);
 
-      // Completely invalid non-object types fall back to DEFAULT_SETTINGS
+      // Completely invalid non-object types fall back to default settings
       rawStorage[STORAGE_KEYS.SETTINGS] = 'invalid-string';
-      await expect(preferences.getSettings()).resolves.toEqual(
-        DEFAULT_SETTINGS
-      );
+      const stringResult = await preferences.readInitialPreferences();
+      expect(stringResult.settings).toEqual({
+        language: 'Polski',
+        model: 'gemini-3.5-flash',
+      });
 
       rawStorage[STORAGE_KEYS.SETTINGS] = null;
-      await expect(preferences.getSettings()).resolves.toEqual(
-        DEFAULT_SETTINGS
-      );
+      const nullResult = await preferences.readInitialPreferences();
+      expect(nullResult.settings).toEqual({
+        language: 'Polski',
+        model: 'gemini-3.5-flash',
+      });
 
       rawStorage[STORAGE_KEYS.SETTINGS] = 12345;
-      await expect(preferences.getSettings()).resolves.toEqual(
-        DEFAULT_SETTINGS
-      );
+      const numberResult = await preferences.readInitialPreferences();
+      expect(numberResult.settings).toEqual({
+        language: 'Polski',
+        model: 'gemini-3.5-flash',
+      });
 
       // Partially invalid: valid language, invalid model type
       rawStorage[STORAGE_KEYS.SETTINGS] = { language: 'English', model: 999 };
-      await expect(preferences.getSettings()).resolves.toEqual({
+      const invalidModelResult = await preferences.readInitialPreferences();
+      expect(invalidModelResult.settings).toEqual({
         language: 'English',
-        model: DEFAULT_SETTINGS.model,
+        model: 'gemini-3.5-flash',
       });
 
       // Partially invalid: null language, valid model
@@ -145,8 +151,9 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
         language: null,
         model: 'gpt-5.6-luna',
       };
-      await expect(preferences.getSettings()).resolves.toEqual({
-        language: DEFAULT_SETTINGS.language,
+      const nullLanguageResult = await preferences.readInitialPreferences();
+      expect(nullLanguageResult.settings).toEqual({
+        language: 'Polski',
         model: 'gpt-5.6-luna',
       });
     });
@@ -158,10 +165,8 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
       rawStorage[STORAGE_KEYS.OPENAI_API_KEY] = null;
       rawStorage[STORAGE_KEYS.CLAUDE_API_KEY] = { key: 'invalid' };
 
-      await expect(preferences.getApiKey('gemini')).resolves.toBe('');
-      await expect(preferences.getApiKey('openai')).resolves.toBe('');
-      await expect(preferences.getApiKey('claude')).resolves.toBe('');
-      await expect(preferences.getAllApiKeys()).resolves.toEqual({
+      const initial = await preferences.readInitialPreferences();
+      expect(initial.apiKeys).toEqual({
         gemini: '',
         openai: '',
         claude: '',
@@ -172,16 +177,16 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
       const preferences = createUserPreferencesStore(adapter);
 
       rawStorage[STORAGE_KEYS.UI_THEME] = 'solarized';
-      await expect(preferences.getTheme()).resolves.toBeNull();
+      expect((await preferences.readInitialPreferences()).theme).toBeNull();
 
       rawStorage[STORAGE_KEYS.UI_THEME] = 42;
-      await expect(preferences.getTheme()).resolves.toBeNull();
+      expect((await preferences.readInitialPreferences()).theme).toBeNull();
 
       rawStorage[STORAGE_KEYS.UI_THEME] = 'night';
-      await expect(preferences.getTheme()).resolves.toBe('night');
+      expect((await preferences.readInitialPreferences()).theme).toBe('night');
 
       rawStorage[STORAGE_KEYS.UI_THEME] = 'nord';
-      await expect(preferences.getTheme()).resolves.toBe('nord');
+      expect((await preferences.readInitialPreferences()).theme).toBe('nord');
     });
 
     it('handles panel pin state strictly preserving boolean true and false', async () => {
@@ -417,15 +422,18 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
 
       await clearUserData({ settings: preferences, history });
 
-      await expect(preferences.getApiKey('gemini')).resolves.toBe('');
-      await expect(preferences.getApiKey('openai')).resolves.toBe('');
-      await expect(preferences.getApiKey('claude')).resolves.toBe('');
+      const clearedPreferences = await preferences.readInitialPreferences();
+      expect(clearedPreferences.apiKeys).toEqual({
+        gemini: '',
+        openai: '',
+        claude: '',
+      });
       await expect(history.getRecords()).resolves.toEqual([]);
-      await expect(preferences.getSettings()).resolves.toEqual({
+      expect(clearedPreferences.settings).toEqual({
         language: 'Polski',
         model: 'gpt-5.6-luna',
       });
-      await expect(preferences.getTheme()).resolves.toBe('nord');
+      expect(clearedPreferences.theme).toBe('nord');
       const pinRead = await adapter.read([STORAGE_KEYS.PANEL_PIN_STATE]);
       expect(pinRead[STORAGE_KEYS.PANEL_PIN_STATE]).toBe(true);
     });

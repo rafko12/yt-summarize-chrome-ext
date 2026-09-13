@@ -65,10 +65,10 @@ describe('Clear User Data use case (src/sidepanel/settings/clearUserData)', () =
     });
 
     // Verify initial population
-    const initialKeys = await settingsStore.getAllApiKeys();
-    expect(initialKeys.gemini).toBe('sk-gemini-secret');
-    expect(initialKeys.openai).toBe('sk-openai-secret');
-    expect(initialKeys.claude).toBe('sk-claude-secret');
+    const initialPreferences = await settingsStore.readInitialPreferences();
+    expect(initialPreferences.apiKeys.gemini).toBe('sk-gemini-secret');
+    expect(initialPreferences.apiKeys.openai).toBe('sk-openai-secret');
+    expect(initialPreferences.apiKeys.claude).toBe('sk-claude-secret');
     expect(await history.getRecords()).toHaveLength(1);
 
     // Execute clearUserData operation
@@ -78,8 +78,8 @@ describe('Clear User Data use case (src/sidepanel/settings/clearUserData)', () =
     });
 
     // Assert: API keys are cleared
-    const postKeys = await settingsStore.getAllApiKeys();
-    expect(postKeys).toEqual({
+    const clearedPreferences = await settingsStore.readInitialPreferences();
+    expect(clearedPreferences.apiKeys).toEqual({
       gemini: '',
       openai: '',
       claude: '',
@@ -90,14 +90,11 @@ describe('Clear User Data use case (src/sidepanel/settings/clearUserData)', () =
     expect(postRecords).toEqual([]);
 
     // Assert: Remaining user settings, theme, and pin state are strictly preserved
-    const postSettings = await settingsStore.getSettings();
-    expect(postSettings).toEqual({
+    expect(clearedPreferences.settings).toEqual({
       language: 'English',
       model: 'gpt-5.6-terra',
     });
-
-    const postTheme = await settingsStore.getTheme();
-    expect(postTheme).toBe('nord');
+    expect(clearedPreferences.theme).toBe('nord');
 
     const readRaw = await memory.read([STORAGE_KEYS.PANEL_PIN_STATE]);
     expect(readRaw[STORAGE_KEYS.PANEL_PIN_STATE]).toBe(true);

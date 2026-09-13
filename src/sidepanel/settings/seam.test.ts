@@ -26,7 +26,8 @@ describe('Settings Module public seam (src/sidepanel/settings)', () => {
     const settingsStore = createUserPreferencesStore(adapter);
 
     await settingsStore.setApiKey('openai', 'sk-test');
-    expect(await settingsStore.getApiKey('openai')).toBe('sk-test');
+    const initial = await settingsStore.readInitialPreferences();
+    expect(initial.apiKeys.openai).toBe('sk-test');
     expect(memoryStore[STORAGE_KEYS.OPENAI_API_KEY]).toBe('sk-test');
   });
 });

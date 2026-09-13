@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { AI_MODELS, AI_PROVIDERS, getDefaultAiModel } from './modelCatalog';
-import {
-  hasApiKey,
-  isModelAvailable,
-  resolveCompatibleModel,
-} from './modelPolicy';
+import { AI_MODELS, AI_PROVIDERS } from './modelCatalog';
+import { isModelAvailable, resolveCompatibleModel } from './modelPolicy';
 
 describe('AI model compatibility policy and model catalog defaults', () => {
   describe('Provider default models in model catalog', () => {
@@ -14,7 +10,6 @@ describe('AI model compatibility policy and model catalog defaults', () => {
 
       AI_PROVIDERS.forEach((provider) => {
         expect(provider.defaultModel).toBeDefined();
-        expect(getDefaultAiModel(provider.id)).toBe(provider.defaultModel);
 
         const modelEntry = AI_MODELS.find(
           (model) => model.id === provider.defaultModel
@@ -34,19 +29,15 @@ describe('AI model compatibility policy and model catalog defaults', () => {
     });
 
     it('defines expected default models for gemini, openai, and claude', () => {
-      expect(getDefaultAiModel('gemini')).toBe('gemini-3.6-flash');
-      expect(getDefaultAiModel('openai')).toBe('gpt-5.6-luna');
-      expect(getDefaultAiModel('claude')).toBe('claude-sonnet-5');
-    });
-  });
-
-  describe('hasApiKey helper', () => {
-    it('returns true only for non-empty trimmed keys', () => {
-      expect(hasApiKey({ gemini: 'valid-key' }, 'gemini')).toBe(true);
-      expect(hasApiKey({ gemini: '  ' }, 'gemini')).toBe(false);
-      expect(hasApiKey({ gemini: '' }, 'gemini')).toBe(false);
-      expect(hasApiKey({}, 'gemini')).toBe(false);
-      expect(hasApiKey(undefined, 'gemini')).toBe(false);
+      expect(AI_PROVIDERS.find((p) => p.id === 'gemini')?.defaultModel).toBe(
+        'gemini-3.6-flash'
+      );
+      expect(AI_PROVIDERS.find((p) => p.id === 'openai')?.defaultModel).toBe(
+        'gpt-5.6-luna'
+      );
+      expect(AI_PROVIDERS.find((p) => p.id === 'claude')?.defaultModel).toBe(
+        'claude-sonnet-5'
+      );
     });
   });
 
