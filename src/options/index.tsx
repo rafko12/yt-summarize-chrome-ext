@@ -1,9 +1,9 @@
 import '@assets/styles/index.css';
 
-import { loadGeistFonts } from '@assets/geistFonts';
+import { loadGeistFonts } from '@assets/loadGeistFonts';
 import { createRoot, Root } from 'react-dom/client';
 
-import Options from './Options';
+import OptionsInfoPage from './OptionsInfoPage';
 
 export const OPTIONS_CONTAINER_ID = 'my-ext-options-page';
 
@@ -19,7 +19,7 @@ export function mountOptions(targetDoc?: Document): Root {
   }
 
   const root = createRoot(container);
-  root.render(<Options />);
+  root.render(<OptionsInfoPage />);
   return root;
 }
 

@@ -3,11 +3,11 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, test } from 'vitest';
 
-import Options from './Options';
+import OptionsInfoPage from './OptionsInfoPage';
 
-describe('Options page', () => {
+describe('OptionsInfoPage', () => {
   test('renders static informational view with night theme and without storage dependencies', () => {
-    const { container } = render(<Options />);
+    const { container } = render(<OptionsInfoPage />);
 
     const rootElement = container.querySelector('#my-ext');
     expect(rootElement).toBeInTheDocument();
@@ -41,7 +41,7 @@ describe('Options page', () => {
   });
 
   test('does not contain any form controls, input fields or storage-bound buttons', () => {
-    const { container } = render(<Options />);
+    const { container } = render(<OptionsInfoPage />);
 
     expect(container.querySelectorAll('input')).toHaveLength(0);
     expect(container.querySelectorAll('button')).toHaveLength(0);

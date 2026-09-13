@@ -35,28 +35,28 @@ Sterownik panelu i adapter Chrome realizują decyzję z [ADR-0002](docs/adr/0002
 
 `src/sidepanel/` jest aplikacją React montowaną bezpośrednio w kontenerze `#my-ext-sidepanel-page` własnego dokumentu HTML panelu (`src/sidepanel/index.html`), bez użycia Shadow DOM ani izolacji stylów. Obsługuje analizę, Historię analiz i ustawienia.
 
-- `dependencies.ts` jest jedynym jawnym composition root panelu bocznego (`SidePanelDependencies`), tworzącym pojedynczy współdzielony adapter lokalnego storage dla modułów ustawień i Historii analiz, produkcyjny adapter i instancję integracji YouTube, klienta AI oraz runtime panelu bocznego. Produkcja i testy przekazują zależności przez ten sam interfejs.
+- `compositionRoot.ts` jest jedynym jawnym composition root panelu bocznego (`SidePanelDependencies`), tworzącym pojedynczy współdzielony adapter lokalnego storage dla modułów ustawień i Historii analiz, produkcyjny adapter i instancję mostu YouTube, klienta AI oraz runtime panelu bocznego. Produkcja i testy przekazują zależności przez ten sam interfejs.
 - `SidePanelApp.tsx` składa widoki i hooki w oparciu o jawnie wstrzyknięty zestaw zależności (`SidePanelDependencies`).
 - `shell/` integruje powłokę i nagłówek panelu (`Header.tsx`) oraz synchronizację motywu dokumentu (`useDocumentTheme.ts`).
 - `analysis/` integruje widoki analizy (`AnalyzeView.tsx`, `SummaryView.tsx`), prezentacyjny renderer Markdown z timestampami (`MarkdownWithTimestamps.tsx`), parser timestampów (`timestampParser.ts`), stan analizy przez reducer (`analysisSessionReducer.ts`) oraz orkiestrację przepływu analizy (`useAnalysisSession.ts`). Renderer timestampów nie tworzy adaptera Chrome — otrzymuje jawny callback `onSeek` z orkiestracji sesji. Przewijanie rozmowy jest efektem widoku `AnalyzeView`, nie orkiestracji sesji.
-- `youtube/` integruje dostęp do aktywnego Filmu YouTube, ukrywając odczyt karty, messaging z ponawianiem i wstrzykiwaniem skryptu oraz fallback metadanych za jednym interfejsem publicznym (`youtube.ts`) wymagającym jawnego adaptera (`YoutubeAdapter`), tworzonego produkcyjnie w composition root (`chromeYoutubeAdapter.ts`).
-- `ai/` integruje Dostawców AI: wspólnego klienta (`client.ts`), katalog Modeli AI (`modelCatalog.ts`), politykę Modeli AI (`modelPolicy.ts`), prompty (`prompts.ts`), typy (`types.ts`) oraz adaptery Gemini, OpenAI i Anthropic (`providers/`).
+- `youtube/` integruje dostęp do aktywnego Filmu YouTube, ukrywając odczyt karty, messaging z ponawianiem i wstrzykiwaniem skryptu oraz fallback metadanych za jednym interfejsem publicznym mostu YouTube (`youtube.ts`, `YoutubeBridge`) wymagającym jawnego adaptera (`YoutubeAdapter`), tworzonego produkcyjnie w composition root (`chromeYoutubeAdapter.ts`).
+- `ai/` integruje Dostawców AI: wspólnego klienta (`client.ts`), katalog Modeli AI (`modelCatalog.ts`), politykę Modeli AI (`modelPolicy.ts`), prompty (`prompts.ts`), kontrakt adapterów (`providerContract.ts`) oraz adaptery Gemini, OpenAI i Anthropic (`providers/`).
 - `history/` integruje Historię analiz i Zapisy analiz: widok (`HistoryView.tsx`), hook (`useAnalysisHistory.ts`), typy (`types.ts`) oraz operacje persistence (`analysisHistory.ts`) bezpośrednio przez wspólny adapter storage.
 - `settings/` integruje ustawienia użytkownika, klucze API, motyw i konfigurację: widok (`SettingsView.tsx`), hook (`useSettings.ts`), typy (`types.ts`), operacje persistence preferencji użytkownika (`userPreferencesStore.ts`) bezpośrednio przez wspólny adapter storage oraz przypadek użycia czyszczenia danych użytkownika (`clearUserData.ts`). Synchronizacja motywu dokumentu HTML należy do shella (`useDocumentTheme`), nie do feature settings.
 - `runtime/` integruje szew pomiędzy panelem a hostem Chrome (`PanelRuntime`): pobieranie kontekstu karty i okna, start panelu w tle (`PANEL_INIT`), globalne przypinanie oraz subskrypcję notyfikacji panelu z adapterem produkcyjnym (`chromePanelRuntime.ts`) i kontrolowanym adapterem testowym (`controlledPanelRuntime.ts`).
 
-Panel komunikuje się ze skryptem treści przez moduł integracji YouTube (`src/sidepanel/youtube/`), a z backgroundem przez jednolity runtime panelu (`src/sidepanel/runtime/`). Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
+Panel komunikuje się ze skryptem treści przez most YouTube (`src/sidepanel/youtube/`), a z backgroundem przez jednolity runtime panelu (`src/sidepanel/runtime/`). Żądania do Dostawców AI są wykonywane bezpośrednio z panelu przez klienta `src/sidepanel/ai/client.ts`; przeniesienie ich do backgroundu nie należy do neutralnego funkcjonalnie refaktoru.
 
 ### Strona opcji
 
-`src/options/` jest osobnym punktem wejścia React (`Options.tsx`), montowanym bezpośrednio w kontenerze `#my-ext-options-page` dokumentu strony opcji (`src/options/index.html`) bez użycia Shadow DOM ani izolacji stylów. Nie współdzieli stanu renderowania z panelem bocznym.
+`src/options/` jest osobnym punktem wejścia React (`OptionsInfoPage.tsx`), montowanym bezpośrednio w kontenerze `#my-ext-options-page` dokumentu strony opcji (`src/options/index.html`) bez użycia Shadow DOM ani izolacji stylów. Nie współdzieli stanu renderowania z panelem bocznym.
 
 ## Moduły współdzielone
 
 - `src/domain/analysis.ts` — kanoniczne typy domeny analizy (Film, segment transkrypcji, wiadomość rozmowy, Zapis analizy).
-- `src/messaging/` — czyste kontrakty wiadomości, odpowiedzi i ich walidatory (`messages.ts`, `index.ts`).
-- `src/storage/` — kanoniczne źródło stabilnych kluczy storage (`keys.ts`) oraz jedyny wspólny adapter `chrome.storage.local` (`chromeStorageLocalAdapter.ts`).
-- `src/assets/` — style i fonty (`geistFonts.ts`).
+- `src/messaging/` — czyste kontrakty wiadomości, odpowiedzi i ich walidatory (`contracts.ts`, `index.ts`).
+- `src/storage/` — kanoniczne źródło stabilnych kluczy storage (`keys.ts`), kontrakt storage (`storageAdapter.ts`) oraz jedyny wspólny adapter `chrome.storage.local` (`chromeStorageLocalAdapter.ts`).
+- `src/assets/` — style i fonty (`loadGeistFonts.ts`).
 
 ## Przepływy danych
 
@@ -93,7 +93,7 @@ Adapter Chrome
 ## Reguły zależności
 
 - Manifest i uprawnienia mają jedno źródło prawdy w `src/manifest.ts`.
-- Panel boczny posiada jeden jawny composition root (`dependencies.ts`), przez który produkcja i testy przekazują zależności.
+- Panel boczny posiada jeden jawny composition root (`compositionRoot.ts`), przez który produkcja i testy przekazują zależności.
 - Kontrakty domenowe, aplikacyjne, adaptery i moduły storage nie zależą od Reacta; importy biblioteki UI należą wyłącznie do widoków, hooków i punktów montowania.
 - Montowanie UI w panelu i na stronie opcji odbywa się bezpośrednio w dokumencie HTML rozszerzenia bez Shadow DOM ani sztucznej izolacji stylów.
 - Widoki nie wykonują bezpośrednio operacji platformowych, jeśli istnieje moduł posiadający tę odpowiedzialność.

@@ -4,7 +4,7 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { AnalysisRecord } from '../domain/analysis';
 import { isErrorResponse } from '../messaging';
 import { AnalyzeView, useAnalysisSession } from './analysis';
-import { SidePanelDependencies } from './dependencies';
+import { SidePanelDependencies } from './compositionRoot';
 import { HistoryView, useAnalysisHistory } from './history';
 import { SidePanelContext } from './runtime';
 import { clearUserData, SettingsView, useSettings } from './settings';

@@ -3,7 +3,7 @@
 import { act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
-import { createSidePanelDependencies } from './dependencies';
+import { createSidePanelDependencies } from './compositionRoot';
 import { mountSidePanel, SIDEPANEL_CONTAINER_ID } from './index';
 
 // @ts-expect-error React act environment flag for jsdom

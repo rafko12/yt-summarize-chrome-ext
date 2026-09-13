@@ -31,7 +31,7 @@ export default defineConfig({
         'src/background/sidePanelController.ts': {
           branches: 100,
         },
-        'src/messaging/messages.ts': {
+        'src/messaging/contracts.ts': {
           branches: 100,
         },
         'src/sidepanel/ai/modelCatalog.ts': {

@@ -6,14 +6,14 @@ import { isErrorResponse } from '../../messaging';
 import { AiClient } from '../ai';
 import { AnalysisHistory } from '../history';
 import { Settings } from '../settings';
-import { YoutubeIntegration } from '../youtube';
+import { YoutubeBridge } from '../youtube';
 import {
   analysisSessionReducer,
   initialAnalysisSessionState,
 } from './analysisSessionReducer';
 
 export interface UseAnalysisSessionProps {
-  youtube: YoutubeIntegration;
+  youtube: YoutubeBridge;
   history: AnalysisHistory;
   aiClient: AiClient;
   onHistoryUpdated?: () => void;

@@ -86,7 +86,7 @@ describe('konfiguracja buildu Vite (vite.config.ts)', () => {
     expect(vitestSource).toContain(
       "'src/background/sidePanelController.ts': {"
     );
-    expect(vitestSource).toContain("'src/messaging/messages.ts': {");
+    expect(vitestSource).toContain("'src/messaging/contracts.ts': {");
     expect(vitestSource).toContain("'src/sidepanel/ai/modelCatalog.ts': {");
     expect(vitestSource).toContain('branches: 100');
   });

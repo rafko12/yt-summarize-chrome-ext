@@ -13,12 +13,11 @@ import {
   TranscriptResponse,
   VideoDataResponse,
 } from '../messaging';
-import { createChromeStorageLocalAdapter } from '../storage';
-import { StorageAdapter } from '../storage/types';
+import { createChromeStorageLocalAdapter, StorageAdapter } from '../storage';
 import {
   createSidePanelDependencies,
   SidePanelDependencies,
-} from './dependencies';
+} from './compositionRoot';
 import {
   ControlledPanelRuntime,
   createControlledPanelRuntime,
@@ -580,7 +579,6 @@ describe('SidePanel Test Harness (src/sidepanel/sidePanelHarness.test.tsx)', () 
     );
     expect(harness.dependencies).toBeDefined();
     expect(harness.dependencies.settings).toBeDefined();
-    expect(harness.dependencies.preferences).toBeDefined();
     expect(harness.dependencies.history).toBeDefined();
     expect(harness.dependencies.youtube).toBeDefined();
     expect(harness.dependencies.aiClient).toBeDefined();
@@ -635,10 +633,7 @@ describe('SidePanel Test Harness (src/sidepanel/sidePanelHarness.test.tsx)', () 
       customFetch,
     });
 
-    await harness.dependencies.preferences.setApiKey(
-      'openai',
-      'test-openai-key'
-    );
+    await harness.dependencies.settings.setApiKey('openai', 'test-openai-key');
     expect(customStorage.write).toHaveBeenCalled();
     expect(customMemory.openai_api_key).toBe('test-openai-key');
 

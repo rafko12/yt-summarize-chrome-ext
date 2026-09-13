@@ -1,7 +1,7 @@
 import { JSX } from 'react';
 import { Info, Sparkle } from '@phosphor-icons/react';
 
-export default function Options(): JSX.Element {
+export default function OptionsInfoPage(): JSX.Element {
   return (
     <div
       id='my-ext'

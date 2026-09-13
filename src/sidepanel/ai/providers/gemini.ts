@@ -3,7 +3,7 @@ import {
   AiRequest,
   AiRequestError,
   getSafeErrorMessage,
-} from '../types';
+} from '../providerContract';
 
 export default function createGeminiProvider(
   customFetch?: typeof fetch

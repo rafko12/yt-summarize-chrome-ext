@@ -26,7 +26,7 @@ export interface YoutubeAdapter {
   ): Promise<{ error: string } | { success: true }>;
 }
 
-export interface YoutubeIntegration {
+export interface YoutubeBridge {
   readActiveFilm(fallbackFilm?: Film): Promise<Film | null>;
   fetchActiveTranscript(
     videoId: string,

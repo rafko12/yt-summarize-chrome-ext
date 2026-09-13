@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createYoutube, YoutubeIntegration } from './index';
+import { createYoutube, YoutubeBridge } from './index';
 import { YoutubeAdapter } from './types';
 
 describe('YouTube Module public seam (src/sidepanel/youtube)', () => {
@@ -29,7 +29,7 @@ describe('YouTube Module public seam (src/sidepanel/youtube)', () => {
       },
     };
 
-    const youtube: YoutubeIntegration = createYoutube(mockAdapter);
+    const youtube: YoutubeBridge = createYoutube(mockAdapter);
 
     const film = await youtube.readActiveFilm();
     expect(film).toEqual({

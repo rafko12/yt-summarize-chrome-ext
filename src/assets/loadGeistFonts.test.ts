@@ -2,9 +2,9 @@
 
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 
-import createGeistFontStyles, { loadGeistFonts } from './geistFonts';
+import createGeistFontStyles, { loadGeistFonts } from './loadGeistFonts';
 
-describe('geistFonts', () => {
+describe('loadGeistFonts', () => {
   beforeEach(() => {
     document.head.innerHTML = '';
   });

@@ -3,7 +3,7 @@ export {
   isContentMessage,
   isErrorResponse,
   isPanelNotification,
-} from './messages';
+} from './contracts';
 export type {
   BackgroundMessage,
   BackgroundResponse,
@@ -17,4 +17,4 @@ export type {
   TranscriptResponse,
   VideoDataResponse,
   YoutubeUrlUpdatedNotification,
-} from './messages';
+} from './contracts';

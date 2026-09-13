@@ -181,6 +181,7 @@ describe('architektura i reguły zależności (src/architecture.test.ts)', () =>
         relativePath.endsWith('/types.ts') ||
         relativePath === 'types.ts' ||
         relativePath.includes('Adapter') ||
+        relativePath.includes('Contract') ||
         relativePath.startsWith('sidepanel/ai/providers/')
       );
     });

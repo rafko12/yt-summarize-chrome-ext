@@ -5,7 +5,7 @@ import {
   isContentMessage,
   isErrorResponse,
   isPanelNotification,
-} from './messages';
+} from './contracts';
 
 describe('directional message contracts', () => {
   test('recognizes valid content messages and rejects invalid shapes', () => {

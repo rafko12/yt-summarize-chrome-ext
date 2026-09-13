@@ -10,7 +10,7 @@ import {
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import registerYoutubeNavigationEvents from '../background/youtubeNavigationEvents';
-import { SidePanelDependencies } from './dependencies';
+import { SidePanelDependencies } from './compositionRoot';
 import {
   createSidePanelHarness,
   SidePanelHarness,
@@ -2060,12 +2060,12 @@ describe('side panel user flow', () => {
         customFetch,
       });
 
-      // Seed preferences and history through the controlled modules
-      await controlledHarness.dependencies.preferences.setApiKey(
+      // Seed settings and history through the controlled modules
+      await controlledHarness.dependencies.settings.setApiKey(
         'gemini',
         'controlled-gemini-key'
       );
-      await controlledHarness.dependencies.preferences.setSettings({
+      await controlledHarness.dependencies.settings.setSettings({
         language: 'Polski',
         model: 'gemini-3.6-flash',
       });

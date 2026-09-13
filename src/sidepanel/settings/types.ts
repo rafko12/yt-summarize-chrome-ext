@@ -24,5 +24,3 @@ export interface UserPreferencesStore {
   setTheme(theme: Theme): Promise<void>;
   clearApiKeys(): Promise<void>;
 }
-
-export type UserPreferences = UserPreferencesStore;

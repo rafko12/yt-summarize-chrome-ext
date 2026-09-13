@@ -1,4 +1,4 @@
-import { StorageAdapter } from './types';
+import { StorageAdapter } from './storageAdapter';
 
 export default function createChromeStorageLocalAdapter(
   storageLocal?: typeof chrome.storage.local

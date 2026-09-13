@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { STORAGE_KEYS } from '../../storage';
-import { StorageAdapter } from '../../storage/types';
+import { STORAGE_KEYS, StorageAdapter } from '../../storage';
 import { createAnalysisHistory } from '../history';
 import { clearUserData, ClearUserDataDependencies } from './clearUserData';
 import createUserPreferencesStore from './userPreferencesStore';

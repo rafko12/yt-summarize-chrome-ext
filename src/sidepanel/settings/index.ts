@@ -6,12 +6,10 @@ export type {
   InitialPreferences,
   Settings,
   Theme,
-  UserPreferences,
   UserPreferencesStore,
 } from './types';
 export {
   default as createUserPreferencesStore,
-  default as createUserPreferences,
   DEFAULT_SETTINGS,
 } from './userPreferencesStore';
 export { default as useSettings } from './useSettings';

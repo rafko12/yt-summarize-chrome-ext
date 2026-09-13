@@ -7,15 +7,15 @@ import {
   getValidationSystemInstruction,
   getValidationUserMessage,
 } from './prompts';
-import createAnthropicProvider from './providers/anthropic';
-import createGeminiProvider from './providers/gemini';
-import createOpenaiProvider from './providers/openai';
 import {
   AiProviderAdapter,
   AiRequest,
   AiRequestError,
   getSafeErrorMessage,
-} from './types';
+} from './providerContract';
+import createAnthropicProvider from './providers/anthropic';
+import createGeminiProvider from './providers/gemini';
+import createOpenaiProvider from './providers/openai';
 
 export interface ValidationResult {
   valid: boolean;

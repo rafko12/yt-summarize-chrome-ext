@@ -4,7 +4,7 @@ import {
   ActiveYoutubeTab,
   TranscriptRequestOptions,
   YoutubeAdapter,
-  YoutubeIntegration,
+  YoutubeBridge,
 } from './types';
 
 function createFallbackFilm(
@@ -20,9 +20,7 @@ function createFallbackFilm(
   };
 }
 
-export default function createYoutube(
-  adapter: YoutubeAdapter
-): YoutubeIntegration {
+export default function createYoutube(adapter: YoutubeAdapter): YoutubeBridge {
   if (!adapter) {
     throw new Error('Wymagany jest jawny adapter YouTube.');
   }

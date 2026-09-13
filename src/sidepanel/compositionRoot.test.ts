@@ -1,15 +1,14 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { STORAGE_KEYS } from '../storage';
-import { StorageAdapter } from '../storage/types';
+import { STORAGE_KEYS, StorageAdapter } from '../storage';
 import {
   createSidePanelDependencies,
   SidePanelDependencies,
-} from './dependencies';
+} from './compositionRoot';
 import { PanelRuntime } from './runtime';
 
-describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
-  it('creates production dependencies with a single shared storage adapter for preferences and history', async () => {
+describe('Composition Root (src/sidepanel/compositionRoot)', () => {
+  it('creates production dependencies with a single shared storage adapter for settings and history', async () => {
     const memoryStore: Record<string, unknown> = {};
     const readSpy = vi.fn(async (keys: readonly string[]) =>
       Object.fromEntries(keys.map((k) => [k, memoryStore[k]]))
@@ -28,14 +27,13 @@ describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
     });
 
     expect(deps.settings).toBeDefined();
-    expect(deps.preferences).toBe(deps.settings);
     expect(deps.history).toBeDefined();
     expect(deps.youtube).toBeDefined();
     expect(deps.aiClient).toBeDefined();
     expect(deps.runtime).toBeDefined();
 
-    // Verify storage adapter is shared: write through preferences and read/write through history
-    await deps.preferences.setApiKey('gemini', 'test-key-gemini');
+    // Verify storage adapter is shared: write through settings and read/write through history
+    await deps.settings.setApiKey('gemini', 'test-key-gemini');
     expect(writeSpy).toHaveBeenCalled();
 
     await deps.history.saveRecord({

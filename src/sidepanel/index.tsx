@@ -1,12 +1,12 @@
 import '@assets/styles/index.css';
 
-import { loadGeistFonts } from '@assets/geistFonts';
+import { loadGeistFonts } from '@assets/loadGeistFonts';
 import { createRoot, Root } from 'react-dom/client';
 
 import {
   createSidePanelDependencies,
   SidePanelDependencies,
-} from './dependencies';
+} from './compositionRoot';
 import SidePanelApp from './SidePanelApp';
 
 export const SIDEPANEL_CONTAINER_ID = 'my-ext-sidepanel-page';

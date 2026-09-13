@@ -7,14 +7,13 @@ import {
   createChromeYoutubeAdapter,
   createYoutube,
   YoutubeAdapter,
-  YoutubeIntegration,
+  YoutubeBridge,
 } from './youtube';
 
 export interface SidePanelDependencies {
   settings: UserPreferencesStore;
-  preferences: UserPreferencesStore;
   history: AnalysisHistory;
-  youtube: YoutubeIntegration;
+  youtube: YoutubeBridge;
   aiClient: AiClient;
   runtime: PanelRuntime;
 }
@@ -34,7 +33,6 @@ export function createSidePanelDependencies(
   const settingsStore = createUserPreferencesStore(storage);
   return {
     settings: settingsStore,
-    preferences: settingsStore,
     history: createAnalysisHistory(storage),
     youtube: createYoutube(youtubeAdapter),
     aiClient: createAiClient(options.customFetch),
