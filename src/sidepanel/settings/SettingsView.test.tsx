@@ -22,7 +22,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-describe('SettingsView (src/sidepanel/preferences)', () => {
+describe('SettingsView (src/sidepanel/settings)', () => {
   test('ustawienia obsługują dostawcę, klucz, preferencje i akcje czyszczenia', () => {
     render(
       <SettingsView

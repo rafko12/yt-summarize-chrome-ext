@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createChromeStorageLocalAdapter, STORAGE_KEYS } from '../../storage';
-import { createUserPreferences } from './index';
+import { createUserPreferencesStore } from './index';
 
-describe('Preferences Module public seam (src/sidepanel/preferences)', () => {
+describe('Settings Module public seam (src/sidepanel/settings)', () => {
   it('instantiates preferences directly with shared ChromeStorageLocalAdapter and canonical keys', async () => {
     const memoryStore: Record<string, unknown> = {};
     const mockStorageLocal = {
@@ -23,10 +23,10 @@ describe('Preferences Module public seam (src/sidepanel/preferences)', () => {
     } as unknown as typeof chrome.storage.local;
 
     const adapter = createChromeStorageLocalAdapter(mockStorageLocal);
-    const preferences = createUserPreferences(adapter);
+    const settingsStore = createUserPreferencesStore(adapter);
 
-    await preferences.setApiKey('openai', 'sk-test');
-    expect(await preferences.getApiKey('openai')).toBe('sk-test');
+    await settingsStore.setApiKey('openai', 'sk-test');
+    expect(await settingsStore.getApiKey('openai')).toBe('sk-test');
     expect(memoryStore[STORAGE_KEYS.OPENAI_API_KEY]).toBe('sk-test');
   });
 });

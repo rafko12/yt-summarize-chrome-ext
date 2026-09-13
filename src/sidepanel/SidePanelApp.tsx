@@ -4,11 +4,10 @@ import { WarningCircle } from '@phosphor-icons/react';
 import { AnalysisRecord } from '../domain/analysis';
 import { isErrorResponse } from '../messaging';
 import { AnalyzeView, useAnalysisSession } from './analysis';
-import { clearApiKeysAndHistory } from './dangerZone';
 import { SidePanelDependencies } from './dependencies';
 import { HistoryView, useAnalysisHistory } from './history';
-import { SettingsView, useSettings } from './preferences';
 import { SidePanelContext } from './runtime';
+import { clearUserData, SettingsView, useSettings } from './settings';
 import { Header, SidePanelTab, useDocumentTheme } from './shell';
 
 export interface SidePanelAppProps {
@@ -18,13 +17,13 @@ export interface SidePanelAppProps {
 export default function SidePanelApp({
   dependencies,
 }: SidePanelAppProps): JSX.Element {
-  const { preferences, history, youtube, aiClient, runtime } = dependencies;
+  const { settings, history, youtube, aiClient, runtime } = dependencies;
   const [activeTab, setActiveTab] = useState<SidePanelTab>('analyze');
   const [isPinnedGlobal, setIsPinnedGlobal] = useState<boolean>(false);
   const panelContextRef = useRef<SidePanelContext | null>(null);
 
   // Ustawienia (theme, api keys)
-  const settingsHook = useSettings({ preferences, aiClient });
+  const settingsHook = useSettings({ settings, aiClient });
   useDocumentTheme(settingsHook.theme);
 
   // Historia analiz (zapisane analizy użytkownika)
@@ -118,8 +117,8 @@ export default function SidePanelApp({
         'Czy na pewno chcesz usunąć wszystkie klucze API oraz całą historię? Tej operacji nie można cofnąć.'
       )
     ) {
-      await clearApiKeysAndHistory({
-        preferences: settingsHook,
+      await clearUserData({
+        settings: settingsHook,
         history: historyHook,
       });
       settingsHook.clearApiKeyState();

@@ -13,7 +13,7 @@ export interface InitialPreferences {
   theme: Theme | null;
 }
 
-export interface UserPreferences {
+export interface UserPreferencesStore {
   readInitialPreferences(): Promise<InitialPreferences>;
   getSettings(): Promise<Settings>;
   setSettings(settings: Settings): Promise<void>;
@@ -24,3 +24,5 @@ export interface UserPreferences {
   setTheme(theme: Theme): Promise<void>;
   clearApiKeys(): Promise<void>;
 }
+
+export type UserPreferences = UserPreferencesStore;

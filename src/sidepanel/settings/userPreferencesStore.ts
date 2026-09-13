@@ -2,7 +2,12 @@ import type { AiProvider } from '../ai';
 
 import { STORAGE_KEYS, StorageAdapter } from '../../storage';
 import { isModelAvailable, resolveCompatibleModel } from '../ai';
-import { InitialPreferences, Settings, Theme, UserPreferences } from './types';
+import {
+  InitialPreferences,
+  Settings,
+  Theme,
+  UserPreferencesStore,
+} from './types';
 
 export const DEFAULT_SETTINGS: Settings = {
   language: 'Polski',
@@ -63,9 +68,9 @@ function normalizeApiKeys(
   };
 }
 
-export default function createUserPreferences(
+export default function createUserPreferencesStore(
   platform: StorageAdapter
-): UserPreferences {
+): UserPreferencesStore {
   return {
     async readInitialPreferences(): Promise<InitialPreferences> {
       const raw = await platform.read(ALL_PREFERENCE_KEYS);

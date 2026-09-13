@@ -27,7 +27,8 @@ describe('Composition Root dependencies (src/sidepanel/dependencies)', () => {
       storage: mockStorageAdapter,
     });
 
-    expect(deps.preferences).toBeDefined();
+    expect(deps.settings).toBeDefined();
+    expect(deps.preferences).toBe(deps.settings);
     expect(deps.history).toBeDefined();
     expect(deps.youtube).toBeDefined();
     expect(deps.aiClient).toBeDefined();

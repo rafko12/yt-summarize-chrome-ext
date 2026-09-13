@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 
-import { Theme } from '../preferences';
+import { Theme } from '../settings';
 
 export default function useDocumentTheme(theme: Theme): void {
   useEffect(() => {

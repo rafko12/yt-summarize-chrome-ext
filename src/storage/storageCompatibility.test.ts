@@ -6,12 +6,12 @@ import {
   ConversationMessage,
   TranscriptSegment,
 } from '../domain/analysis';
-import { clearApiKeysAndHistory } from '../sidepanel/dangerZone';
 import { createAnalysisHistory } from '../sidepanel/history';
 import {
-  createUserPreferences,
+  clearUserData,
+  createUserPreferencesStore,
   DEFAULT_SETTINGS,
-} from '../sidepanel/preferences';
+} from '../sidepanel/settings';
 import {
   createChromeStorageLocalAdapter,
   STORAGE_KEYS,
@@ -115,7 +115,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
 
   describe('2. Legacy formats and partially invalid data', () => {
     it('normalizes legacy and partially invalid settings', async () => {
-      const preferences = createUserPreferences(adapter);
+      const preferences = createUserPreferencesStore(adapter);
 
       // Completely invalid non-object types fall back to DEFAULT_SETTINGS
       rawStorage[STORAGE_KEYS.SETTINGS] = 'invalid-string';
@@ -152,7 +152,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
     });
 
     it('normalizes non-string or malformed API keys to empty string', async () => {
-      const preferences = createUserPreferences(adapter);
+      const preferences = createUserPreferencesStore(adapter);
 
       rawStorage[STORAGE_KEYS.GEMINI_API_KEY] = 123;
       rawStorage[STORAGE_KEYS.OPENAI_API_KEY] = null;
@@ -169,7 +169,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
     });
 
     it('normalizes unrecognized themes to null while preserving night and nord', async () => {
-      const preferences = createUserPreferences(adapter);
+      const preferences = createUserPreferencesStore(adapter);
 
       rawStorage[STORAGE_KEYS.UI_THEME] = 'solarized';
       await expect(preferences.getTheme()).resolves.toBeNull();
@@ -393,7 +393,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
 
   describe('4. Clearing API keys and history while preserving preferences', () => {
     it('clears all API keys and history while preserving settings and theme', async () => {
-      const preferences = createUserPreferences(adapter);
+      const preferences = createUserPreferencesStore(adapter);
       const history = createAnalysisHistory(adapter);
 
       await preferences.setApiKey('gemini', 'key-gemini');
@@ -415,7 +415,7 @@ describe('Storage Compatibility Suite (src/storage/storageCompatibility)', () =>
         chat: [],
       });
 
-      await clearApiKeysAndHistory({ preferences, history });
+      await clearUserData({ settings: preferences, history });
 
       await expect(preferences.getApiKey('gemini')).resolves.toBe('');
       await expect(preferences.getApiKey('openai')).resolves.toBe('');

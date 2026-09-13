@@ -579,6 +579,7 @@ describe('SidePanel Test Harness (src/sidepanel/sidePanelHarness.test.tsx)', () 
       'https://www.youtube.com/watch?v=movie'
     );
     expect(harness.dependencies).toBeDefined();
+    expect(harness.dependencies.settings).toBeDefined();
     expect(harness.dependencies.preferences).toBeDefined();
     expect(harness.dependencies.history).toBeDefined();
     expect(harness.dependencies.youtube).toBeDefined();

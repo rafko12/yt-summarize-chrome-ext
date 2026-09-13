@@ -5,7 +5,7 @@ import { AnalysisRecord, ConversationMessage } from '../../domain/analysis';
 import { isErrorResponse } from '../../messaging';
 import { AiClient } from '../ai';
 import { AnalysisHistory } from '../history';
-import { Settings } from '../preferences';
+import { Settings } from '../settings';
 import { YoutubeIntegration } from '../youtube';
 import {
   analysisSessionReducer,

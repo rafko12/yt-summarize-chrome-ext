@@ -9,7 +9,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { ConversationMessage, Film } from '../../domain/analysis';
-import { Settings } from '../preferences';
+import { Settings } from '../settings';
 import { SidePanelTab } from '../shell';
 import { MarkdownLine } from './MarkdownWithTimestamps';
 import SummaryView from './SummaryView';

@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { STORAGE_KEYS } from '../storage';
-import { StorageAdapter } from '../storage/types';
-import { clearApiKeysAndHistory, DangerZoneOwners } from './dangerZone';
-import { createAnalysisHistory } from './history';
-import { createUserPreferences } from './preferences';
+import { STORAGE_KEYS } from '../../storage';
+import { StorageAdapter } from '../../storage/types';
+import { createAnalysisHistory } from '../history';
+import { clearUserData, ClearUserDataDependencies } from './clearUserData';
+import createUserPreferencesStore from './userPreferencesStore';
 
 function createMemoryStorageAdapter(
   initialData: Record<string, unknown> = {}
@@ -21,38 +21,38 @@ function createMemoryStorageAdapter(
   };
 }
 
-describe('Danger Zone Cleanup (src/sidepanel/dangerZone)', () => {
-  it('orchestrates data deletion explicitly through preferences and history owners', async () => {
-    const mockPreferences: DangerZoneOwners['preferences'] = {
+describe('Clear User Data use case (src/sidepanel/settings/clearUserData)', () => {
+  it('orchestrates data deletion explicitly through settings and history dependencies', async () => {
+    const mockSettings: ClearUserDataDependencies['settings'] = {
       clearApiKeys: vi.fn(async () => undefined),
     };
-    const mockHistory: DangerZoneOwners['history'] = {
+    const mockHistory: ClearUserDataDependencies['history'] = {
       clearRecords: vi.fn(async () => undefined),
     };
 
-    await clearApiKeysAndHistory({
-      preferences: mockPreferences,
+    await clearUserData({
+      settings: mockSettings,
       history: mockHistory,
     });
 
-    expect(mockPreferences.clearApiKeys).toHaveBeenCalledTimes(1);
+    expect(mockSettings.clearApiKeys).toHaveBeenCalledTimes(1);
     expect(mockHistory.clearRecords).toHaveBeenCalledTimes(1);
   });
 
   it('removes every API key together with analysis history while preserving settings, theme, and pin state', async () => {
     const memory = createMemoryStorageAdapter();
-    const preferences = createUserPreferences(memory);
+    const settingsStore = createUserPreferencesStore(memory);
     const history = createAnalysisHistory(memory);
 
     // Initial state setup across all storage areas
-    await preferences.setApiKey('gemini', 'sk-gemini-secret');
-    await preferences.setApiKey('openai', 'sk-openai-secret');
-    await preferences.setApiKey('claude', 'sk-claude-secret');
-    await preferences.setSettings({
+    await settingsStore.setApiKey('gemini', 'sk-gemini-secret');
+    await settingsStore.setApiKey('openai', 'sk-openai-secret');
+    await settingsStore.setApiKey('claude', 'sk-claude-secret');
+    await settingsStore.setSettings({
       language: 'English',
       model: 'gpt-5.6-terra',
     });
-    await preferences.setTheme('nord');
+    await settingsStore.setTheme('nord');
     await memory.write({ [STORAGE_KEYS.PANEL_PIN_STATE]: true });
 
     await history.saveRecord({
@@ -66,17 +66,20 @@ describe('Danger Zone Cleanup (src/sidepanel/dangerZone)', () => {
     });
 
     // Verify initial population
-    const initialKeys = await preferences.getAllApiKeys();
+    const initialKeys = await settingsStore.getAllApiKeys();
     expect(initialKeys.gemini).toBe('sk-gemini-secret');
     expect(initialKeys.openai).toBe('sk-openai-secret');
     expect(initialKeys.claude).toBe('sk-claude-secret');
     expect(await history.getRecords()).toHaveLength(1);
 
-    // Execute danger zone clear operation
-    await clearApiKeysAndHistory({ preferences, history });
+    // Execute clearUserData operation
+    await clearUserData({
+      settings: settingsStore,
+      history,
+    });
 
     // Assert: API keys are cleared
-    const postKeys = await preferences.getAllApiKeys();
+    const postKeys = await settingsStore.getAllApiKeys();
     expect(postKeys).toEqual({
       gemini: '',
       openai: '',
@@ -87,14 +90,14 @@ describe('Danger Zone Cleanup (src/sidepanel/dangerZone)', () => {
     const postRecords = await history.getRecords();
     expect(postRecords).toEqual([]);
 
-    // Assert: Remaining user preferences and pin state are strictly preserved
-    const postSettings = await preferences.getSettings();
+    // Assert: Remaining user settings, theme, and pin state are strictly preserved
+    const postSettings = await settingsStore.getSettings();
     expect(postSettings).toEqual({
       language: 'English',
       model: 'gpt-5.6-terra',
     });
 
-    const postTheme = await preferences.getTheme();
+    const postTheme = await settingsStore.getTheme();
     expect(postTheme).toBe('nord');
 
     const readRaw = await memory.read([STORAGE_KEYS.PANEL_PIN_STATE]);

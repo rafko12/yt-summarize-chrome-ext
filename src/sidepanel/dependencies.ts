@@ -1,8 +1,8 @@
 import { createChromeStorageLocalAdapter, StorageAdapter } from '../storage';
 import { AiClient, createAiClient } from './ai';
 import { AnalysisHistory, createAnalysisHistory } from './history';
-import { createUserPreferences, UserPreferences } from './preferences';
 import { createChromePanelRuntime, PanelRuntime } from './runtime';
+import { createUserPreferencesStore, UserPreferencesStore } from './settings';
 import {
   createChromeYoutubeAdapter,
   createYoutube,
@@ -11,7 +11,8 @@ import {
 } from './youtube';
 
 export interface SidePanelDependencies {
-  preferences: UserPreferences;
+  settings: UserPreferencesStore;
+  preferences: UserPreferencesStore;
   history: AnalysisHistory;
   youtube: YoutubeIntegration;
   aiClient: AiClient;
@@ -30,8 +31,10 @@ export function createSidePanelDependencies(
 ): SidePanelDependencies {
   const storage = options.storage ?? createChromeStorageLocalAdapter();
   const youtubeAdapter = options.youtubeAdapter ?? createChromeYoutubeAdapter();
+  const settingsStore = createUserPreferencesStore(storage);
   return {
-    preferences: createUserPreferences(storage),
+    settings: settingsStore,
+    preferences: settingsStore,
     history: createAnalysisHistory(storage),
     youtube: createYoutube(youtubeAdapter),
     aiClient: createAiClient(options.customFetch),

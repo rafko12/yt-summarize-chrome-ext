@@ -1,13 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { STORAGE_KEYS, StorageAdapter } from '../../storage';
-import { UserPreferences } from './types';
-import createUserPreferences, { DEFAULT_SETTINGS } from './userPreferences';
+import { UserPreferencesStore } from './types';
+import createUserPreferencesStore, {
+  DEFAULT_SETTINGS,
+} from './userPreferencesStore';
 
-describe('UserPreferences', () => {
+describe('UserPreferencesStore (src/sidepanel/settings/userPreferencesStore)', () => {
   let storageData: Record<string, unknown>;
   let platform: StorageAdapter;
-  let preferences: UserPreferences;
+  let preferences: UserPreferencesStore;
 
   beforeEach(() => {
     storageData = {};
@@ -19,7 +21,7 @@ describe('UserPreferences', () => {
         Object.assign(storageData, values);
       }),
     };
-    preferences = createUserPreferences(platform);
+    preferences = createUserPreferencesStore(platform);
   });
 
   describe('initial preferences batch read (waterfall elimination)', () => {

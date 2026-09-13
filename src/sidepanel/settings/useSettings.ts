@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react';
 import type { AiProvider } from '../ai';
-import type { Settings, Theme, UserPreferences } from './types';
+import type { Settings, Theme, UserPreferencesStore } from './types';
 
 import { AiClient, resolveCompatibleModel } from '../ai';
 
 export interface UseSettingsProps {
-  preferences: UserPreferences;
+  preferences?: UserPreferencesStore;
+  settings?: UserPreferencesStore;
   aiClient: AiClient;
 }
 
 export default function useSettings({
   preferences,
+  settings: injectedSettingsStore,
   aiClient,
 }: UseSettingsProps) {
+  const store = injectedSettingsStore ?? preferences;
+  if (!store) {
+    throw new Error('useSettings requires a settings/preferences store');
+  }
+
   // Theme state
   const [theme, setTheme] = useState<Theme>(() =>
     typeof window !== 'undefined' &&
@@ -47,7 +54,7 @@ export default function useSettings({
         apiKeys: savedKeys,
         settings: savedSettings,
         theme: savedTheme,
-      } = await preferences.readInitialPreferences();
+      } = await store.readInitialPreferences();
 
       setApiKeysVal(savedKeys);
       setApiKeyInput(savedKeys[selectedProvider]);
@@ -56,12 +63,12 @@ export default function useSettings({
     };
     init();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preferences]);
+  }, [store]);
 
   const toggleTheme = async () => {
     const nextTheme = theme === 'night' ? 'nord' : 'night';
     setTheme(nextTheme);
-    await preferences.setTheme(nextTheme);
+    await store.setTheme(nextTheme);
   };
 
   const handleSelectProvider = (p: AiProvider) => {
@@ -98,11 +105,11 @@ export default function useSettings({
 
       if (compatibleModel !== settings.model) {
         const nextSettings = { ...settings, model: compatibleModel };
-        await preferences.setSettings(nextSettings);
+        await store.setSettings(nextSettings);
         setSettingsVal(nextSettings);
       }
 
-      await preferences.setApiKey(selectedProvider, trimmedKey);
+      await store.setApiKey(selectedProvider, trimmedKey);
       setApiKeysVal(nextApiKeys);
       setKeyValidationMsg({
         text: 'Klucz API jest poprawny i został zapisany!',
@@ -128,11 +135,11 @@ export default function useSettings({
 
     if (compatibleModel !== settings.model) {
       const nextSettings = { ...settings, model: compatibleModel };
-      await preferences.setSettings(nextSettings);
+      await store.setSettings(nextSettings);
       setSettingsVal(nextSettings);
     }
 
-    await preferences.setApiKey(provider, '');
+    await store.setApiKey(provider, '');
     setApiKeysVal(nextApiKeys);
     if (selectedProvider === provider) {
       setApiKeyInput('');
@@ -147,20 +154,20 @@ export default function useSettings({
 
   const handleLanguageChange = async (lang: string) => {
     const updatedSettings = { ...settings, language: lang };
-    await preferences.setSettings(updatedSettings);
+    await store.setSettings(updatedSettings);
     setSettingsVal(updatedSettings);
   };
 
   const handleModelChange = async (model: string) => {
     const updatedSettings = { ...settings, model };
-    await preferences.setSettings(updatedSettings);
+    await store.setSettings(updatedSettings);
     setSettingsVal(updatedSettings);
   };
 
   const hasAnyKey = Object.values(apiKeys).some((k) => !!k.trim());
 
   const clearApiKeys = async () => {
-    await preferences.clearApiKeys();
+    await store.clearApiKeys();
     clearApiKeyState();
   };
 

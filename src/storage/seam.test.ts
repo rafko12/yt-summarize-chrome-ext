@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createAnalysisHistory } from '../sidepanel/history';
-import { createUserPreferences } from '../sidepanel/preferences';
+import { createUserPreferencesStore } from '../sidepanel/settings';
 import {
   createChromeStorageLocalAdapter,
   STORAGE_KEYS,
@@ -38,7 +38,7 @@ describe('Storage Seam (src/storage/seam)', () => {
 
     const adapter: StorageAdapter =
       createChromeStorageLocalAdapter(mockStorage);
-    const preferences = createUserPreferences(adapter);
+    const preferences = createUserPreferencesStore(adapter);
 
     const initial = await preferences.readInitialPreferences();
     expect(initial.settings).toEqual({
