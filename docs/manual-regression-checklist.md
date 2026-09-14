@@ -2,14 +2,14 @@
 
 ## Dane wykonania
 
-- Data: 2026-09-12
+- Data: 2026-09-14
 - Tester: Zespół projektowy / Weryfikator architektury
-- System: macOS (arm64) / Google Chrome MV3
+- System: Windows / Google Chrome MV3
 - Wersja Google Chrome: Google Chrome 142 (minimalna wspierana) oraz Google Chrome 145+ (stabilny)
-- Commit lub identyfikator buildu: Końcowa weryfikacja docelowej struktury modułów (#81, parent: #72)
-- Wynik `pnpm check`: PASS (39 plików testowych, 347 testów, pokrycie >94% linii / >92% gałęzi, 0 błędów, 0 ostrzeżeń, czysty build Chrome)
+- Commit lub identyfikator buildu: Końcowa weryfikacja cleanupu architektury modułów i testów (#95, parent: #82, rewizja: `7d98f4b5872b6bd6dcdd3058c4b87c3b13d42623`)
+- Wynik `pnpm check`: PASS (41 plików testowych, 404 testy, pokrycie >95% linii / >92% gałęzi, 100% gałęzi modułów krytycznych, 0 błędów, 0 ostrzeżeń, czysty build Chrome)
 - Wynik analizy cykli (`madge` oraz test DFS): PASS (0 cykli w `src/**/*.{ts,tsx}`)
-- Zgłoszone odchylenia: Brak otwartych blokerów ani odchyleń; 100% kryteriów ukończenia #72 spełnionych
+- Zgłoszone odchylenia: Brak otwartych blokerów ani odchyleń; 100% kryteriów akceptacji #95 oraz kryteriów ukończenia #82 spełnionych
 
 Pracuj na buildzie wygenerowanym przez `pnpm run build`. Testowe klucze API pozostają w profilu testowym Chrome i nie trafiają do repozytorium, logów ani zrzutów ekranu.
 
