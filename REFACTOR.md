@@ -4,7 +4,7 @@
 
 Refaktor został pomyślnie ukończony i zweryfikowany 1 września 2026 r. Wszystkie etapy 0–8 spełniają zatwierdzone kryteria akceptacji, automatyczna bramka `pnpm check` jest w pełni zielona (100% testów przechodzi, brak ostrzeżeń, zachowane wymagane progi coverage), a pełna manualna lista kontrolna regresji potwierdza brak niezamierzonych zmian w zachowaniu, wyglądzie, UX i kompatybilności danych użytkownika.
 
-Bieżące technologie i ich źródła prawdy mapuje [`TECH_STACK.md`](TECH_STACK.md). Ten plan opisuje zamierzone przejścia, dlatego nie należy traktować jego etapów jako opisu już wdrożonego stosu.
+Ten dokument stanowi historyczny plan pierwotnego refaktoru (etapy 0–8). Nie zostaje on przepisywany jako bieżący plan cleanupu architektury modułów i testów — źródłem zakresu dla bieżącego cleanupu pozostaje specyfikacja w nadrzędnym Issue #82 (`refactor(architecture): domknąć cleanup struktury modułów i testów`). Bieżący stan faktyczny architektury opisuje [`ARCHITECTURE.md`](ARCHITECTURE.md), a mapę technologii [`TECH_STACK.md`](TECH_STACK.md).
 
 ## Cel
 

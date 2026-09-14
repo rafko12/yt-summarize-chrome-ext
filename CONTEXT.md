@@ -13,7 +13,7 @@ Bieżąca praca użytkownika dotycząca jednego filmu, obejmująca jego transkry
 _Unikaj_: Sesja filmu, historia czatu
 
 **Zapis analizy**:
-Utrwalony stan sesji analizy, do którego użytkownik może później wrócić.
+Utrwalony stan sesji analizy, do którego użytkownik może później wrócić. Zapis rozmowy zachowuje istniejący `createdAt` i nie posiada `updatedAt`.
 _Unikaj_: Element historii, rekord historii
 
 **Historia analiz**:

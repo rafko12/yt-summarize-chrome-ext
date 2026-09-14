@@ -1,7 +1,10 @@
 # Raport końcowej weryfikacji architektury (#72)
 
+> [!NOTE] > **Dokument archiwalny**: Niniejszy raport stanowi historyczny dowód weryfikacyjny utrwalający stan audytu, dowody realizacji i wyniki kontroli jakości dla konkretnej rewizji powiązanej z Issue #72 i #81.
+> Aktualnym źródłem prawdy o architekturze, technologiach i strukturze modułów są [`ARCHITECTURE.md`](../ARCHITECTURE.md) oraz [`TECH_STACK.md`](../TECH_STACK.md).
+
 Data: 2026-09-12  
-Status: ZWERYFIKOWANY (PASS)  
+Status: ZWERYFIKOWANY (PASS) (status historyczny rewizji #72)  
 Zadanie nadrzędne: [#72 — Refactor: uprościć strukturę modułów panelu i montowanie UI](https://github.com/rafko12/yt-summarize-chrome-ext/issues/72)  
 Zadanie weryfikujące: [#81 — Zweryfikować i udokumentować docelową strukturę modułów](https://github.com/rafko12/yt-summarize-chrome-ext/issues/81)
 

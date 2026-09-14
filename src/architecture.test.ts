@@ -168,7 +168,7 @@ describe('architektura i reguły zależności (src/architecture.test.ts)', () =>
     });
   });
 
-  it('gwarantuje, że domena, storage, messaging, kontrakty i adaptery są całkowicie wolne od Reacta', () => {
+  it('gwarantuje, że domena, storage, messaging, kontrakty, adaptery i composition root są całkowicie wolne od Reacta', () => {
     const prodFiles = getProductionSourceFiles(srcDir);
 
     const nonUiModules = prodFiles.filter((filePath) => {
@@ -182,7 +182,8 @@ describe('architektura i reguły zależności (src/architecture.test.ts)', () =>
         relativePath === 'types.ts' ||
         relativePath.includes('Adapter') ||
         relativePath.includes('Contract') ||
-        relativePath.startsWith('sidepanel/ai/providers/')
+        relativePath.startsWith('sidepanel/ai/providers/') ||
+        relativePath === 'sidepanel/compositionRoot.ts'
       );
     });
 

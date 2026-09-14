@@ -36,5 +36,5 @@ Przykład: lokalne panele są otwarte na kartach A i B. Użytkownik przypina pan
 - Widok analizy ma jeden główny pionowy obszar przewijania obejmujący podsumowanie i rozmowę.
 - Bezpośrednie karty treści zachowują naturalną wysokość; długie podsumowanie wydłuża obszar przewijania zamiast być obcinane.
 - Łańcuch elementów flex pomiędzy korzeniem a treścią zachowuje poprawne ograniczenie wysokości, w tym `min-height: 0` tam, gdzie jest wymagane.
-- Element `#my-ext` służy jako prefiks izolujący CSS dla PostCSS. Klasy głównego layoutu, takie jak `flex`, `h-screen` i `overflow`, należą do wewnętrznego korzenia aplikacji, nie do `#my-ext`.
+- Element `#my-ext` jest wewnętrznym kontenerem szablonu aplikacji panelu bocznego, na którym ustawiany jest motyw (`data-theme`). Klasy głównego layoutu, takie jak `flex`, `h-dvh` i `overflow`, należą do wewnętrznego korzenia aplikacji, a style nie stosują izolacji PostCSS.
 - Deterministyczne rozmiary okna i pomiar przepełnienia definiuje `.agents/rules/testing.md`.

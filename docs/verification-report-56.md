@@ -1,7 +1,10 @@
 # Raport końcowej weryfikacji architektury (#56)
 
+> [!NOTE] > **Dokument archiwalny**: Niniejszy raport stanowi historyczny dowód weryfikacyjny utrwalający stan audytu, dowody realizacji i wyniki kontroli jakości dla konkretnej rewizji powiązanej z Issue #56 i #71.
+> Aktualnym źródłem prawdy o architekturze, technologiach i strukturze modułów są [`ARCHITECTURE.md`](../ARCHITECTURE.md) oraz [`TECH_STACK.md`](../TECH_STACK.md).
+
 Data: 2026-09-12  
-Status: ZWERYFIKOWANY (PASS)  
+Status: ZWERYFIKOWANY (PASS) (status historyczny rewizji #56)  
 Zadanie nadrzędne: [#56 — Domknąć architecture cleanup i neutralność Historii analiz](https://github.com/rafko12/yt-summarize-chrome-ext/issues/56)  
 Zadanie weryfikujące: [#71 — Wykonać końcową weryfikację #56](https://github.com/rafko12/yt-summarize-chrome-ext/issues/71)
 

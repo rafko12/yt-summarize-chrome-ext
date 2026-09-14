@@ -6,11 +6,11 @@ je w dokumentacji.
 
 ## Platforma wykonawcza
 
-| Obszar                | Technologia                                                                               | Zastosowanie                                                       | Źródło prawdy                                                              |
-| --------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------- |
-| Przeglądarka          | Google Chrome, Manifest V3                                                                | Rozszerzenie z panelem bocznym, usługą w tle i skryptem treści     | [`src/manifest.ts`](src/manifest.ts)                                       |
-| Interfejsy rozszerzeń | `chrome.sidePanel`, `chrome.runtime`, `chrome.tabs`, `chrome.storage`, `chrome.scripting` | Panel, komunikacja między kontekstami, stan i integracja ze stroną | [`src/manifest.ts`](src/manifest.ts), [`ARCHITECTURE.md`](ARCHITECTURE.md) |
-| Strona docelowa       | YouTube                                                                                   | Metadane Filmu, transkrypcja i sterowanie odtwarzaczem             | [`src/content/`](src/content/), [`ARCHITECTURE.md`](ARCHITECTURE.md)       |
+| Obszar                | Technologia                                                                               | Zastosowanie                                                       | Źródło prawdy                                                                                                                  |
+| --------------------- | ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Przeglądarka          | Google Chrome, Manifest V3                                                                | Rozszerzenie z panelem bocznym, usługą w tle i skryptem treści     | [`src/manifest.ts`](src/manifest.ts)                                                                                           |
+| Interfejsy rozszerzeń | `chrome.sidePanel`, `chrome.runtime`, `chrome.tabs`, `chrome.storage`, `chrome.scripting` | Panel, komunikacja między kontekstami, stan i integracja ze stroną | [`src/manifest.ts`](src/manifest.ts), [`src/sidepanel/runtime/`](src/sidepanel/runtime/), [`ARCHITECTURE.md`](ARCHITECTURE.md) |
+| Strona docelowa       | YouTube                                                                                   | Metadane Filmu, transkrypcja i sterowanie odtwarzaczem             | [`src/content/`](src/content/), [`src/sidepanel/youtube/`](src/sidepanel/youtube/), [`ARCHITECTURE.md`](ARCHITECTURE.md)       |
 
 Wspieranym artefaktem jest wyłącznie build Chrome w `dist_chrome`. Minimalną
 wersję przeglądarki wyznacza `minimum_chrome_version` w `src/manifest.ts`.
@@ -30,6 +30,7 @@ Artefakt nie zawiera konfiguracji deweloperskich, testów, mocków ani plików t
 | ------------------- | --------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | Język               | TypeScript w trybie ścisłym | Kod produkcyjny, konfiguracja buildu i testy | [`tsconfig.json`](tsconfig.json), [`package.json`](package.json)                                       |
 | UI                  | React i React DOM           | Panel boczny oraz strona opcji               | [`package.json`](package.json), [`src/sidepanel/`](src/sidepanel/), [`src/options/`](src/options/)     |
+| Składanie modułów   | Jawny composition root      | Zależności panelu (`SidePanelDependencies`)  | [`src/sidepanel/compositionRoot.ts`](src/sidepanel/compositionRoot.ts)                                 |
 | Style               | Tailwind CSS 4              | Klasy narzędziowe i konfiguracja CSS-first   | [`src/assets/styles/index.css`](src/assets/styles/index.css), [`postcss.config.js`](postcss.config.js) |
 | Komponenty i motywy | DaisyUI 5                   | Komponenty oraz motywy `night` i `nord`      | [`src/assets/styles/index.css`](src/assets/styles/index.css)                                           |
 | Montowanie UI       | Bezpośredni root React      | Montowanie widoków rozszerzenia w dokumencie | [`src/sidepanel/index.tsx`](src/sidepanel/index.tsx), [`src/options/index.tsx`](src/options/index.tsx) |
@@ -73,14 +74,19 @@ Procedurę doboru testów i wymagane progi opisuje
 [`.agents/rules/testing.md`](.agents/rules/testing.md). Pełną bramką repozytorium
 pozostaje skrypt `check` z `package.json`.
 
-## Integracje zewnętrzne
+## Integracje i moduły współdzielone
 
-| Integracja                 | Sposób użycia                                             | Źródło prawdy                                                                  |
-| -------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Gemini, OpenAI i Anthropic | Bezpośrednie żądania z panelu przez adaptery Dostawców AI | [`src/sidepanel/ai/`](src/sidepanel/ai/), [`src/manifest.ts`](src/manifest.ts) |
-| `youtube-transcript`       | Pobieranie transkrypcji Filmu                             | [`package.json`](package.json), [`src/content/`](src/content/)                 |
-| `chrome.storage.local`     | Trwałe dane użytkownika                                   | [`src/storage/`](src/storage/)                                                 |
-| `chrome.storage.session`   | Stan bieżącej sesji panelu                                | [`ARCHITECTURE.md`](ARCHITECTURE.md)                                           |
+| Obszar                  | Technologia / Moduł                               | Sposób użycia i odpowiedzialność                                                    | Źródło prawdy                                                                                                                                  |
+| ----------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Dostawcy AI             | Gemini, OpenAI i Anthropic                        | Bezpośrednie żądania z panelu przez adaptery Dostawców AI                           | [`src/sidepanel/ai/`](src/sidepanel/ai/), [`src/manifest.ts`](src/manifest.ts)                                                                 |
+| Transkrypcja YouTube    | `youtube-transcript`                              | Pobieranie transkrypcji Filmu w skrypcie treści                                     | [`package.json`](package.json), [`src/content/`](src/content/)                                                                                 |
+| Most YouTube            | `YoutubeBridge` i adapter platformy               | Bezpieczny dostęp do aktywnej karty, odczyt Filmu, wstrzykiwanie skryptu i seek     | [`src/sidepanel/youtube/`](src/sidepanel/youtube/)                                                                                             |
+| Trwałe dane użytkownika | `chrome.storage.local`                            | Klucze API, preferencje, Historia analiz i motyw                                    | [`src/storage/keys.ts`](src/storage/keys.ts), [`src/storage/storageAdapter.ts`](src/storage/storageAdapter.ts), [`src/storage/`](src/storage/) |
+| Stan sesji panelu       | `chrome.storage.session`                          | Identyfikatory kart z lokalnie otwartym panelem                                     | [`src/background/chromeSidePanelAdapter.ts`](src/background/chromeSidePanelAdapter.ts), [`ARCHITECTURE.md`](ARCHITECTURE.md)                   |
+| Kontrakty wiadomości    | Czyste kontrakty i walidatory                     | Niezależne od transportu definicje wiadomości między kontekstami rozszerzenia       | [`src/messaging/contracts.ts`](src/messaging/contracts.ts), [`src/messaging/`](src/messaging/)                                                 |
+| Transport panelu        | `PanelRuntime`                                    | Pobieranie kontekstu, `PANEL_INIT`, globalne przypinanie oraz powiadomienia zdarzeń | [`src/sidepanel/runtime/`](src/sidepanel/runtime/)                                                                                             |
+| Settings                | `UserPreferencesStore`, widok i akcja czyszczenia | Preferencje, klucze API, motyw, konfiguracja i czyszczenie danych użytkownika       | [`src/sidepanel/settings/`](src/sidepanel/settings/)                                                                                           |
+| Historia analiz         | `AnalysisHistory` i Zapisy analiz                 | Kolekcja zapisów analiz (wyłącznie znacznik `createdAt`, bez pola `updatedAt`)      | [`src/sidepanel/history/`](src/sidepanel/history/), [`src/domain/analysis.ts`](src/domain/analysis.ts)                                         |
 
 Klucze API i dane potrzebne do wygenerowania odpowiedzi trafiają bezpośrednio
 do interfejsu sieciowego wybranego Dostawcy AI. Rozszerzenie nie utrzymuje
